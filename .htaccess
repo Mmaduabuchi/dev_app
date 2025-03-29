@@ -1,0 +1,12 @@
+Options -Indexes +FollowSymLinks -MultiViews
+DirectoryIndex index.php
+
+# Enable mod_rewrite for URL routing
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule ^ index.php [NC,L]
+
+RewriteRule ^we-welcome-you/?$ index.php [NC,L]
+RewriteRule ^login/?$ login.php [NC,L]
+RewriteRule ^register/?$ register.php [NC,L]
