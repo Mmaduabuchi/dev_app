@@ -1,15 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
     
-<!-- Mirrored from zoyothemes.com/hando/html/offline-page by HTTrack Website Copier/3.x [XR&CO'2014], Sat, 29 Mar 2025 13:06:04 GMT -->
-<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
 <head>
 
         <meta charset="utf-8" />
-        <title>Offline Page | Hando - Responsive Admin Dashboard Template</title>
+        <title>Offline Page | Hando - Dashboard</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="A fully featured admin theme which can be used to build CRM, CMS, etc."/>
-        <meta name="author" content="Zoyothemes"/>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
         <!-- App favicon -->
@@ -72,6 +69,4 @@
         <script src="assets/js/app.js"></script>
         
     </body>
-
-<!-- Mirrored from zoyothemes.com/hando/html/offline-page by HTTrack Website Copier/3.x [XR&CO'2014], Sat, 29 Mar 2025 13:06:06 GMT -->
 </html>
