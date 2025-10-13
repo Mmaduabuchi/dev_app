@@ -1,0 +1,28 @@
+Options -Indexes +FollowSymLinks -MultiViews
+DirectoryIndex index.php
+
+# Enable mod_rewrite for URL routing
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule ^ index.php [NC,L]
+
+RewriteRule ^we-welcome-you/?$ index.php [NC,L]
+RewriteRule ^login/?$ login.php [NC,L]
+RewriteRule ^register/?$ register.php [NC,L]
+RewriteRule ^forgotten/?$ forgotten.php [NC,L]
+RewriteRule ^reset/?$ reset.php [NC,L]
+RewriteRule ^logout/?$ app/auth-logout.php [NC,L]
+RewriteRule ^stack/?$ stack.php [NC,L]
+RewriteRule ^screening/?$ screening.php [NC,L]
+RewriteRule ^screening2/?$ screening_page2.php [NC,L]
+RewriteRule ^screening3/?$ screening_page3.php [NC,L]
+
+#dashboard
+RewriteRule ^dashboard/?$ app/index.php [NC,L]
+RewriteRule ^dashboard/setting/?$ app/forms-validation.php [NC,L]
+RewriteRule ^dashboard/profile/?$ app/profile.php [NC,L]
+RewriteRule ^dashboard/delete/?$ app/delete_account.php [NC,L]
+RewriteRule ^dashboard/report/?$ app/report.php [NC,L]
+RewriteRule ^dashboard/resume/?$ app/resume.php [NC,L]
+RewriteRule ^dashboard/manage/?$ app/manage_sub.php [NC,L]
