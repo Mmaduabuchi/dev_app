@@ -216,31 +216,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             response('error', 'User not logged in.');
         }
 
-        // Move uploaded files to permanent location
-        $uploadDir = __DIR__ . '/documents/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-
-        // Extract safe extensions
-        $profileExt = strtolower(pathinfo($profilePhoto['name'], PATHINFO_EXTENSION));
-        $resumeExt  = strtolower(pathinfo($resume['name'], PATHINFO_EXTENSION));
-
-        // Generate unique safe filenames
-        $profilePhotoPath = $uploadDir . uniqid('profile_', true) . '.' . $profileExt;
-        $resumePath = $uploadDir . uniqid('resume_', true) . '.' . $resumeExt;
-
-        // Move files
-        if (!move_uploaded_file($profilePhoto['tmp_name'], $profilePhotoPath)) {
-            response('error', 'Failed to save profile photo.');
-        }
-        if (!move_uploaded_file($resume['tmp_name'], $resumePath)) {
-            response('error', 'Failed to save resume.');
-        }
-
-        // Begin transaction
-        $conn->begin_transaction();
         try {
+            // Begin transaction
+            $conn->begin_transaction();
+
+            // Move uploaded files to permanent location
+            $uploadDir = __DIR__ . '/documents/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+
+            // Extract safe extensions
+            $profileExt = strtolower(pathinfo($profilePhoto['name'], PATHINFO_EXTENSION));
+            $resumeExt  = strtolower(pathinfo($resume['name'], PATHINFO_EXTENSION));
+
+            // Generate unique safe filenames
+            $profilePhotoPath_A = uniqid('profile_', true) . '.' . $profileExt;
+            $profilePhotoPath = $uploadDir . $profilePhotoPath_A;
+            //prepare resume path
+            $resumePath_A = uniqid('resume_', true) . '.' . $resumeExt;
+            $resumePath = $uploadDir . $resumePath_A;
+
+            // Move files
+            if (!move_uploaded_file($profilePhoto['tmp_name'], $profilePhotoPath)) {
+                response('error', 'Failed to save profile photo.');
+            }
+            if (!move_uploaded_file($resume['tmp_name'], $resumePath)) {
+                response('error', 'Failed to save resume.');
+            }
+
+            // Prepare file paths for database
+            $profilePhotoPath = 'library/documents/' . $profilePhotoPath_A;
+            $resumePath = 'library/documents/' . $resumePath_A;
+
             $created_at = date('Y-m-d H:i:s');
             // Update profile with file paths and set action to 'completed'
             $stmt = $conn->prepare("UPDATE developers_profiles SET action=?, profile_picture=?, resume=?, updated_at=? WHERE user_id=?");
@@ -276,7 +284,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $conn->rollback();
             response('error', $e->getMessage());
         }
-        
     } else {
         response('error', 'Invalid action.');
     }

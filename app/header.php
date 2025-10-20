@@ -163,7 +163,7 @@
                 <li class="dropdown notification-list topbar-dropdown">
                     <a class="nav-link dropdown-toggle nav-user me-0" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
                         <img src="<?php echo $base_url; ?>assets/images/users/user-13.jpg" alt="user-image" class="rounded-circle" />
-                        <span class="pro-user-name ms-1">Creator Profile <i class="mdi mdi-chevron-down"></i></span>
+                        <span class="pro-user-name ms-1">Candidate Profile <i class="mdi mdi-chevron-down"></i></span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end profile-dropdown">
                         <!-- item-->
@@ -172,7 +172,7 @@
                         </div>
 
                         <!-- item-->
-                        <a class='dropdown-item notify-item' href='/devhire/dashboard/profile'>
+                        <a class='dropdown-item notify-item' href='/devhire/dashboard/myprofile'>
                             <i class="mdi mdi-account-circle-outline fs-16 align-middle"></i>
                             <span>Profile</span>
                         </a>
@@ -243,16 +243,13 @@
                     <div class="collapse" id="sidebarDashboards">
                         <ul class="nav-second-level">
                             <li>
-                                <a class='tp-link' href='analytics.html'>Subscriptions</a>
+                                <a class='tp-link' href='/devhire/dashboard/subscriptions'>Subscriptions</a>
                             </li>
                             <li>
                                 <a class='tp-link' href='/devhire/dashboard/manage'>Manage Subscription</a>
                             </li>
                             <li>
-                                <a class='tp-link' href='projects.html'>Meet Developers</a>
-                            </li>
-                            <li>
-                                <a class='tp-link' href='hrm.html'>HRM</a>
+                                <a class='tp-link' href='/devhire/dashboard/developers'>Meet Developers</a>
                             </li>
                         </ul>
                     </div>
@@ -261,9 +258,16 @@
                 <li class="menu-title mt-2">General</li>
 
                 <li>
-                    <a class='tp-link' href='/devhire/dashboard/profile'>
+                    <a class='tp-link' href='/devhire/dashboard/myprofile'>
                         <i data-feather="user"></i>
                         <span> My Profile </span>
+                    </a>
+                </li>
+
+                <li>
+                    <a class='tp-link' href='/devhire/dashboard/profile'>
+                        <i data-feather="settings"></i>
+                        <span> Profile Settings</span>
                     </a>
                 </li>
 
