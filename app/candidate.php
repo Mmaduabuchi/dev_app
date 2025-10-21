@@ -2,6 +2,8 @@
 require_once "config.php";
 // Start session and check authentication
 require_once "auth.php";
+//get usertoken from session
+$usertoken = $_SESSION['user']['usertoken'] ?? null;
 
 if (!isset($_GET['ref']) || !isset($_GET['token'])) {
     header("Location: /devhire/dashboard/error/");
@@ -17,6 +19,7 @@ $stmt->bind_param("s", $ref);
 $stmt->execute();
 $result = $stmt->get_result();
 $candidate = $result->fetch_assoc();
+$stmt->close();
 
 if (!$candidate) {
     // Candidate not found, redirect to error page
@@ -34,6 +37,15 @@ $location = htmlspecialchars($candidate['location']);
 $age = htmlspecialchars($candidate['age']);
 $citizenship = htmlspecialchars($candidate['citizenship']);
 
+
+//get current user email
+$stmt = $conn->prepare("SELECT email FROM users WHERE usertoken = ?");
+$stmt->bind_param("s", $usertoken);
+$stmt->execute();
+$result = $stmt->get_result();
+$currentUser = $result->fetch_assoc();
+$currentUserEmail = $currentUser ? $currentUser['email'] : '';
+$stmt->close();
 
 ?>
 <!DOCTYPE html>
@@ -414,16 +426,31 @@ $citizenship = htmlspecialchars($candidate['citizenship']);
             const formData = new FormData();
             formData.append('token', '<?php echo $ref; ?>');
             formData.append('request_title', title);
+            formData.append('request_type', 'request');
             formData.append('request_message', message);
 
-            // Send the fetch request
+            // Send the request
             fetch('<?php echo $base_url; ?>process/process_send_request.php', {
                     method: 'POST',
                     body: formData
                 }).then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        alert('Request sent successfully!');
+                        if (typeof Swal !== 'undefined') {
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3500,
+                                timerProgressBar: true
+                            });
+                            Toast.fire({
+                                icon: 'success',
+                                title: data.message || 'Request sent successfully!'
+                            });
+                        } else {
+                            alert('Request sent successfully!');
+                        }
                         // Close the modal
                         var modal = bootstrap.Modal.getInstance(document.getElementById('exampleModal'));
                         modal.hide();
