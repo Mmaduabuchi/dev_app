@@ -33,9 +33,13 @@ $email = htmlspecialchars($candidate['email']);
 $role = htmlspecialchars($candidate['role']);
 $bio = htmlspecialchars($candidate['bio']);
 $years_of_experience = $candidate['years_of_experience'];
+$preferred_hourly_rate = $candidate['preferred_hourly_rate'];
 $location = htmlspecialchars($candidate['location']);
 $age = htmlspecialchars($candidate['age']);
 $citizenship = htmlspecialchars($candidate['citizenship']);
+$website = htmlspecialchars($candidate['website']);
+$github = htmlspecialchars($candidate['github']);
+$linkedin = htmlspecialchars($candidate['linkedin']);
 
 
 //get current user email
@@ -239,18 +243,31 @@ $stmt->close();
                                 </div>
                             </div>
                             <div class="row mt-4 mb-4">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="card-title mb-0">Portfolio</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col">
-                                                <!-- content goes in here  -->
+                                <?php
+                                    if(!empty($website)):
+                                ?>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="card-title mb-0">Portfolio</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col">
+                                                    <p>Website URL::</p>
+                                                    <span class="text-danger">
+                                                        <i>
+                                                            <a href="<?= htmlspecialchars($website) ?>" target="_blank">
+                                                                <?= htmlspecialchars($website) ?>
+                                                            </a>
+                                                        </i>
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                <?php
+                                    endif;
+                                ?>
                             </div>
                         </div>
 
@@ -275,7 +292,7 @@ $stmt->close();
                                                 <hr>
                                                 <p><strong>Gender:</strong></p>
                                                 <hr>
-                                                <p><strong>Expected Salary:</strong></p>
+                                                <p><strong>Preferred hourly rate in USD:</strong> <?= $preferred_hourly_rate ?> </p>
                                                 <hr>
                                                 <p><strong>Years of Experience:</strong> <?php echo $years_of_experience . ' years'; ?> </p>
                                             </div>
@@ -302,7 +319,10 @@ $stmt->close();
                             <section>
                                 <div class="row">
                                     <div class="col">
-                                        <!-- content goes in here  -->
+                                        <label for="email">Response email</label>
+                                        <input type="email" id="email" class="form-control" value="<?php echo $currentUserEmail; ?>" disabled>
+                                        <span class="text-danger"> <i>This user can reply you on your email address above.</i> </span>
+                                        <br>
                                         <label for="">Request title</label>
                                         <select name="request_title" id="request_title" class="form-select">
                                             <option value="">Select request title</option>
@@ -381,11 +401,13 @@ $stmt->close();
     <script>
         const sendRequestBtn = document.getElementById('send_request');
         const requestTitleSelect = document.getElementById('request_title');
+        const requestEmailInput = document.getElementById('email');
         const requestMessageTextarea = document.querySelector('textarea[name="request_message"]');
 
         //validation and send request
         sendRequestBtn.addEventListener('click', () => {
             const title = requestTitleSelect.value;
+            const email = requestEmailInput.value;
             const message = requestMessageTextarea.value.trim();
             if (title === "") {
                 if (typeof Swal !== 'undefined') {
@@ -405,7 +427,7 @@ $stmt->close();
                 }
                 return;
             }
-            if (message === "") {
+            if (message === "" || email === "") {
                 if (typeof Swal !== 'undefined') {
                     const Toast = Swal.mixin({
                         toast: true,
@@ -416,10 +438,10 @@ $stmt->close();
                     });
                     Toast.fire({
                         icon: 'error',
-                        title: 'Please enter a request message.'
+                        title: 'Invalid Request Data.'
                     });
                 } else {
-                    alert('Please enter a request message.');
+                    alert('Invalid Request Data.');
                 }
                 return;
             }
@@ -427,6 +449,7 @@ $stmt->close();
             formData.append('token', '<?php echo $ref; ?>');
             formData.append('request_title', title);
             formData.append('request_type', 'request');
+            formData.append('request_email', email);
             formData.append('request_message', message);
 
             // Send the request

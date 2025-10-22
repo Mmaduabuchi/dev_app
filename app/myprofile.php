@@ -24,9 +24,13 @@ $email = htmlspecialchars($candidate['email']);
 $role = htmlspecialchars($candidate['role']);
 $bio = htmlspecialchars($candidate['bio']);
 $years_of_experience = $candidate['years_of_experience'];
+$preferred_hourly_rate = $candidate['preferred_hourly_rate'];
 $location = htmlspecialchars($candidate['location']);
 $age = htmlspecialchars($candidate['age']);
 $citizenship = htmlspecialchars($candidate['citizenship']);
+$website = htmlspecialchars($candidate['website']);
+$github = htmlspecialchars($candidate['github']);
+$linkedin = htmlspecialchars($candidate['linkedin']);
 
 
 ?>
@@ -213,18 +217,31 @@ $citizenship = htmlspecialchars($candidate['citizenship']);
                                 </div>
                             </div>
                             <div class="row mt-4 mb-4">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="card-title mb-0">Portfolio</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col">
-                                                <!-- content goes in here  -->
+                                <?php
+                                    if(!empty($website)):
+                                ?>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h5 class="card-title mb-0">Portfolio</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col">
+                                                    <p>Website URL::</p>
+                                                    <span class="text-danger">
+                                                        <i>
+                                                            <a href="<?= htmlspecialchars($website) ?>" target="_blank">
+                                                                <?= htmlspecialchars($website) ?>
+                                                            </a>
+                                                        </i>
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                <?php
+                                    endif;
+                                ?>
                             </div>
                         </div>
 
@@ -233,7 +250,7 @@ $citizenship = htmlspecialchars($candidate['citizenship']);
                                 <div class="card-header text-center">
                                     <img id="img_candidate" src="<?php echo $profile_pic; ?>" alt="User Image">
                                     <h5 id="img_candidate_h5"><?php echo $fullname; ?></h5>
-                                    <a href="#">Send a Request</a>
+                                    <!-- <a href="#">Send a Request</a> -->
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
@@ -249,7 +266,7 @@ $citizenship = htmlspecialchars($candidate['citizenship']);
                                                 <hr>
                                                 <p><strong>Gender:</strong></p>
                                                 <hr>
-                                                <p><strong>Expected Salary:</strong></p>
+                                                <p><strong>Preferred hourly rate in USD:</strong> <?= $preferred_hourly_rate ?> </p>
                                                 <hr>
                                                 <p><strong>Years of Experience:</strong> <?php echo $years_of_experience . ' years'; ?> </p>
                                             </div>

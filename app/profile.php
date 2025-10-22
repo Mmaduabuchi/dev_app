@@ -252,7 +252,7 @@ $user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
                                 </div><!-- end card header -->
 
                                 <div class="card-body">
-                                    <form>
+                                    <form method="post" action="" id="social_media_form">
                                         <div class="mb-3">
                                             <label for="example-input-large" class="form-label">Github</label>
                                             <input type="text" id="example-input-large" name="Github" class="form-control form-control-lg" placeholder="e.g., https://github.com/username">
@@ -262,7 +262,7 @@ $user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
                                             <input type="text" id="example-input-normal" name="linkedin" class="form-control" placeholder="e.g., https://linkedin.com/in/yourprofile">
                                         </div>
                                         <div>
-                                            <span class="btn btn-primary">Save</span>
+                                            <button class="btn btn-primary" type="submit">Save</button>
                                         </div>
                                     </form>
                                 </div>
@@ -281,13 +281,13 @@ $user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
                                 </div><!-- end card header -->
 
                                 <div class="card-body">
-                                    <form>
+                                    <form method="post" action="" id="add_website_form">
                                         <div class="mb-3">
                                             <label for="example-input-normal" class="form-label">Website</label>
-                                            <input type="text" id="example-input-normal" name="Website" class="form-control" placeholder="e.g., https://websitename.com/">
+                                            <input type="text" id="example-input-normal" name="website" class="form-control" placeholder="e.g., https://websitename.com/">
                                         </div>
                                         <div>
-                                            <span class="btn btn-primary">Add Website</span>
+                                            <button type="submit" class="btn btn-primary">Add Website</button>
                                         </div>
                                     </form>
                                 </div>
@@ -315,78 +315,6 @@ $user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
                                         </div>
                                         <div class="col-12 col-md-6 col-lg-6 text-md-center text-start mt-3 mt-md-0">
                                             <img id="img_candidate" class="img-fluid shadow-sm" src="<?php echo $profile_pic; ?>" alt="User Image">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">Floating Labels</h5>
-                                </div><!-- end card header -->
-
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-lg-6">
-                                            <h6 class="fs-15 mb-3">Example</h6>
-
-                                            <div class="form-floating mb-3">
-                                                <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com">
-                                                <label for="floatingInput">Email address</label>
-                                            </div>
-                                            <div class="form-floating mb-3">
-                                                <input type="password" class="form-control" id="floatingPassword" placeholder="Password">
-                                                <label for="floatingPassword">Password</label>
-                                            </div>
-
-                                            <h6 class="fs-15 mb-3">Textareas</h6>
-
-                                            <div class="form-floating">
-                                                <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea"></textarea>
-                                                <label for="floatingTextarea">Comments</label>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-lg-6">
-                                            <h6 class="fs-15 mb-3">Selects</h6>
-
-                                            <div class="form-floating mb-3">
-                                                <select class="form-select" id="floatingSelect" aria-label="Floating label select example">
-                                                    <option selected>Open this select menu</option>
-                                                    <option value="1">One</option>
-                                                    <option value="2">Two</option>
-                                                    <option value="3">Three</option>
-                                                </select>
-                                                <label for="floatingSelect">Works with selects</label>
-                                            </div>
-
-                                            <h6 class="fs-15 mb-3">Layout</h6>
-
-                                            <div class="row g-2">
-                                                <div class="col-md">
-                                                    <div class="form-floating mb-3">
-                                                        <input type="email" class="form-control" id="floatingInputGrid" placeholder="name@example.com" value="mdo@example.com">
-                                                        <label for="floatingInputGrid">Email address</label>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-md">
-                                                    <div class="form-floating mb-3">
-                                                        <select class="form-select" id="floatingSelectGrid">
-                                                            <option selected>Open this select menu</option>
-                                                            <option value="1">1</option>
-                                                            <option value="2">2</option>
-                                                            <option value="3">3</option>
-                                                        </select>
-                                                        <label for="floatingSelectGrid">Works with selects</label>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -600,6 +528,194 @@ $user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
                     alert('An error occurred while uploading the profile picture.');
                 }
             });
+        });
+
+
+        document.querySelector("#social_media_form").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const github = document.querySelector("input[name='Github']").value;
+            const linkedin = document.querySelector("input[name='linkedin']").value;
+
+            //validate inputs
+            if (!github || !linkedin) {
+                if (typeof Swal !== 'undefined') {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3500,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'warning',
+                        title: 'Please fill in all fields.'
+                    });
+                } else {
+                    alert('Please fill in all fields.');
+                }
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('github', github);
+            formData.append('linkedin', linkedin);
+            formData.append('token', '<?php echo $usertoken; ?>');
+
+            fetch('<?php echo $base_url; ?>process/process_update_social_media.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (typeof Swal !== 'undefined') {
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3500,
+                            timerProgressBar: true
+                        });
+                        Toast.fire({
+                            icon: 'success',
+                            title: data.message || 'Social media links updated successfully.'
+                        });
+                        //reload page after 2 seconds
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        alert('Social media links updated successfully.');
+                    }
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3500,
+                            timerProgressBar: true
+                        });
+                        Toast.fire({
+                            icon: 'error',
+                            title: data.message || 'Failed to update social media links.'
+                        });
+                    } else {
+                        alert(data.message || 'Failed to update social media links.');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (typeof Swal !== 'undefined') {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3500,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'An error occurred while updating social media links.'
+                    });
+                } else {
+                    alert('An error occurred while updating social media links.');
+                }
+            });
+        });
+
+
+        document.querySelector("#add_website_form").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const website = document.querySelector("input[name='website']").value;
+
+            if(!website){
+                if (typeof Swal !== 'undefined') {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3500,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'warning',
+                        title: 'Please enter your website URL.'
+                    });
+                } else {
+                    alert('Please enter your website URL.');
+                }
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('website', website);
+            formData.append('token', '<?php echo $usertoken; ?>');
+
+            fetch('<?php echo $base_url; ?>process/process_add_website.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (typeof Swal !== 'undefined') {
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3500,
+                            timerProgressBar: true
+                        });
+                        Toast.fire({
+                            icon: 'success',
+                            title: data.message || 'Website URL updated successfully.'
+                        });
+                        //reload page after 2 seconds
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        alert('Website URL updated successfully.');
+                    }
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3500,
+                            timerProgressBar: true
+                        });
+                        Toast.fire({
+                            icon: 'error',
+                            title: data.message || 'Failed to update your website URL.'
+                        });
+                    } else {
+                        alert(data.message || 'Failed to update your website URL.');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (typeof Swal !== 'undefined') {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3500,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'An error occurred while updating your website URL.'
+                    });
+                } else {
+                    alert('An error occurred while updating your website URL.');
+                }
+            });
+                
         });
     </script>
 

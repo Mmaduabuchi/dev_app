@@ -18,9 +18,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $request_title = $_POST['request_title'] ?? '';
     $request_message = $_POST['request_message'] ?? '';
     $request_type = $_POST['request_type'] ?? '';
+    $request_email = $_POST['request_email'] ?? '';
 
     //validate inputs
-    if (empty($candidate_usertoken) || empty($request_title) || empty($request_message) || empty($request_type)) {
+    if (empty($candidate_usertoken) || empty($request_title) || empty($request_message) || empty($request_type) || empty($request_email)) {
         sendResponse('error', 'All fields are required.');
     }
     // Check if user is logged in
@@ -48,15 +49,34 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         }
         $row = $result->fetch_assoc();
         $candidateUserToken = $row['usertoken'];
-        $candidate_id= $row['id'];
+        $candidate_id = $row['id'];
         $stmt->close();
 
-        //insert request into database
-        $stmt = $conn->prepare("INSERT INTO `notifications` (user_id, sender_id, title, message, type, status, created_at) VALUES (?, ?, ?, ?, ?, 'unread', NOW())");
+        //fetch current user email from database
+        $stmt = $conn->prepare("SELECT email FROM `users` WHERE id = ?");
         if (!$stmt) {
             throw new Exception('Database error: ' . $conn->error);
         }
-        $stmt->bind_param("iisss", $candidate_id, $userId, $request_title, $request_message, $request_type);
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows === 0) {
+            sendResponse('error', 'User not found.');
+        }
+        $row = $result->fetch_assoc();
+        $current_user_email = $row['email'];
+        $stmt->close();
+
+        if($request_email !== $current_user_email){
+            sendResponse('error', 'An error occurred while validating your email.');
+        }
+
+        //insert request into database
+        $stmt = $conn->prepare("INSERT INTO `notifications` (user_id, sender_id, sender_email, title, message, type, status, created_at) VALUES (?, ?, ?, ?, ?, ?, 'unread', NOW())");
+        if (!$stmt) {
+            throw new Exception('Database error: ' . $conn->error);
+        }
+        $stmt->bind_param("iissss", $candidate_id, $userId, $current_user_email, $request_title, $request_message, $request_type);
         $stmt->execute();
         if ($stmt->affected_rows === 0) {
             throw new Exception('Failed to send request.');
