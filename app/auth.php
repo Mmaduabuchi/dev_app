@@ -1,9 +1,8 @@
 <?php
-//include database connection
-require_once __DIR__ . '/../config/databaseconnection.php';
-
 //strat session
 session_start();
+//include database connection
+require_once __DIR__ . '/../config/databaseconnection.php';
 
 //check if user is logged in
 if (!isset($_SESSION['user'])) {

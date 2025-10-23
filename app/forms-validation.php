@@ -2,6 +2,8 @@
 require_once "config.php";
 // Start session and check authentication
 require_once "auth.php";
+//notification count
+require_once __DIR__ . '/fetch_notification_count.php';
 
 // fetch user data from database
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");

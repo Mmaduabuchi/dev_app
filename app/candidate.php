@@ -2,6 +2,8 @@
 require_once "config.php";
 // Start session and check authentication
 require_once "auth.php";
+//notification count
+require_once __DIR__ . '/fetch_notification_count.php';
 //get usertoken from session
 $usertoken = $_SESSION['user']['usertoken'] ?? null;
 
@@ -34,6 +36,7 @@ $role = htmlspecialchars($candidate['role']);
 $bio = htmlspecialchars($candidate['bio']);
 $years_of_experience = $candidate['years_of_experience'];
 $preferred_hourly_rate = $candidate['preferred_hourly_rate'];
+$primary_job_interest = $candidate['primary_job_interest'];
 $location = htmlspecialchars($candidate['location']);
 $age = htmlspecialchars($candidate['age']);
 $citizenship = htmlspecialchars($candidate['citizenship']);
@@ -288,7 +291,7 @@ $stmt->close();
                                                 <hr>
                                                 <p><strong>Email:</strong> <?php echo $email; ?> </p>
                                                 <hr>
-                                                <p><strong>Qualification:</strong></p>
+                                                <p><strong>Primary job interest:</strong> <?= ucfirst($primary_job_interest) ?> </p>
                                                 <hr>
                                                 <p><strong>Gender:</strong></p>
                                                 <hr>

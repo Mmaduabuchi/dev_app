@@ -41,7 +41,13 @@
                 <li class="dropdown notification-list topbar-dropdown">
                     <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
                         <i data-feather="bell" class="noti-icon"></i>
-                        <span class="badge bg-danger rounded-circle noti-icon-badge">9</span>
+                        <?php
+                            if($notification_count > 0):
+                        ?>
+                                <span class="badge bg-danger rounded-circle noti-icon-badge"><?= $notification_count ?></span>
+                        <?php
+                            endif;
+                        ?>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end dropdown-lg">
                         <!-- item-->
@@ -185,7 +191,7 @@
 
                         <!-- item-->
                         <a class='dropdown-item notify-item' href='auth-lock-screen.html'>
-                            <i class="mdi mdi-lock-outline fs-16 align-middle"></i>
+                            <i class="mdi mdi-bell-outline fs-16 align-middle"></i>
                             <span>Notification</span>
                         </a>
 
@@ -283,7 +289,21 @@
                         <i data-feather="mail"></i>
                         <span> Messages </span>
                     </a>
-                </li>               
+                </li>
+
+                <li>
+                    <a class='tp-link' href='#'>
+                        <i data-feather="inbox"></i>
+                        <span> Request </span>
+                    </a>
+                </li>
+
+                <li>
+                    <a class='tp-link' href='/devhire/dashboard/skills'>
+                        <i data-feather="plus-circle"></i>
+                        <span> Add Skills </span>
+                    </a>
+                </li>            
 
                 <li>
                     <a class='tp-link' href='widgets.html'>

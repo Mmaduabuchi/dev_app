@@ -2,6 +2,8 @@
 require_once "config.php";
 // Start session and check authentication
 require_once "auth.php";
+//notification count
+require_once __DIR__ . '/fetch_notification_count.php';
 //get usertoken from session
 $usertoken = $_SESSION['user']['usertoken'] ?? null;
 
@@ -25,6 +27,7 @@ $role = htmlspecialchars($candidate['role']);
 $bio = htmlspecialchars($candidate['bio']);
 $years_of_experience = $candidate['years_of_experience'];
 $preferred_hourly_rate = $candidate['preferred_hourly_rate'];
+$primary_job_interest = $candidate['primary_job_interest'];
 $location = htmlspecialchars($candidate['location']);
 $age = htmlspecialchars($candidate['age']);
 $citizenship = htmlspecialchars($candidate['citizenship']);
@@ -248,27 +251,27 @@ $linkedin = htmlspecialchars($candidate['linkedin']);
                         <div class="col-lg-4 col-md-5 mb-4">
                             <div class="card">
                                 <div class="card-header text-center">
-                                    <img id="img_candidate" src="<?php echo $profile_pic; ?>" alt="User Image">
-                                    <h5 id="img_candidate_h5"><?php echo $fullname; ?></h5>
-                                    <!-- <a href="#">Send a Request</a> -->
+                                    <img id="img_candidate" src="<?= $profile_pic; ?>" alt="User Image">
+                                    <h5 id="img_candidate_h5"><?= $fullname; ?></h5>
+                                    <a href="#"><?= $role ?></a>
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col">
                                             <div class="profile-info">
-                                                <p><strong>Location:</strong> <?php echo $location . ', ' . $citizenship; ?></p>
+                                                <p><strong>Location:</strong> <?= $location . ', ' . $citizenship; ?></p>
                                                 <hr>
                                                 <p><strong>Age:</strong> 28</p>
                                                 <hr>
-                                                <p><strong>Email:</strong> <?php echo $email; ?> </p>
+                                                <p><strong>Email:</strong> <?= $email; ?> </p>
                                                 <hr>
-                                                <p><strong>Qualification:</strong></p>
+                                                <p><strong>Primary job interest:</strong> <?= ucfirst($primary_job_interest) ?> </p>
                                                 <hr>
                                                 <p><strong>Gender:</strong></p>
                                                 <hr>
                                                 <p><strong>Preferred hourly rate in USD:</strong> <?= $preferred_hourly_rate ?> </p>
                                                 <hr>
-                                                <p><strong>Years of Experience:</strong> <?php echo $years_of_experience . ' years'; ?> </p>
+                                                <p><strong>Years of Experience:</strong> <?= $years_of_experience . ' years'; ?> </p>
                                             </div>
                                         </div>
                                     </div>
