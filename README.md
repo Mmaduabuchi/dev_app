@@ -1,2 +1,2 @@
 # dev_app
-digital marketing platform
+Online developers hire platform
