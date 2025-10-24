@@ -16,10 +16,12 @@
             <ul class="list-unstyled topnav-menu mb-0 d-flex align-items-center">
                 <li class="d-none d-lg-block">
                     <form class="app-search d-none d-md-block me-auto">
-                        <div class="position-relative topbar-search">
-                            <input type="text" class="form-control ps-4" placeholder="Search..." />
-                            <i class="mdi mdi-magnify fs-16 position-absolute text-muted top-50 translate-middle-y ms-2"></i>
-                        </div>
+                        <a href="/devhire/dashboard/search">
+                            <div class="position-relative topbar-search">
+                                <input type="text" disabled class="form-control ps-4" placeholder="Search..." />
+                                <i class="mdi mdi-magnify fs-16 position-absolute text-muted top-50 translate-middle-y ms-2"></i>
+                            </div>
+                        </a>
                     </form>
                 </li>
 
@@ -42,11 +44,11 @@
                     <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
                         <i data-feather="bell" class="noti-icon"></i>
                         <?php
-                            if($notification_count > 0):
+                        if ($notification_count > 0):
                         ?>
-                                <span class="badge bg-danger rounded-circle noti-icon-badge"><?= $notification_count ?></span>
+                            <span class="badge bg-danger rounded-circle noti-icon-badge"><?= $notification_count ?></span>
                         <?php
-                            endif;
+                        endif;
                         ?>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end dropdown-lg">
@@ -260,7 +262,7 @@
                         </ul>
                     </div>
                 </li>
-                
+
                 <li class="menu-title mt-2">General</li>
 
                 <li>
@@ -284,15 +286,22 @@
                     </a>
                 </li>
 
-                <li>
-                    <a class='tp-link' href='apps-calendar.html'>
+                <!-- <li>
+                    <a class='tp-link' href='#'>
                         <i data-feather="mail"></i>
                         <span> Messages </span>
+                    </a>
+                </li> -->
+
+                <li>
+                    <a class='tp-link' href='/devhire/dashboard/search'>
+                        <i data-feather="search"></i>
+                        <span> Search </span>
                     </a>
                 </li>
 
                 <li>
-                    <a class='tp-link' href='#'>
+                    <a class='tp-link' href='/devhire/dashboard/myrequest'>
                         <i data-feather="inbox"></i>
                         <span> Request </span>
                     </a>
@@ -303,14 +312,14 @@
                         <i data-feather="plus-circle"></i>
                         <span> Add Skills </span>
                     </a>
-                </li>            
+                </li>
 
                 <li>
                     <a class='tp-link' href='widgets.html'>
                         <i data-feather="bell"></i>
                         <span> Job Alert </span>
                     </a>
-                </li>               
+                </li>
 
                 <li>
                     <a class='tp-link' href='/devhire/dashboard/report'>

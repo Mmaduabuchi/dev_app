@@ -29,6 +29,16 @@ $record_count = $row['record_count'];
 $stmt->close();
 
 
+//count users added skills
+$stmt = $conn->prepare("SELECT COUNT(*) AS skill_count FROM `user_skills` WHERE user_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$row = $result->fetch_assoc();
+$skill_count = $row['skill_count'];
+$stmt->close();
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -68,7 +78,7 @@ $stmt->close();
             border-radius: 5px;
         }
 
-        .tagDone .remove {
+        .tagDone .removeAdded {
             margin-left: 6px;
             cursor: pointer;
             font-weight: bold;
@@ -108,6 +118,59 @@ $stmt->close();
             background: #007bff;
             color: white;
         }
+
+        .education-card {
+            border-radius: 12px;
+            border: 1px solid #e5e5e5;
+            padding: 2rem;
+            background: #fff;
+        }
+
+        .edu-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .edu-number {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #198754;
+            color: #198754;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .edu-line {
+            position: absolute;
+            left: 19px;
+            top: 45px;
+            width: 2px;
+            height: calc(100% - 45px);
+            background-color: #e5e5e5;
+        }
+
+        .edu-content h6 {
+            color: #198754;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .edu-content h5 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .edu-content p {
+            color: #6c757d;
+            margin-bottom: 0;
+        }
     </style>
 
 
@@ -139,7 +202,7 @@ $stmt->close();
                             <div class="card">
 
                                 <div class="card-header">
-                                    <h5 class="card-title mb-0">Skills</h5>
+                                    <h5 class="card-title mb-0">Skills <?= htmlspecialchars($skill_count) . '/20' ?> </h5>
                                 </div><!-- end card header -->
 
                                 <div class="card-body">
@@ -165,23 +228,23 @@ $stmt->close();
                                                 <div class="card-body">
                                                     <div class="d-flex flex-wrap gap-2">
                                                         <?php
-                                                            //fetch user skills from database
-                                                            $stmt = $conn->prepare("SELECT s.skill_name FROM `user_skills` us JOIN `skills` s ON us.skill_id = s.id WHERE us.user_id = ?");
-                                                            $stmt->bind_param("i", $user_id);
-                                                            $stmt->execute();
-                                                            $result = $stmt->get_result();
-                                                            if($result->num_rows > 0){
-                                                                while ($skill = $result->fetch_assoc()) {
-                                                        ?>         
-                                                                    <span class="tagDone d-flex">
-                                                                        <?php echo htmlspecialchars($skill['skill_name']); ?>
-                                                                        <span class="remove">&times;</span>
-                                                                    </span>
+                                                        //fetch user skills from database
+                                                        $stmt = $conn->prepare("SELECT us.id AS user_skill_id, s.skill_name FROM `user_skills` us JOIN `skills` s ON us.skill_id = s.id WHERE us.user_id = ?");
+                                                        $stmt->bind_param("i", $user_id);
+                                                        $stmt->execute();
+                                                        $result = $stmt->get_result();
+                                                        if ($result->num_rows > 0) {
+                                                            while ($skill = $result->fetch_assoc()) {
+                                                        ?>
+                                                                <span class="tagDone d-flex align-items-center" data-id="<?= $skill['user_skill_id'] ?>">
+                                                                    <?= htmlspecialchars($skill['skill_name']) ?>
+                                                                    <span class="removeAdded">&times;</span>
+                                                                </span>
                                                         <?php
-                                                                }
-                                                            }else{
-                                                                echo "<p class='text-center'>No skills added yet..</p>";
                                                             }
+                                                        } else {
+                                                            echo "<p class='text-center'>No skills added yet..</p>";
+                                                        }
                                                         ?>
                                                     </div>
                                                 </div>
@@ -200,7 +263,7 @@ $stmt->close();
                             <div class="card">
 
                                 <div class="card-header">
-                                    <h5 class="card-title mb-0">Add Work Experience <?= $record_count ?>/5</h5>
+                                    <h5 class="card-title mb-0">Add Work Experience <?= htmlspecialchars($record_count) ?>/5</h5>
                                 </div><!-- end card header -->
 
                                 <div class="card-body">
@@ -258,6 +321,46 @@ $stmt->close();
                                             <button type="submit" class="btn btn-primary">Add experience</button>
                                         </div>
                                     </form>
+                                    <div class="row">
+                                        <div class="col">
+                                            <?php
+                                            //fetch user work experience records
+                                            $stmt = $conn->prepare("SELECT * FROM `work_experience_records` WHERE user_id = ? ORDER BY created_at DESC");
+                                            $stmt->bind_param("i", $user_id);
+                                            $stmt->execute();
+                                            $result = $stmt->get_result();
+                                            if ($result->num_rows > 0):
+                                            ?>
+                                                <div class="container py-5">
+                                                    <div class="education-card shadow-sm">
+                                                        <h4 class="fw-bold mb-4 border-bottom pb-2">Work Experience</h4>
+                                                        <?php
+                                                        $count = 1;
+                                                        while ($row = $result->fetch_assoc()):
+                                                        ?>
+                                                            <!-- Item 1 -->
+                                                            <div class="edu-item">
+                                                                <div class="edu-number"><?= $count ?></div>
+                                                                <div class="edu-content">
+                                                                    <h6><?= htmlspecialchars($row['company']) ?></h6>
+                                                                    <h5><?= htmlspecialchars($row['job_title']) ?></h5>
+                                                                    <p><?= htmlspecialchars($row['job_description']) ?></p>
+                                                                </div>
+                                                                <?php if ($count < $result->num_rows): ?>
+                                                                    <div class="edu-line"></div>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        <?php
+                                                            $count++;
+                                                        endwhile;
+                                                        ?>
+                                                    </div>
+                                                </div>
+                                            <?php
+                                            endif;
+                                            ?>
+                                        </div>
+                                    </div>
                                 </div>
 
                             </div>
@@ -380,49 +483,49 @@ $stmt->close();
             formData.append('skills', JSON.stringify(selectedSkills));
 
             fetch('<?php echo $base_url; ?>process/process_save_skills.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    if (typeof Swal !== 'undefined') {
-                        const Toast = Swal.mixin({
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 3500,
-                            timerProgressBar: true
-                        });
-                        Toast.fire({
-                            icon: 'success',
-                            title: data.message || 'Skills saved successfully.'
-                        });
-                        //reload page after 2 seconds
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        if (typeof Swal !== 'undefined') {
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3500,
+                                timerProgressBar: true
+                            });
+                            Toast.fire({
+                                icon: 'success',
+                                title: data.message || 'Skills saved successfully.'
+                            });
+                            //reload page after 2 seconds
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
+                        } else {
+                            alert('Skills saved successfully.');
+                        }
                     } else {
-                        alert('Skills saved successfully.');
+                        if (typeof Swal !== 'undefined') {
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3500,
+                                timerProgressBar: true
+                            });
+                            Toast.fire({
+                                icon: 'error',
+                                title: data.message || 'Failed to save skills.'
+                            });
+                        } else {
+                            alert(data.message || 'Failed to save skills.');
+                        }
                     }
-                } else {
-                    if (typeof Swal !== 'undefined') {
-                        const Toast = Swal.mixin({
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 3500,
-                            timerProgressBar: true
-                        });
-                        Toast.fire({
-                            icon: 'error',
-                            title: data.message || 'Failed to save skills.'
-                        });
-                    } else {
-                        alert(data.message || 'Failed to save skills.');
-                    }
-                }
-            });
+                });
         };
 
 
@@ -524,6 +627,99 @@ $stmt->close();
                     }
                 });
 
+        });
+
+        document.addEventListener('click', async (event) => {
+            // check if user clicked the remove icon
+            if (event.target.classList.contains('removeAdded')) {
+                const tag = event.target.closest('.tagDone');
+                const skillId = tag.getAttribute('data-id');
+
+                //create swal confirmation
+                const result = await Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                });
+
+                if (!result) return;
+                //proceed to delete skill
+                const formData = new FormData();
+                formData.append('skillId', skillId);
+                formData.append('token', '<?php echo $usertoken; ?>');
+
+                fetch('<?php echo $base_url; ?>process/process_delete_skill.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            if (typeof Swal !== 'undefined') {
+                                const Toast = Swal.mixin({
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 3500,
+                                    timerProgressBar: true
+                                });
+                                Toast.fire({
+                                    icon: 'success',
+                                    title: data.message || 'Skill has been deleted.'
+                                });
+                            } else {
+                                alert('Skill has been deleted.');
+                            }
+                            //remove the tag from UI
+                            tag.remove();
+                        } else {
+                            if (typeof Swal !== 'undefined') {
+                                const Toast = Swal.mixin({
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 3500,
+                                    timerProgressBar: true
+                                });
+                                Toast.fire({
+                                    icon: 'error',
+                                    title: 'Failed to delete skill.'
+                                });
+                            } else {
+                                alert('Failed to delete skill.');
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        if (typeof Swal !== 'undefined') {
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3500,
+                                timerProgressBar: true
+                            });
+                            Toast.fire({
+                                icon: 'error',
+                                title: 'An error occurred while deleting skill.'
+                            });
+                        } else {
+                            alert('An error occurred while deleting skill.');
+                        }
+                    });
+
+            }
         });
     </script>
 

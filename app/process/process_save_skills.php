@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         foreach ($skills as $skill_name) {
             // Trim and validate skill name
             $skill_name = ucfirst(strtolower(trim($skill_name)));
-            if (empty($skill_name) || !preg_match("/^[a-zA-Z0-9\s\.\,\-\&\+]+$/", $skill_name)) {
+            if (empty($skill_name) || !preg_match("/^[a-zA-Z0-9\s\.\,\-\&\+\/]+$/", $skill_name)) {
                 throw new Exception("Invalid skill name: " . htmlspecialchars($skill_name));
             }
 
@@ -98,6 +98,22 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $row = $result->fetch_assoc();
             $skill_id = $row['id'];
             $stmt->close();
+
+            //check how many added skills the user has
+            $stmt = $conn->prepare("SELECT COUNT(*) AS skill_count FROM `user_skills` WHERE user_id = ?");
+            if (!$stmt) {
+                throw new Exception('Database error: ' . $conn->error);
+            }
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+            $skill_count = $row['skill_count'];
+            $stmt->close();
+
+            if ($skill_count >= 20) {
+                throw new Exception('You can only add up to twenty skills.');
+            }
 
             // Associate skill with user in user_skills table
             $stmt = $conn->prepare("INSERT IGNORE INTO `user_skills` (user_id, skill_id, created_at) VALUES (?, ?, NOW())");

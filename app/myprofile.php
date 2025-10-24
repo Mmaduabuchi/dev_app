@@ -26,8 +26,10 @@ $email = htmlspecialchars($candidate['email']);
 $role = htmlspecialchars($candidate['role']);
 $bio = htmlspecialchars($candidate['bio']);
 $years_of_experience = $candidate['years_of_experience'];
+$english_proficiency = $candidate['english_proficiency'];
 $preferred_hourly_rate = $candidate['preferred_hourly_rate'];
 $primary_job_interest = $candidate['primary_job_interest'];
+$job_commitment = $candidate['job_commitment'];
 $location = htmlspecialchars($candidate['location']);
 $age = htmlspecialchars($candidate['age']);
 $citizenship = htmlspecialchars($candidate['citizenship']);
@@ -84,8 +86,8 @@ $linkedin = htmlspecialchars($candidate['linkedin']);
             padding: 30px 20px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
         }
-        
-        #img_candidate{
+
+        #img_candidate {
             width: 80px;
             height: 80px;
             border-radius: 50%;
@@ -124,6 +126,69 @@ $linkedin = htmlspecialchars($candidate['linkedin']);
 
         .fs-big {
             font-size: 1.1rem;
+        }
+
+        .tagDone {
+            display: inline-block;
+            background: #71eb6cff;
+            color: white;
+            padding: 5px 10px;
+            margin: 3px;
+            border-radius: 5px;
+        }
+
+
+        /* .education-card {
+            border-radius: 12px;
+            border: 1px solid #e5e5e5;
+            padding: 2rem;
+            background: #fff;
+        } */
+
+        .edu-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .edu-number {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #198754;
+            color: #198754;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .edu-line {
+            position: absolute;
+            left: 19px;
+            top: 45px;
+            width: 2px;
+            height: calc(100% - 45px);
+            background-color: #e5e5e5;
+        }
+
+        .edu-content h6 {
+            color: #198754;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .edu-content h5 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .edu-content p {
+            color: #6c757d;
+            margin-bottom: 0;
         }
     </style>
 
@@ -185,7 +250,54 @@ $linkedin = htmlspecialchars($candidate['linkedin']);
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col">
-                                                <!-- content goes in here  -->
+                                                <?php
+                                                //fetch user work experience records
+                                                $stmt = $conn->prepare("SELECT * FROM `education_records` WHERE user_id = ? ORDER BY created_at DESC");
+                                                $stmt->bind_param("i", $user_id);
+                                                $stmt->execute();
+                                                $result = $stmt->get_result();
+                                                if ($result->num_rows > 0):
+                                                    $count = 1;
+                                                    while ($row = $result->fetch_assoc()):
+                                                ?>
+                                                        <!-- Item 1 -->
+                                                        <div class="edu-item">
+                                                            <div class="edu-number"><?= $count ?></div>
+                                                            <div class="edu-content">
+                                                                <h6><?= htmlspecialchars($row['academy']) ?></h6>
+                                                                <?php
+                                                                $courseLabel = !empty($row['course']) ? htmlspecialchars(ucwords(str_replace('_', ' ', $row['course']))) : '';
+                                                                $degreeTitle = !empty($row['degree']) ? htmlspecialchars($row['degree']) : '';
+                                                                $startYear = htmlspecialchars($row['start_year'] ?? '');
+                                                                $endYearRaw = $row['end_year'] ?? '';
+                                                                $endYear = (empty($endYearRaw) || in_array(strtolower($endYearRaw), ['present', 'ongoing'], true)) ? 'Present' : htmlspecialchars($endYearRaw);
+                                                                ?>
+                                                                <h5 class="d-flex justify-content-between align-items-center mb-1">
+                                                                    <span>
+                                                                        <?php if ($degreeTitle): ?>
+                                                                            <strong><?= $degreeTitle ?></strong><?php if ($courseLabel): ?> — <?= $courseLabel ?><?php endif; ?>
+                                                                            <?php else: ?>
+                                                                                <?= $courseLabel ?>
+                                                                            <?php endif; ?>
+                                                                    </span>
+                                                                    <small class="text-muted"><?= $startYear ?> &ndash; <?= $endYear ?></small>
+                                                                </h5>
+                                                                <p><?= htmlspecialchars($row['description']) ?></p>
+                                                            </div>
+                                                            <?php if ($count < $result->num_rows): ?>
+                                                                <div class="edu-line"></div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                <?php
+                                                        $count++;
+                                                    endwhile;
+                                                else:
+                                                ?>
+                                                    <p class="text-center">No educational record added yet..</p>
+                                                <?php
+                                                endif;
+                                                $stmt->close();
+                                                ?>
                                             </div>
                                         </div>
                                     </div>
@@ -199,7 +311,27 @@ $linkedin = htmlspecialchars($candidate['linkedin']);
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col">
-                                                <!-- content goes in here  -->
+                                                <div class="d-flex flex-wrap gap-2">
+                                                    <?php
+                                                    //fetch user skills from database
+                                                    $stmt = $conn->prepare("SELECT us.id AS user_skill_id, s.skill_name FROM `user_skills` us JOIN `skills` s ON us.skill_id = s.id WHERE us.user_id = ?");
+                                                    $stmt->bind_param("i", $user_id);
+                                                    $stmt->execute();
+                                                    $result = $stmt->get_result();
+                                                    if ($result->num_rows > 0) {
+                                                        while ($skill = $result->fetch_assoc()) {
+                                                    ?>
+                                                            <span class="tagDone d-flex align-items-center" data-id="<?= $skill['user_skill_id'] ?>">
+                                                                <?= htmlspecialchars($skill['skill_name']) ?>
+                                                                <!-- <span class="removeAdded">&times;</span> -->
+                                                            </span>
+                                                    <?php
+                                                        }
+                                                    } else {
+                                                        echo "<p class='text-center'>No skills added yet..</p>";
+                                                    }
+                                                    ?>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -213,7 +345,37 @@ $linkedin = htmlspecialchars($candidate['linkedin']);
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col">
-                                                <!-- content goes in here  -->
+                                                <?php
+                                                //fetch user work experience records
+                                                $stmt = $conn->prepare("SELECT * FROM `work_experience_records` WHERE user_id = ? ORDER BY created_at DESC");
+                                                $stmt->bind_param("i", $user_id);
+                                                $stmt->execute();
+                                                $result = $stmt->get_result();
+                                                if ($result->num_rows > 0):
+                                                    $count = 1;
+                                                    while ($row = $result->fetch_assoc()):
+                                                ?>
+                                                        <!-- Item 1 -->
+                                                        <div class="edu-item">
+                                                            <div class="edu-number"><?= $count ?></div>
+                                                            <div class="edu-content">
+                                                                <h6><?= htmlspecialchars($row['company']) ?></h6>
+                                                                <h5><?= htmlspecialchars($row['job_title']) ?></h5>
+                                                                <p><?= htmlspecialchars($row['job_description']) ?></p>
+                                                            </div>
+                                                            <?php if ($count < $result->num_rows): ?>
+                                                                <div class="edu-line"></div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                <?php
+                                                        $count++;
+                                                    endwhile;
+                                                else:
+                                                ?>
+                                                    <p class="text-center">No work experience added yet..</p>
+                                                <?php
+                                                endif;
+                                                ?>
                                             </div>
                                         </div>
                                     </div>
@@ -221,7 +383,7 @@ $linkedin = htmlspecialchars($candidate['linkedin']);
                             </div>
                             <div class="row mt-4 mb-4">
                                 <?php
-                                    if(!empty($website)):
+                                if (!empty($website)):
                                 ?>
                                     <div class="card">
                                         <div class="card-header">
@@ -243,7 +405,7 @@ $linkedin = htmlspecialchars($candidate['linkedin']);
                                         </div>
                                     </div>
                                 <?php
-                                    endif;
+                                endif;
                                 ?>
                             </div>
                         </div>
@@ -267,7 +429,14 @@ $linkedin = htmlspecialchars($candidate['linkedin']);
                                                 <hr>
                                                 <p><strong>Primary job interest:</strong> <?= ucfirst($primary_job_interest) ?> </p>
                                                 <hr>
-                                                <p><strong>Gender:</strong></p>
+                                                <p><strong>English Proficiency:</strong> <?= ucfirst($english_proficiency) ?> </p>
+                                                <hr>
+                                                <p>
+                                                    <strong>Job Commitment:</strong>
+                                                    <?php 
+                                                      echo ($job_commitment === "part_time") ? 'Part time' : ucfirst($job_commitment);
+                                                    ?>
+                                                </p>
                                                 <hr>
                                                 <p><strong>Preferred hourly rate in USD:</strong> <?= $preferred_hourly_rate ?> </p>
                                                 <hr>
