@@ -18,6 +18,17 @@ RewriteRule ^screening/?$ screening.php [NC,L]
 RewriteRule ^screening2/?$ screening_page2.php [NC,L]
 RewriteRule ^screening3/?$ screening_page3.php [NC,L]
 
+#onboarding CEOs
+RewriteRule ^hire/?$ hire/error.php [NC,L]
+RewriteRule ^hire/new/?$ hire/onboarding_step1.php [NC,L]
+RewriteRule ^hire/company-size/?$ hire/onboarding_step2.php [NC,L]
+RewriteRule ^hire/situation/?$ hire/onboarding_step3.php [NC,L]
+RewriteRule ^hire/project-length/?$ hire/onboarding_step4.php [NC,L]
+RewriteRule ^hire/commitment/?$ hire/onboarding_step5.php [NC,L]
+RewriteRule ^hire/ready-to-start/?$ hire/onboarding_step6.php [NC,L]
+RewriteRule ^hire/contacts/?$ hire/onboarding_step7.php [NC,L]
+
+
 #dashboard
 RewriteRule ^dashboard/?$ app/index.php [NC,L]
 RewriteRule ^dashboard/setting/?$ app/forms-validation.php [NC,L]
@@ -34,3 +45,4 @@ RewriteRule ^dashboard/myprofile/?$ app/myprofile.php [NC,L]
 RewriteRule ^dashboard/skills/?$ app/add_skills.php [NC,L]
 RewriteRule ^dashboard/myrequest/?$ app/request.php [NC,L]
 RewriteRule ^dashboard/search/?$ app/search.php [NC,L]
+RewriteRule ^dashboard/notification/?$ app/notification.php [NC,L]

@@ -192,7 +192,7 @@
                         </a>
 
                         <!-- item-->
-                        <a class='dropdown-item notify-item' href='auth-lock-screen.html'>
+                        <a class='dropdown-item notify-item' href='/devhire/dashboard/notification'>
                             <i class="mdi mdi-bell-outline fs-16 align-middle"></i>
                             <span>Notification</span>
                         </a>
@@ -315,9 +315,9 @@
                 </li>
 
                 <li>
-                    <a class='tp-link' href='widgets.html'>
+                    <a class='tp-link' href='/devhire/dashboard/notification'>
                         <i data-feather="bell"></i>
-                        <span> Job Alert </span>
+                        <span> Notification </span>
                     </a>
                 </li>
 

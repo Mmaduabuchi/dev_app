@@ -234,9 +234,12 @@ $user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
                                             </form>
                                         </div>
                                         <div class="col-12">
-                                            <!-- <button> -->
-                                            <span class="btn btn-primary">Export CSV</span>
-                                            <!-- </button> -->
+                                            <form action="<?php echo $base_url; ?>export/export_profile_csv.php" method="post" target="_blank">
+                                                <input type="hidden" name="user_id" value="<?= $user_id; ?>">
+                                                <button type="submit" class="btn btn-primary">
+                                                    Export CSV
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -325,12 +328,12 @@ $user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
                     </div>
 
 
-                    <div class="row">
+                    <!-- <div class="row">
                         <div class="col-lg-6">
                             <div class="card">
                                 <div class="card-header">
                                     <h5 class="card-title mb-0">Input Group</h5>
-                                </div><!-- end card header -->
+                                </div>
 
                                 <div class="card-body">
                                     <div class="input-group mb-3">
@@ -372,10 +375,7 @@ $user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
 
                             </div>
                         </div>
-
-
-
-                    </div>
+                    </div> -->
 
                 </div> <!-- container-fluid -->
 
@@ -469,32 +469,51 @@ $user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
             formData.append('profile_picture', file);
             formData.append('token', '<?php echo $usertoken; ?>');
             fetch('<?php echo $base_url; ?>process/process_update_profile_picture.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    if (typeof Swal !== 'undefined') {
-                        const Toast = Swal.mixin({
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 3500,
-                            timerProgressBar: true
-                        });
-                        Toast.fire({
-                            icon: 'success',
-                            title: 'Profile picture updated successfully.'
-                        });
-                        //reload page after 2 seconds
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        if (typeof Swal !== 'undefined') {
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3500,
+                                timerProgressBar: true
+                            });
+                            Toast.fire({
+                                icon: 'success',
+                                title: 'Profile picture updated successfully.'
+                            });
+                            //reload page after 2 seconds
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
+                        } else {
+                            alert('Profile picture updated successfully.');
+                        }
                     } else {
-                        alert('Profile picture updated successfully.');
+                        if (typeof Swal !== 'undefined') {
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3500,
+                                timerProgressBar: true
+                            });
+                            Toast.fire({
+                                icon: 'error',
+                                title: data.message || 'Failed to update profile picture.'
+                            });
+                        } else {
+                            alert(data.message || 'Failed to update profile picture.');
+                        }
                     }
-                } else {
+                })
+                .catch(error => {
+                    console.error('Error:', error);
                     if (typeof Swal !== 'undefined') {
                         const Toast = Swal.mixin({
                             toast: true,
@@ -505,31 +524,12 @@ $user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
                         });
                         Toast.fire({
                             icon: 'error',
-                            title: data.message || 'Failed to update profile picture.'
+                            title: 'An error occurred while uploading the profile picture.'
                         });
                     } else {
-                        alert(data.message || 'Failed to update profile picture.');
+                        alert('An error occurred while uploading the profile picture.');
                     }
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                if (typeof Swal !== 'undefined') {
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3500,
-                        timerProgressBar: true
-                    });
-                    Toast.fire({
-                        icon: 'error',
-                        title: 'An error occurred while uploading the profile picture.'
-                    });
-                } else {
-                    alert('An error occurred while uploading the profile picture.');
-                }
-            });
+                });
         });
 
 
@@ -564,32 +564,51 @@ $user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
             formData.append('token', '<?php echo $usertoken; ?>');
 
             fetch('<?php echo $base_url; ?>process/process_update_social_media.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    if (typeof Swal !== 'undefined') {
-                        const Toast = Swal.mixin({
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 3500,
-                            timerProgressBar: true
-                        });
-                        Toast.fire({
-                            icon: 'success',
-                            title: data.message || 'Social media links updated successfully.'
-                        });
-                        //reload page after 2 seconds
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        if (typeof Swal !== 'undefined') {
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3500,
+                                timerProgressBar: true
+                            });
+                            Toast.fire({
+                                icon: 'success',
+                                title: data.message || 'Social media links updated successfully.'
+                            });
+                            //reload page after 2 seconds
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
+                        } else {
+                            alert('Social media links updated successfully.');
+                        }
                     } else {
-                        alert('Social media links updated successfully.');
+                        if (typeof Swal !== 'undefined') {
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3500,
+                                timerProgressBar: true
+                            });
+                            Toast.fire({
+                                icon: 'error',
+                                title: data.message || 'Failed to update social media links.'
+                            });
+                        } else {
+                            alert(data.message || 'Failed to update social media links.');
+                        }
                     }
-                } else {
+                })
+                .catch(error => {
+                    console.error('Error:', error);
                     if (typeof Swal !== 'undefined') {
                         const Toast = Swal.mixin({
                             toast: true,
@@ -600,39 +619,20 @@ $user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
                         });
                         Toast.fire({
                             icon: 'error',
-                            title: data.message || 'Failed to update social media links.'
+                            title: 'An error occurred while updating social media links.'
                         });
                     } else {
-                        alert(data.message || 'Failed to update social media links.');
+                        alert('An error occurred while updating social media links.');
                     }
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                if (typeof Swal !== 'undefined') {
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3500,
-                        timerProgressBar: true
-                    });
-                    Toast.fire({
-                        icon: 'error',
-                        title: 'An error occurred while updating social media links.'
-                    });
-                } else {
-                    alert('An error occurred while updating social media links.');
-                }
-            });
+                });
         });
 
 
-        document.querySelector("#add_website_form").addEventListener("submit", function (e) {
+        document.querySelector("#add_website_form").addEventListener("submit", function(e) {
             e.preventDefault();
             const website = document.querySelector("input[name='website']").value;
 
-            if(!website){
+            if (!website) {
                 if (typeof Swal !== 'undefined') {
                     const Toast = Swal.mixin({
                         toast: true,
@@ -656,32 +656,51 @@ $user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
             formData.append('token', '<?php echo $usertoken; ?>');
 
             fetch('<?php echo $base_url; ?>process/process_add_website.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    if (typeof Swal !== 'undefined') {
-                        const Toast = Swal.mixin({
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 3500,
-                            timerProgressBar: true
-                        });
-                        Toast.fire({
-                            icon: 'success',
-                            title: data.message || 'Website URL updated successfully.'
-                        });
-                        //reload page after 2 seconds
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        if (typeof Swal !== 'undefined') {
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3500,
+                                timerProgressBar: true
+                            });
+                            Toast.fire({
+                                icon: 'success',
+                                title: data.message || 'Website URL updated successfully.'
+                            });
+                            //reload page after 2 seconds
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
+                        } else {
+                            alert('Website URL updated successfully.');
+                        }
                     } else {
-                        alert('Website URL updated successfully.');
+                        if (typeof Swal !== 'undefined') {
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3500,
+                                timerProgressBar: true
+                            });
+                            Toast.fire({
+                                icon: 'error',
+                                title: data.message || 'Failed to update your website URL.'
+                            });
+                        } else {
+                            alert(data.message || 'Failed to update your website URL.');
+                        }
                     }
-                } else {
+                })
+                .catch(error => {
+                    console.error('Error:', error);
                     if (typeof Swal !== 'undefined') {
                         const Toast = Swal.mixin({
                             toast: true,
@@ -692,34 +711,16 @@ $user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
                         });
                         Toast.fire({
                             icon: 'error',
-                            title: data.message || 'Failed to update your website URL.'
+                            title: 'An error occurred while updating your website URL.'
                         });
                     } else {
-                        alert(data.message || 'Failed to update your website URL.');
+                        alert('An error occurred while updating your website URL.');
                     }
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                if (typeof Swal !== 'undefined') {
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3500,
-                        timerProgressBar: true
-                    });
-                    Toast.fire({
-                        icon: 'error',
-                        title: 'An error occurred while updating your website URL.'
-                    });
-                } else {
-                    alert('An error occurred while updating your website URL.');
-                }
-            });
-                
+                });
+
         });
     </script>
 
 </body>
+
 </html>
