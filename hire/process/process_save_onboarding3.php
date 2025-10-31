@@ -12,7 +12,7 @@ function sendResponse($status, $message)
 }
 
 if (!isset($_SESSION['onboarding_id'])) {
-    $_SESSION['onboarding_id'] = uniqid('onboard_', true);
+    sendResponse('error', 'Invalid user token.');
 }
 
 // Check if the request method is POST
@@ -20,17 +20,20 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendResponse('error', 'Invalid request method.');
 } else {
     $onboarding_id = $_SESSION['onboarding_id'];
-    $step_number = (int)$_POST['step_number'] ?? 1;
-    $field_name = 'hire_type';
+    $step_number = (int)$_POST['step_number'] ?? '';
+    $field_name = 'situation';
     $field_value = $_POST['field_value'] ?? '';
 
+    //page number data
+    $data = 3;
+
     //validate session
-    if(!$onboarding_id){
+    if (!$onboarding_id) {
         sendResponse('error', 'Invalid user session id.');
     }
 
     //validate step number
-    if($step_number !== 3){
+    if ($step_number !== $data) {
         sendResponse('error', 'Invalid onboarding stage access denied.');
     }
     if ($step_number < 1 || $step_number > 7) {
@@ -45,36 +48,55 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         sendResponse('error', 'Invalid option selected.');
     }
     // Limit length to a reasonable size
-    if (mb_strlen($field_value) > 30) {
+    if (mb_strlen($field_value) > 65) {
         sendResponse('error', 'Selected option is too long.');
     }
     // Allow only common safe characters (letters, numbers, spaces, underscore, dash, dot, comma)
-    if (!preg_match('/^[\p{L}\p{N}\s_\-.,]+$/u', $field_value)) {
+    if (!preg_match("/^[\p{L}\p{N}\s_\-.,'’]+$/u", $field_value)) {
         sendResponse('error', 'Invalid characters in selected option.');
     }
     // Normalize/encode to avoid storing raw HTML
     $field_value = htmlspecialchars($field_value, ENT_QUOTES, 'UTF-8');
 
-    try{
+    try {
         // Start transaction
         $conn->begin_transaction();
 
-        $stmt = $conn->prepare("INSERT INTO `onboarding_sessions` (onboarding_id, step_number, field_name, field_value, created_at) VALUES (?, ?, ?, ?, NOW())");
+        //look for the onboarding_id
+        $stmt = $conn->prepare("SELECT id FROM `onboarding_sessions` WHERE onboarding_id = ? AND step_number = ? ");
         if (!$stmt) {
             throw new Exception('Database error: ' . $conn->error);
         }
-        $stmt->bind_param("siss", $onboarding_id, $step_number, $field_name, $field_value);
+        $stmt->bind_param("si", $onboarding_id, $data);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-        if ($stmt->execute()) {
-            sendResponse('success', 'Step saved');
+        if ($result && $result->num_rows > 0) {
+            $stmt = $conn->prepare("UPDATE `onboarding_sessions` SET field_name = ?, field_value = ?, updated_at = NOW() WHERE onboarding_id = ? AND step_number = ?");
+
+            if (!$stmt) {
+                throw new Exception('Database error: ' . $conn->error);
+            }
+            $stmt->bind_param("sssi", $field_name, $field_value, $onboarding_id, $data);
         } else {
+            //new record
+            $stmt = $conn->prepare("INSERT INTO `onboarding_sessions` (onboarding_id, step_number, field_name, field_value, created_at) VALUES (?, ?, ?, ?, NOW())");
+
+            if (!$stmt) {
+                throw new Exception('Database error: ' . $conn->error);
+            }
+            $stmt->bind_param("siss", $onboarding_id, $step_number, $field_name, $field_value);
+        }
+
+
+        if (!$stmt->execute()) {
             sendResponse('error', 'Failed to save step');
         }
         $stmt->close();
 
         // Commit transaction
         $conn->commit();
-
+        sendResponse('success', 'Step saved successfully');
     } catch (Exception $e) {
         $conn->rollback(); // Rollback if error occurs
         sendResponse('error', 'An error occurred: ' . $e->getMessage());

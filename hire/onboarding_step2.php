@@ -1,3 +1,27 @@
+<?php
+//database connection
+require_once __DIR__ . '/../config/databaseconnection.php';
+//require auth_hire
+require_once 'auth_hire.php';
+require_once 'config.php';
+
+$data = 1;
+//fetch user process data/stage
+$stmt = $conn->prepare("SELECT id FROM `onboarding_sessions` WHERE onboarding_id = ? AND step_number = ?");
+if (!$stmt) {
+    throw new Exception('Database error: ' . $conn->error);
+}
+$stmt->bind_param("si", $onboarding_id, $data);
+$stmt->execute();
+$result = $stmt->get_result();
+if ($result && $result->num_rows < 1) {
+    $stmt->close();
+    $conn->close();
+    header("location: {$root_url}");
+    exit;
+}
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -179,7 +203,49 @@
     </div>
 
 
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const optionCards = document.querySelectorAll('.option-card');
+
+            optionCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const title = card.querySelector('h6').innerText;
+
+                    // Send to backend
+                    fetch('<?php echo $base_url; ?>process/process_save_onboarding2.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: new URLSearchParams({
+                                step_number: 2,
+                                field_value: title
+                            })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                // Move to Step 2 page
+                                window.location.href = './situation';
+                            } else {
+                                // alert('Error saving data. Please try again.');
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'error',
+                                    title: data.message,
+                                    showConfirmButton: false,
+                                    timer: 2500
+                                });
+                            }
+                        })
+                        .catch(err => console.error(err));
+                });
+            });
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             const backBtn = document.querySelector('.icon');
             if (!backBtn) return;
@@ -187,4 +253,5 @@
         });
     </script>
 </body>
+
 </html>
