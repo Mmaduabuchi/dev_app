@@ -8,8 +8,25 @@
                         <i data-feather="menu" class="noti-icon"></i>
                     </button>
                 </li>
+                <?php
+                    // Get user full name
+                    $fullname = $_SESSION['user']['fullname'] ?? 'User';
+
+                    // Determine greeting based on time
+                    $hour = date('H'); // 24-hour format
+
+                    if ($hour >= 5 && $hour < 12) {
+                        $greeting = "Good Morning";
+                    } elseif ($hour >= 12 && $hour < 17) {
+                        $greeting = "Good Afternoon";
+                    } elseif ($hour >= 17 && $hour < 21) {
+                        $greeting = "Good Evening";
+                    } else {
+                        $greeting = "Good Night";
+                    }
+                ?>
                 <li class="d-none d-lg-block">
-                    <h5 class="mb-0">Good Morning, <?= $_SESSION['user']['fullname']; ?></h5>
+                    <h5 class="mb-0"><?= $greeting; ?>, <?= htmlspecialchars($fullname, ENT_QUOTES, 'UTF-8'); ?></h5>
                 </li>
             </ul>
 
@@ -179,11 +196,23 @@
                             <h6 class="text-overflow m-0">Welcome !</h6>
                         </div>
 
-                        <!-- item-->
-                        <a class='dropdown-item notify-item' href='/devhire/dashboard/myprofile'>
-                            <i class="mdi mdi-account-circle-outline fs-16 align-middle"></i>
-                            <span>Profile</span>
-                        </a>
+                        <?php 
+                            if($user_global_variable === false):
+                        ?>
+                            <a class='dropdown-item notify-item' href='/devhire/dashboard/myprofile'>
+                                <i class="mdi mdi-account-circle-outline fs-16 align-middle"></i>
+                                <span>Profile</span>
+                            </a>
+                        <?php
+                        else:
+                        ?>
+                            <a class='dropdown-item notify-item' href='/devhire/dashboard/mycompany'>
+                                <i class="mdi mdi-briefcase-outline fs-16 align-middle"></i>
+                                <span>Company</span>
+                            </a>                        
+                        <?php
+                        endif;
+                        ?>
 
                         <!-- item-->
                         <a class='dropdown-item notify-item' href='/devhire/dashboard/setting'>
@@ -264,55 +293,87 @@
                 </li>
 
                 <li class="menu-title mt-2">General</li>
+                
+                <?php
+                    if($user_global_variable === false):
+                ?>
 
-                <li>
-                    <a class='tp-link' href='/devhire/dashboard/myprofile'>
-                        <i data-feather="user"></i>
-                        <span> My Profile </span>
-                    </a>
-                </li>
+                    <li>
+                        <a class='tp-link' href='/devhire/dashboard/myprofile'>
+                            <i data-feather="user"></i>
+                            <span> My Profile </span>
+                        </a>
+                    </li>
 
-                <li>
-                    <a class='tp-link' href='/devhire/dashboard/profile'>
-                        <i data-feather="settings"></i>
-                        <span> Profile Settings</span>
-                    </a>
-                </li>
+                    <li>
+                        <a class='tp-link' href='/devhire/dashboard/profile'>
+                            <i data-feather="settings"></i>
+                            <span> Profile Settings</span>
+                        </a>
+                    </li>
 
-                <li>
-                    <a class='tp-link' href='/devhire/dashboard/resume'>
-                        <i data-feather="file-text"></i>
-                        <span> Resume </span>
-                    </a>
-                </li>
+                    <li>
+                        <a class='tp-link' href='/devhire/dashboard/resume'>
+                            <i data-feather="file-text"></i>
+                            <span> Resume </span>
+                        </a>
+                    </li>
 
-                <!-- <li>
-                    <a class='tp-link' href='#'>
-                        <i data-feather="mail"></i>
-                        <span> Messages </span>
-                    </a>
-                </li> -->
+                <?php
+                    else:
+                ?>
+
+                    <li>
+                        <a class='tp-link' href='/devhire/dashboard/mycompany'>
+                            <i data-feather="briefcase"></i>
+                            <span> My Company </span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a class='tp-link' href='/devhire/dashboard/company'>
+                            <i data-feather="sliders"></i>
+                            <span> Company Settings</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a class='tp-link' href='/devhire/dashboard/sentrequest'>
+                            <i data-feather="send"></i>
+                            <span> Sent Request </span>
+                        </a>
+                    </li>
+
+                <?php
+                    endif;
+                ?>
 
                 <li>
                     <a class='tp-link' href='/devhire/dashboard/search'>
                         <i data-feather="search"></i>
                         <span> Search </span>
                     </a>
-                </li>
+                </li>                
+                
+                <?php
+                    if($user_global_variable === false):
+                ?>
+                    <li>
+                        <a class='tp-link' href='/devhire/dashboard/myrequest'>
+                            <i data-feather="inbox"></i>
+                            <span> Request </span>
+                        </a>
+                    </li>
 
-                <li>
-                    <a class='tp-link' href='/devhire/dashboard/myrequest'>
-                        <i data-feather="inbox"></i>
-                        <span> Request </span>
-                    </a>
-                </li>
-
-                <li>
-                    <a class='tp-link' href='/devhire/dashboard/skills'>
-                        <i data-feather="plus-circle"></i>
-                        <span> Add Skills </span>
-                    </a>
-                </li>
+                    <li>
+                        <a class='tp-link' href='/devhire/dashboard/skills'>
+                            <i data-feather="plus-circle"></i>
+                            <span> Add Skills </span>
+                        </a>
+                    </li>
+                <?php
+                    endif;
+                ?>
 
                 <li>
                     <a class='tp-link' href='/devhire/dashboard/notification'>

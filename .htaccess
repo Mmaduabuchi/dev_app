@@ -46,3 +46,8 @@ RewriteRule ^dashboard/skills/?$ app/add_skills.php [NC,L]
 RewriteRule ^dashboard/myrequest/?$ app/request.php [NC,L]
 RewriteRule ^dashboard/search/?$ app/search.php [NC,L]
 RewriteRule ^dashboard/notification/?$ app/notification.php [NC,L]
+
+#CEO routes
+RewriteRule ^dashboard/mycompany/?$ app/mycompany.php [NC,L]
+RewriteRule ^dashboard/company/?$ app/company.php [NC,L]
+RewriteRule ^dashboard/sentrequest/?$ app/sentrequest.php [NC,L]

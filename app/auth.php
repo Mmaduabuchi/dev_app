@@ -22,27 +22,65 @@ if ($user_id === null) {
     exit;
 }
 
-//fetch user data from database
-$stmt = $conn->prepare("SELECT action FROM developers_profiles WHERE user_id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
+$user_global_variable = false;
 
+try {
 
-// If no profile found, redirect to profile screening page
-if (!$user) {
-    header("Location: /devhire/screening");
-    exit;
-}
+    //check if user is an employer or not
+    $stmt = $conn->prepare("SELECT user_type, role FROM `users` WHERE id = ?");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user_data = $result->fetch_assoc();
+    $stmt->close();
 
-//check if user has completed profile
-if ($user['action'] === 'step1') {
-    //if not redirect to profile completion page
-    header("Location: /devhire/screening2");
-    exit;
-}else if ($user['action'] === 'step2') {
-    //if not redirect to profile completion page
-    header("Location: /devhire/screening3");
-    exit;
+    // If no user record found
+    if (!$user_data) {
+        header("Location: /devhire/register");
+        exit;
+    }
+
+    $user_type = $user_data["user_type"];
+    $role = $user_data["role"];
+
+    //Employer/CEO: Allow direct access
+    if ($user_type === "employer" && $role === "CEO") {
+        // Employer can proceed to dashboard
+        $user_global_variable = true;
+        return;
+    }
+    //fetch user data from database
+    $stmt = $conn->prepare("SELECT action FROM developers_profiles WHERE user_id = ?");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+    $stmt->close();
+
+    // If no profile found, redirect to profile screening page
+    if (!$user) {
+        header("Location: /devhire/screening");
+        exit;
+    }
+
+    //check if user has completed profile
+    if ($user['action'] === 'step1') {
+        //if not redirect to profile completion page
+        header("Location: /devhire/screening2");
+        exit;
+    } else if ($user['action'] === 'step2') {
+        //if not redirect to profile completion page
+        header("Location: /devhire/screening3");
+        exit;
+    }
+} catch (Exception $e) {
+    $conn->close();
+    error_log($e->getMessage());
+    echo "Something went wrong. Please try again later.";
 }

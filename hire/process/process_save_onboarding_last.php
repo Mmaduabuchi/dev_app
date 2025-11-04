@@ -7,6 +7,7 @@ require_once __DIR__ . '/../../config/databaseconnection.php';
 //helper function for response
 function sendResponse($status, $message)
 {
+    header('Content-Type: application/json');
     echo json_encode(['status' => $status, 'message' => $message]);
     exit;
 }
@@ -64,12 +65,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
     //validate CompanyContactName (only letters and spaces)
     if (!preg_match("/^[a-zA-Z\s]+$/", $CompanyContactName)) {
-        response('error', 'Contact name can only contain letters and spaces.');
+        sendResponse('error', 'Contact name can only contain letters and spaces.');
     }
 
     //validate email format
     if (!filter_var($CompanyEmail, FILTER_VALIDATE_EMAIL)) {
-        response('error', 'Invalid company email format.');
+        sendResponse('error', 'Invalid company email format.');
     }
 
     //validate password
@@ -114,13 +115,27 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         // Check if email already exists
         $stmt = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
         if (!$stmt) {
-            response('error', 'Database error: ' . $conn->error);
+            sendResponse('error', 'Database error: ' . $conn->error);
         }
         $stmt->bind_param("s", $CompanyEmail);
         $stmt->execute();
         $result = $stmt->get_result();
         if ($result->num_rows > 0) {
-            response('error', 'Email is already registered.');
+            sendResponse('error', 'Email is already registered.');
+        }
+        $stmt->close();
+
+        // Check if onboarding_id already exists
+        $stmt = $conn->prepare("SELECT id FROM `onboarding_to_users` WHERE onboarding_id = ? LIMIT 1");
+        if (!$stmt) {
+            sendResponse('error', 'Database error: ' . $conn->error);
+        }
+        $stmt->bind_param("s", $onboarding_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            unset($_SESSION['onboarding_id']);
+            sendResponse('error', 'Already registered or suspended account.');
         }
         $stmt->close();
 
@@ -144,21 +159,35 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         $role = 'CEO';
 
         // Insert user
-        $stmt = $conn->prepare("INSERT INTO users (google_id, picture, fullname, email, password, usertoken, user_type, role, auth, is_profile_complete, suspended_at, created_at, updated_at, deleted_at) VALUES (NULL, NULL, ?, ?, ?, ?, 'employer', ?, 'user', ?, NULL, ?, ?, NULL)");
+        $stmt = $conn->prepare("INSERT INTO users (google_id, picture, fullname, email, password, usertoken, tel, user_type, role, auth, is_profile_complete, suspended_at, created_at, updated_at, deleted_at) VALUES (NULL, NULL, ?, ?, ?, ?, ?, 'employer', ?, 'user', ?, NULL, ?, ?, NULL)");
         if (!$stmt) {
-            response('error', 'Database error: ' . $conn->error);
+            sendResponse('error', 'Database error: ' . $conn->error);
         }
-        $stmt->bind_param("sssssiss", $CompanyContactName, $CompanyEmail, $hashed_password, $user_token, $role, $is_profile_complete, $created_at, $created_at);
+        $stmt->bind_param("ssssssiss", $CompanyContactName, $CompanyEmail, $hashed_password, $user_token, $CompanyPhoneNumber, $role, $is_profile_complete, $created_at, $created_at);
 
         if (!$stmt->execute()) {
-            response('error', 'Registration failed. Please try again.');
+            sendResponse('error', 'Registration failed. Please try again.');
         }
 
         //Fetch the newly created user
         $new_id = $stmt->insert_id;
         $stmt->close();
 
+        //insert record to onboarding_to_users
+        $stmt = $conn->prepare("INSERT INTO `onboarding_to_users` (user_id, onboarding_id, created_at) VALUES (?, ?, NOW())");
+        if (!$stmt) {
+            sendResponse('error', 'Database error: ' . $conn->error);
+        }
+        $stmt->bind_param("is", $new_id, $onboarding_id);
+        if (!$stmt->execute()) {
+            sendResponse('error', 'Registration failed. Please check your internet connection and try again later.');
+        }
+        $stmt->close();
+
         $stmt = $conn->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
+        if (!$stmt) {
+            sendResponse('error', 'Database error: ' . $conn->error);
+        }
         $stmt->bind_param("i", $new_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -169,13 +198,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         //Store in session
         $_SESSION['user'] = $user;
 
-        $stmt->close();
-
         // Commit transaction
         $conn->commit();
         
         // Respond with success
-        response('success', 'Registration successful.');
+        sendResponse('success', 'Registration successful.');
     } catch (Exception $e) {
         $conn->rollback(); // Rollback if error occurs
         sendResponse('error', 'An error occurred: ' . $e->getMessage());

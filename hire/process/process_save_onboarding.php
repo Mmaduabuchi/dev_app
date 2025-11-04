@@ -12,7 +12,21 @@ function sendResponse($status, $message)
 }
 
 if (!isset($_SESSION['onboarding_id'])) {
-    $_SESSION['onboarding_id'] = uniqid('onboard_', true);
+    do {
+        // Generate a new unique ID
+        $onboarding_id = uniqid('onboard_', true);
+
+        // Check if this ID already exists
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM `onboarding_sessions` WHERE onboarding_id = ?");
+        $stmt->bind_param("s", $onboarding_id);
+        $stmt->execute();
+        $stmt->bind_result($count);
+        $stmt->fetch();
+        $stmt->close();
+    } while ($count > 0);
+
+    // Store unique onboarding_id in session
+    $_SESSION['onboarding_id'] = $onboarding_id;
 }
 
 // Check if the request method is POST

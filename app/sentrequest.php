@@ -25,9 +25,9 @@ try {
     $user_fullname = $user['fullname'];
 
     //mark all user notifications as read
-    $stmt = $conn->prepare("UPDATE `notifications` SET status = 'read' WHERE user_id = ? AND deleted_at IS NULL");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
+    // $stmt = $conn->prepare("UPDATE `notifications` SET status = 'read' WHERE sender_id = ? AND deleted_at IS NULL");
+    // $stmt->bind_param("i", $user_id);
+    // $stmt->execute();
 
 } catch (Exception $e) {
     // handle error gracefully
@@ -44,7 +44,7 @@ try {
 
 <head>
     <meta charset="utf-8" />
-    <title>Myrequest | devhire - Dashboard</title>
+    <title>Your Company request | devhire - Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
@@ -60,58 +60,6 @@ try {
     <script src="<?php echo $base_url; ?>assets/js/head.js"></script>
 
     <style>
-        /* .education-card {
-            border-radius: 12px;
-            border: 1px solid #e5e5e5;
-            padding: 2rem;
-            background: #fff;
-        }
-
-        .edu-item {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 2rem;
-            position: relative;
-        }
-
-        .edu-number {
-            width: 40px;
-            height: 40px;
-            border: 2px solid #198754;
-            color: #198754;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            margin-right: 1rem;
-            flex-shrink: 0;
-        }
-
-        .edu-line {
-            position: absolute;
-            left: 19px;
-            top: 45px;
-            width: 2px;
-            height: calc(100% - 45px);
-            background-color: #e5e5e5;
-        }
-
-        .edu-content h6 {
-            color: #198754;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .edu-content h5 {
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .edu-content p {
-            color: #6c757d;
-            margin-bottom: 0;
-        } */
     </style>
 </head>
 
@@ -130,7 +78,7 @@ try {
 
                     <div class="py-3 d-flex align-items-sm-center flex-sm-row flex-column">
                         <div class="flex-grow-1">
-                            <h4 class="fs-18 fw-semibold m-0">My Request</h4>
+                            <h4 class="fs-18 fw-semibold m-0">Company Request</h4>
                         </div>
                     </div>
 
@@ -140,7 +88,7 @@ try {
                             <div class="card">
 
                                 <div class="card-header">
-                                    <h5 class="card-title mb-0">Request notification</h5>
+                                    <h5 class="card-title mb-0">Delivered Requests</h5>
                                 </div>
 
                                 <div class="card-body">
@@ -152,7 +100,7 @@ try {
                                         $offset = ($page - 1) * $limit;
 
                                         // Count total notifications
-                                        $countStmt = $conn->prepare("SELECT COUNT(*) AS total FROM notifications WHERE user_id = ? AND deleted_at IS NULL");
+                                        $countStmt = $conn->prepare("SELECT COUNT(*) AS total FROM notifications WHERE sender_id = ? AND deleted_at IS NULL");
                                         $countStmt->bind_param("i", $user_id);
                                         $countStmt->execute();
                                         $countResult = $countStmt->get_result();
@@ -162,7 +110,7 @@ try {
                                         $totalPages = ceil($total / $limit);
 
                                         // Fetch paginated notifications
-                                        $stmt = $conn->prepare("SELECT id, title, created_at  FROM notifications WHERE user_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT ?, ?");
+                                        $stmt = $conn->prepare("SELECT id, title, created_at  FROM notifications WHERE sender_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT ?, ?");
                                         $stmt->bind_param("iii", $user_id, $offset, $limit);
                                         $stmt->execute();
                                         $result = $stmt->get_result();
@@ -215,6 +163,7 @@ try {
                                         <?php endif; ?>
                                     </div>
                                 </div>
+
 
                             </div>
                         </div>
@@ -271,7 +220,7 @@ try {
                 formData.append('nid', data);
                 formData.append('token', <?= json_encode($usertoken) ?>);
 
-                fetch('<?php echo $base_url; ?>process/process_delete_request.php', {
+                fetch('<?php echo $base_url; ?>process/process_delete_sent_request.php', {
                         method: 'POST',
                         body: formData
                     })

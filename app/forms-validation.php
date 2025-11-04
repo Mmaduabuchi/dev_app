@@ -5,24 +5,43 @@ require_once "auth.php";
 //notification count
 require_once __DIR__ . '/fetch_notification_count.php';
 
-// fetch user data from database
-$stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
+try{
+    // fetch user data from database
+    $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+    $stmt->close();
 
-//fetch user phone number from developers_profiles table
-$stmt = $conn->prepare("SELECT phone_number FROM developers_profiles WHERE user_id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$profile = $result->fetch_assoc();
+    //user details
+    $user_email = $user['email'];
+    $user_fullname = $user['fullname'];
 
-//user details
-$user_email = $user['email'];
-$user_fullname = $user['fullname'];
-$user_phone = $profile['phone_number'];
+    if($user_global_variable === false){
+        //fetch user phone number from developers_profiles table
+        $stmt = $conn->prepare("SELECT phone_number FROM developers_profiles WHERE user_id = ?");
+        if (!$stmt) {
+            throw new Exception('Database error: ' . $conn->error);
+        }
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $profile = $result->fetch_assoc();
+        $stmt->close();
+        $user_phone = $profile['phone_number'];
+    }
+
+    if($user_global_variable !== false){
+        $user_phone = $user['tel'] ?? 'NaN';
+    }
+} catch (Exception $e){
+    error_log($e->getMessage());
+    echo "Something went wrong. Please try again later.";
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

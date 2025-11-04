@@ -13,6 +13,7 @@ $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $user = $result->fetch_assoc();
+$stmt->close();
 
 //fetch user phone number from developers_profiles table
 $stmt = $conn->prepare("SELECT * FROM developers_profiles WHERE user_id = ?");

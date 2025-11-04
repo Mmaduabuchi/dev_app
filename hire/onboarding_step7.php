@@ -6,19 +6,26 @@ require_once 'auth_hire.php';
 require_once 'config.php';
 
 $data = 6;
-//fetch user process data/stage
-$stmt = $conn->prepare("SELECT id FROM `onboarding_sessions` WHERE onboarding_id = ? AND step_number = ?");
-if (!$stmt) {
-    throw new Exception('Database error: ' . $conn->error);
-}
-$stmt->bind_param("si", $onboarding_id, $data);
-$stmt->execute();
-$result = $stmt->get_result();
-if ($result && $result->num_rows < 1) {
-    $stmt->close();
-    $conn->close();
-    header("location: {$root_url}");
-    exit;
+
+try{
+    //fetch user process data/stage
+    $stmt = $conn->prepare("SELECT id FROM `onboarding_sessions` WHERE onboarding_id = ? AND step_number = ?");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("si", $onboarding_id, $data);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result && $result->num_rows < 1) {
+        $stmt->close();
+        $conn->close();
+        header("location: {$root_url}");
+        exit;
+    }
+
+} catch (Exception $e) {
+    error_log($e->getMessage());
+    echo "Something went wrong. Please try again later.";
 }
 
 
@@ -280,13 +287,30 @@ if ($result && $result->num_rows < 1) {
                         method: 'POST',
                         body: formData
                     })
-                    .then(res => res.json())
+                    .then(async res => {
+                        if (!res.ok) {
+                            // Handle HTTP errors
+                            const text = await res.text();
+                            throw new Error(`Server error (${res.status}): ${text}`);
+                        }
+                        return res.json();
+                    })
                     .then(data => {
                         if (data.status === 'success') {
-                            // Move to Step 2 page
-                            window.location.href = './situation';
+                            // window.location.href = './situation';
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: data.message,
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true
+                            }).then(() => {
+                                // Redirect to dashboard
+                                window.location.href = '../dashboard';
+                            });
                         } else {
-                            // alert('Error saving data. Please try again.');
                             Swal.fire({
                                 toast: true,
                                 position: 'top-end',
