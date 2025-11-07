@@ -67,19 +67,19 @@ require_once __DIR__ . '/fetch_notification_count.php';
                         <!-- Start Row -->
                         <div class="row">
                             
-                            <div class="col-md-6 col-xl-3">
+                            <div class="col-md-6 col-xl-4">
                                 <div class="card overflow-hidden">
                                     <div class="card-body">
                                         <div class="widget-first">
 
                                             <div class="d-flex align-items-center mb-3">
                                                 <div>
-                                                    <p class="mb-0 text-dark fs-16">Basic</p>
+                                                    <p class="mb-0 text-dark fs-16">Free</p>
                                                 </div>
                                             </div>
 
                                             <div class="d-flex align-items-center mb-3">
-                                                <h3 class="mb-0 fs-26 text-dark me-2 me-3">$3.00 <sub> / month</sub> </h3>
+                                                <h3 class="mb-0 fs-26 text-dark me-2 me-3">$0.00 <sub> / month</sub> </h3>
                                             </div>
 
                                             <p class="text-muted fs-14 mb-2">
@@ -105,7 +105,7 @@ require_once __DIR__ . '/fetch_notification_count.php';
                                 </div>
                             </div>
 
-                            <div class="col-md-6 col-xl-3">
+                            <div class="col-md-6 col-xl-4">
                                 <div class="card">
                                     <div class="card-body">
                                         <div class="widget-first">
@@ -144,7 +144,7 @@ require_once __DIR__ . '/fetch_notification_count.php';
                                 </div>
                             </div>
 
-                            <div class="col-md-6 col-xl-3">
+                            <div class="col-md-6 col-xl-4">
                                 <div class="card">
                                     <div class="card-body">
                                         <div class="widget-first">
@@ -172,46 +172,6 @@ require_once __DIR__ . '/fetch_notification_count.php';
                                                 <li><i data-feather="x-circle" class="text-danger me-1"></i> Limited to one workspace</li>
                                             </ul>
                                             
-                                            <div class="row align-items-center">
-                                                <div class="col">
-                                                    <button class="btn btn-primary subBtn rounded-4 text-light p-2 w-100">Buy Now</button>
-                                                </div>
-                                            </div>
-                                            
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 col-xl-3">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="widget-first">
-
-                                            <div class="d-flex align-items-center mb-3">
-                                                <div>
-                                                    <p class="mb-0 text-dark fs-16">Enterprise</p>
-                                                </div>
-                                            </div>
-
-                                            <div class="d-flex align-items-center mb-3">
-                                                <h3 class="mb-0 fs-26 text-dark me-2 me-3">$30.00 <sub> / month</sub> </h3>
-                                            </div>
-
-                                            <p class="text-muted fs-14 mb-2">
-                                                Best for large organizations that require advanced scalability, control, and security.
-                                            </p>
-                                            
-                                            <ul class="text-muted fs-13 mb-3 list-unstyled">
-                                                <li><i data-feather="check-circle" class="text-success me-1"></i> Unlimited everything (projects, users, workspaces)</li>
-                                                <li><i data-feather="check-circle" class="text-success me-1"></i> Dedicated account manager</li>
-                                                <li><i data-feather="check-circle" class="text-success me-1"></i> White-label solution with full branding</li>
-                                                <li><i data-feather="check-circle" class="text-success me-1"></i> Advanced analytics & business insights</li>
-                                                <li><i data-feather="check-circle" class="text-success me-1"></i> API + Custom integrations</li>
-                                                <li><i data-feather="check-circle" class="text-success me-1"></i> 24/7 priority phone, email, and chat support</li>
-                                                <li><i data-feather="check-circle" class="text-success me-1"></i> Custom deployment options (cloud or on-premise)</li>
-                                            </ul>
-
                                             <div class="row align-items-center">
                                                 <div class="col">
                                                     <button class="btn btn-primary subBtn rounded-4 text-light p-2 w-100">Buy Now</button>

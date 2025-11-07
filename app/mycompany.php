@@ -16,11 +16,11 @@ $empolyer = $result->fetch_assoc();
 
 if (!$empolyer) {
     // empolyer not found, redirect to error page
-    header("Location: /devhire/dashboard/error/");
+    header("Location: /devhire/dashboard/error");
     exit();
 }
 
-$profile_pic = $empolyer['profile_picture'] ? '/devhire/' . $empolyer['profile_picture'] :  $empolyer['picture'];
+$profile_pic = $empolyer['company_logo'] ? '/devhire/' . $empolyer['company_logo'] :  $empolyer['picture'];
 $email = htmlspecialchars($empolyer['email']);
 $bio = htmlspecialchars($empolyer['bio']);
 $company_name = $empolyer['company_name'];
@@ -128,62 +128,7 @@ $website = htmlspecialchars($empolyer['website']);
             margin: 3px;
             border-radius: 5px;
         }
-
-
-        /* .education-card {
-            border-radius: 12px;
-            border: 1px solid #e5e5e5;
-            padding: 2rem;
-            background: #fff;
-        } */
-
-        .edu-item {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 2rem;
-            position: relative;
-        }
-
-        .edu-number {
-            width: 40px;
-            height: 40px;
-            border: 2px solid #198754;
-            color: #198754;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            margin-right: 1rem;
-            flex-shrink: 0;
-        }
-
-        .edu-line {
-            position: absolute;
-            left: 19px;
-            top: 45px;
-            width: 2px;
-            height: calc(100% - 45px);
-            background-color: #e5e5e5;
-        }
-
-        .edu-content h6 {
-            color: #198754;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .edu-content h5 {
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .edu-content p {
-            color: #6c757d;
-            margin-bottom: 0;
-        }
     </style>
-
 
 </head>
 
@@ -232,69 +177,7 @@ $website = htmlspecialchars($empolyer['website']);
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="row mt-4">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="card-title mb-0">Education</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col">
-                                                <?php
-                                                //fetch user work experience records
-                                                $stmt = $conn->prepare("SELECT * FROM `education_records` WHERE user_id = ? ORDER BY created_at DESC");
-                                                $stmt->bind_param("i", $user_id);
-                                                $stmt->execute();
-                                                $result = $stmt->get_result();
-                                                if ($result->num_rows > 0):
-                                                    $count = 1;
-                                                    while ($row = $result->fetch_assoc()):
-                                                ?>
-                                                        <!-- Item 1 -->
-                                                        <div class="edu-item">
-                                                            <div class="edu-number"><?= $count ?></div>
-                                                            <div class="edu-content">
-                                                                <h6><?= htmlspecialchars($row['academy']) ?></h6>
-                                                                <?php
-                                                                $courseLabel = !empty($row['course']) ? htmlspecialchars(ucwords(str_replace('_', ' ', $row['course']))) : '';
-                                                                $degreeTitle = !empty($row['degree']) ? htmlspecialchars($row['degree']) : '';
-                                                                $startYear = htmlspecialchars($row['start_year'] ?? '');
-                                                                $endYearRaw = $row['end_year'] ?? '';
-                                                                $endYear = (empty($endYearRaw) || in_array(strtolower($endYearRaw), ['present', 'ongoing'], true)) ? 'Present' : htmlspecialchars($endYearRaw);
-                                                                ?>
-                                                                <h5 class="d-flex justify-content-between align-items-center mb-1">
-                                                                    <span>
-                                                                        <?php if ($degreeTitle): ?>
-                                                                            <strong><?= $degreeTitle ?></strong><?php if ($courseLabel): ?> — <?= $courseLabel ?><?php endif; ?>
-                                                                            <?php else: ?>
-                                                                                <?= $courseLabel ?>
-                                                                            <?php endif; ?>
-                                                                    </span>
-                                                                    <small class="text-muted"><?= $startYear ?> &ndash; <?= $endYear ?></small>
-                                                                </h5>
-                                                                <p><?= htmlspecialchars($row['description']) ?></p>
-                                                            </div>
-                                                            <?php if ($count < $result->num_rows): ?>
-                                                                <div class="edu-line"></div>
-                                                            <?php endif; ?>
-                                                        </div>
-                                                <?php
-                                                        $count++;
-                                                    endwhile;
-                                                else:
-                                                ?>
-                                                    <p class="text-center">No educational record added yet..</p>
-                                                <?php
-                                                endif;
-                                                $stmt->close();
-                                                ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            </div>  
                             
                             
                             <div class="row mt-4 mb-4">
@@ -337,26 +220,18 @@ $website = htmlspecialchars($empolyer['website']);
                                     <div class="row">
                                         <div class="col">
                                             <div class="profile-info">
-                                                <p><strong>Location:</strong> <?= $location . ', ' . $citizenship; ?></p>
-                                                <hr>
-                                                <p><strong>Age:</strong> 28</p>
+                                                <p><strong>Company Name:</strong> <?= ucfirst($company_name) ?> </p>
                                                 <hr>
                                                 <p><strong>Email:</strong> <?= $email; ?> </p>
                                                 <hr>
-                                                <p><strong>Primary job interest:</strong> <?= ucfirst($primary_job_interest) ?> </p>
-                                                <hr>
-                                                <p><strong>English Proficiency:</strong> <?= ucfirst($english_proficiency) ?> </p>
+                                                <p><strong>Company Size:</strong> <?= ucfirst($company_size) ?> </p>
                                                 <hr>
                                                 <p>
-                                                    <strong>Job Commitment:</strong>
-                                                    <?php 
-                                                      echo ($job_commitment === "part_time") ? 'Part time' : ucfirst($job_commitment);
-                                                    ?>
+                                                    <strong>Company Website:</strong>                                             
+                                                    <a href="<?= htmlspecialchars($website) ?>" target="_blank">
+                                                        <?= htmlspecialchars($website) ?>
+                                                    </a>    
                                                 </p>
-                                                <hr>
-                                                <p><strong>Preferred hourly rate in USD:</strong> <?= $preferred_hourly_rate ?> </p>
-                                                <hr>
-                                                <p><strong>Years of Experience:</strong> <?= $years_of_experience . ' years'; ?> </p>
                                             </div>
                                         </div>
                                     </div>

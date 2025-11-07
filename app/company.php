@@ -7,36 +7,41 @@ require_once __DIR__ . '/fetch_notification_count.php';
 //get usertoken from session
 $usertoken = $_SESSION['user']['usertoken'] ?? null;
 
-// fetch user data from database
-$stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
-$stmt->close();
+try{
+    // fetch user data from database
+    $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+    $stmt->close();
 
-//fetch user phone number from developers_profiles table
-$stmt = $conn->prepare("SELECT * FROM developers_profiles WHERE user_id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$profile = $result->fetch_assoc();
+    //user details
+    $user_email = $user['email'];
+    $user_fullname = $user['fullname'];
+    $user_phone = $user['tel'] ?? 'NAN';
+    $created_at = $user['created_at'];
 
-//user details
-$user_email = $user['email'];
-$user_fullname = $user['fullname'];
-$user_phone = $user['tel'] ?? 'NAN';
-$created_at = $user['created_at'];
+    //fetch user phone number from employer_profiles table
+    $stmt = $conn->prepare("SELECT * FROM `employer_profiles` WHERE user_id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $profile = $result->fetch_assoc();
+    $stmt->close();
 
-//more user details
-$profile_pic = "/devhire/" . $profile['profile_picture'];
-$user_bio = $profile['bio'];
-$user_legal_name = $profile['legal_name'];
-$user_location = $profile['location'];
-$user_github = empty($profile['github']) ? 'Not Specified' : $profile['github'];
-$user_website = empty($profile['website']) ? 'Not Specified' : $profile['website'];
-$user_linkedin = empty($profile['linkedin']) ? 'Not Specified' : $profile['linkedin'];
+    //more user details
+    $profile_pic = "/devhire/" . $profile['company_logo'];
+    $user_bio = $profile['bio'];
+    $user_legal_name = $profile['legal_name'];
+    $user_location = $profile['location'];
+    $user_website = empty($profile['website']) ? 'Not Specified' : $profile['website'];
 
+} catch (Exception $e){
+    $conn->close();
+    error_log($e->getMessage());
+    echo "Something went wrong. Please try again later.";
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -124,6 +129,11 @@ $user_linkedin = empty($profile['linkedin']) ? 'Not Specified' : $profile['linke
                                                     <label for="example-textarea" class="form-label">Company Bio</label>
                                                     <textarea class="form-control" id="example-textarea" placeholder="Write something interesting about your company...." rows="5" spellcheck="false"><?= htmlspecialchars($user_bio); ?></textarea>
                                                     <span class="text-secondary">Brief description for your company.</span>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label for="example-palaceholder" class="form-label">Company Website</label>
+                                                    <input type="text" id="example-palaceholder" readonly class="form-control" value="<?= $user_website; ?>">
                                                 </div>
 
                                             </form>
@@ -263,20 +273,20 @@ $user_linkedin = empty($profile['linkedin']) ? 'Not Specified' : $profile['linke
                     });
                     Toast.fire({
                         icon: 'warning',
-                        title: 'Please select a profile picture to upload.'
+                        title: 'Please select a your company logo to upload.'
                     });
                 } else {
-                    alert('Please select a profile picture to upload.');
+                    alert('Please select a your company logo to upload.');
                 }
                 return;
             }
 
             // Proceed with uploading the profile picture
-            console.log('Uploading profile picture:', file);
+            console.log('Uploading company logo picture:', file);
             const formData = new FormData();
-            formData.append('profile_picture', file);
+            formData.append('CompanyLogo', file);
             formData.append('token', '<?php echo $usertoken; ?>');
-            fetch('<?php echo $base_url; ?>process/process_update_profile_picture.php', {
+            fetch('<?php echo $base_url; ?>process/process_update_company_logo_picture.php', {
                     method: 'POST',
                     body: formData
                 })
@@ -368,7 +378,7 @@ $user_linkedin = empty($profile['linkedin']) ? 'Not Specified' : $profile['linke
             formData.append('website', website);
             formData.append('token', '<?php echo $usertoken; ?>');
 
-            fetch('<?php echo $base_url; ?>process/process_add_website.php', {
+            fetch('<?php echo $base_url; ?>process/process_add_company_website.php', {
                     method: 'POST',
                     body: formData
                 })

@@ -297,7 +297,6 @@ try{
                     })
                     .then(data => {
                         if (data.status === 'success') {
-                            // window.location.href = './situation';
                             Swal.fire({
                                 toast: true,
                                 position: 'top-end',

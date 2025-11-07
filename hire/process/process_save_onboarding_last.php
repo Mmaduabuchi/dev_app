@@ -184,6 +184,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         }
         $stmt->close();
 
+        //insert company name to employer_profiles
+        $employer_status_action = "pending";
+        $stmt = $conn->prepare("INSERT INTO `employer_profiles` (user_id, company_name, action, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())");
+        if (!$stmt) {
+            sendResponse('error', 'Database error: ' . $conn->error);
+        }
+        $stmt->bind_param("iss", $new_id, $CompanyName, $employer_status_action);
+        if (!$stmt->execute()) {
+            sendResponse('error', 'Failed. Please check your internet connection and try again later.');
+        }
+        $stmt->close();
+
+        //fetch user details
         $stmt = $conn->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
         if (!$stmt) {
             sendResponse('error', 'Database error: ' . $conn->error);
