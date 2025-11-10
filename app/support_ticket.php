@@ -52,27 +52,27 @@ try {
     <script src="<?php echo $base_url; ?>assets/js/head.js"></script>
 
     <style>
-        .badge-dark{
+        .badge-dark {
             background-color: black !important;
             padding: 0.4rem !important;
         }
 
-        .badge-success{
+        .badge-success {
             background-color: yellow !important;
             padding: 0.4rem !important;
         }
 
-        .badge-warning{
+        .badge-warning {
             background-color: blueviolet !important;
             padding: 0.4rem !important;
         }
 
-        .badge-secondary{
+        .badge-secondary {
             background-color: #FFBF00 !important;
             padding: 0.4rem !important;
         }
 
-        .badge-primary{
+        .badge-primary {
             background-color: green !important;
             padding: 0.4rem !important;
         }
@@ -107,6 +107,9 @@ try {
                                 <div class="card-header">
                                     <div class="d-flex align-items-center">
                                         <h5 class="card-title mb-0">Your ticket history</h5>
+                                        <div class="ms-auto">
+                                            <button class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#staticBackdrop">Open ticket</button>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -123,72 +126,129 @@ try {
                                                 </tr>
                                             </thead>
                                             <?php
-                                                function fetchTicketshistory(){
-                                                    global $conn;
-                                                    global $user_id;
-                                                    try {
-                                                        $stmt = $conn->prepare("SELECT * FROM `support_ticket` WHERE user_id = ? AND deleted_at IS NULL ORDER BY created_at DESC");
-                                                        if (!$stmt) {
-                                                            throw new Exception('Database error: ' . $conn->error);
-                                                        }
-                                                        $stmt->bind_param("i", $user_id);
-                                                        if ($stmt->execute()) {
-                                                            $result = $stmt->get_result();
-
-                                                            //Check if no tickets is found
-                                                            if ($result->num_rows < 1) {
-                                                                echo '<tr><td colspan="4" class="text-center text-muted">No support tickets found.</td></tr>';
-                                                                return;
-                                                            }
-
-                                                            while ($ticketData = $result->fetch_assoc()) {
-                                                                $rawDate = $ticketData['created_at'];
-                                                                $status = ucfirst($ticketData['status']);
-                                                                $subject = htmlspecialchars($ticketData['title']);
-                                                                $category = htmlspecialchars($ticketData['category'] ?? 'Support');
-                                                                $badgeColors = [
-                                                                    'open' => 'badge-success',
-                                                                    'in progress' => 'badge-warning',
-                                                                    'closed' => 'badge-dark',
-                                                                    'pending' => 'badge-secondary',
-                                                                    'resolved' => 'badge-primary'
-                                                                ];
-
-                                                                $badgeClass = $badgeColors[strtolower($status)] ?? 'badge-light';
-
-                                                                
-                                                                // Create DateTime object
-                                                                $date = new DateTime($rawDate);
-                                            ?>                                            
-                                                                <tr>
-                                                                    <td class="text-nowrap text-reset">
-                                                                        <?= $category ?>
-                                                                    </td>
-                                                                    <td>
-                                                                        <a href="#" class="text-reset"><?= $subject ?></a>
-                                                                    </td>
-                                                                    <td>
-                                                                        <a href="#" class="text-reset">
-                                                                            <span class="badge badge-pill <?= $badgeClass ?>"><?= $status ?></span>
-                                                                        </a>
-                                                                    </td>
-                                                                    <td class="text-nowrap text-reset">
-                                                                        <i data-feather="calendar" style="height: 18px; width: 18px;" class="me-1"></i>
-                                                                        <?= $date->format("l, F jS Y g:i:s A"); ?>
-                                                                    </td>
-                                                                </tr>
-                                            <?php
-                                                            }
-                                                        }
-                                                    } catch (Exception $e){
-                                                        $conn->close();
-                                                        error_log($e->getMessage());
-                                                        echo '<tr><td colspan="4" class="text-center text-danger">Something went wrong. Please try again later.</td></tr>';
+                                            function fetchTicketshistory()
+                                            {
+                                                global $conn;
+                                                global $user_id;
+                                                try {
+                                                    $stmt = $conn->prepare("SELECT * FROM `support_ticket` WHERE user_id = ? AND deleted_at IS NULL ORDER BY created_at DESC");
+                                                    if (!$stmt) {
+                                                        throw new Exception('Database error: ' . $conn->error);
                                                     }
+                                                    $stmt->bind_param("i", $user_id);
+                                                    if ($stmt->execute()) {
+                                                        $result = $stmt->get_result();
+
+                                                        //Check if no tickets is found
+                                                        if ($result->num_rows < 1) {
+                                                            echo '<tr><td colspan="4" class="text-center text-muted">No support tickets found.</td></tr>';
+                                                            return;
+                                                        }
+
+                                                        while ($ticketData = $result->fetch_assoc()) {
+                                                            $rawDate = $ticketData['created_at'];
+                                                            $status = ucfirst($ticketData['status']);
+                                                            $subject = htmlspecialchars($ticketData['title']);
+                                                            $category = htmlspecialchars($ticketData['category'] ?? 'Support');
+                                                            $badgeColors = [
+                                                                'open' => 'badge-success',
+                                                                'in progress' => 'badge-warning',
+                                                                'closed' => 'badge-dark',
+                                                                'pending' => 'badge-secondary',
+                                                                'resolved' => 'badge-primary'
+                                                            ];
+
+                                                            $badgeClass = $badgeColors[strtolower($status)] ?? 'badge-light';
+
+
+                                                            // Create DateTime object
+                                                            $date = new DateTime($rawDate);
+                                            ?>
+                                                            <tr>
+                                                                <td class="text-nowrap text-reset">
+                                                                    <?= $category ?>
+                                                                </td>
+                                                                <td>
+                                                                    <a href="#" class="text-reset"><?= $subject ?></a>
+                                                                </td>
+                                                                <td>
+                                                                    <a href="#" class="text-reset">
+                                                                        <span class="badge badge-pill <?= $badgeClass ?>"><?= $status ?></span>
+                                                                    </a>
+                                                                </td>
+                                                                <td class="text-nowrap text-reset">
+                                                                    <i data-feather="calendar" style="height: 18px; width: 18px;" class="me-1"></i>
+                                                                    <?= $date->format("l, F jS Y g:i:s A"); ?>
+                                                                </td>
+                                                            </tr>
+                                            <?php
+                                                        }
+                                                    }
+                                                } catch (Exception $e) {
+                                                    $conn->close();
+                                                    error_log($e->getMessage());
+                                                    echo '<tr><td colspan="4" class="text-center text-danger">Something went wrong. Please try again later.</td></tr>';
                                                 }
-                                                fetchTicketshistory();
+                                            }
+                                            fetchTicketshistory();
                                             ?>
                                         </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col">
+                            <!-- Modal -->
+                            <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <form id="openTicketForm" method="POST" action="/submit-ticket.php">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="exampleModalLabel">Support Ticket</h1>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <!-- Ticket Title -->
+                                                <div class="mb-3">
+                                                    <label for="ticketTitle" class="form-label">Title</label>
+                                                    <input type="text" class="form-control" id="ticketTitle" name="title" placeholder="Enter ticket title" required>
+                                                </div>
+                                                <!-- Category -->
+                                                <div class="mb-3">
+                                                    <label for="ticketCategory" class="form-label">Category</label>
+                                                    <select class="form-select" id="ticketCategory" name="category" required>
+                                                        <option value="" selected disabled>Select a category</option>
+                                                        <option value="Technical Support">Technical Support</option>
+                                                        <option value="Billing">Billing</option>
+                                                        <option value="Account Issue">Account Issue</option>
+                                                        <option value="Feedback">Feedback</option>
+                                                        <option value="General Inquiry">General Inquiry</option>
+                                                    </select>
+                                                </div>
+                                                <!-- Priority -->
+                                                <div class="mb-3">
+                                                    <label for="ticketPriority" class="form-label">Priority</label>
+                                                    <select class="form-select" id="ticketPriority" name="priority" required>
+                                                        <option value="Low" selected>Low</option>
+                                                        <option value="Medium">Medium</option>
+                                                        <option value="High">High</option>
+                                                    </select>
+                                                </div>
+
+                                                <!-- Message -->
+                                                <div class="mb-3">
+                                                    <label for="ticketMessage" class="form-label">Message</label>
+                                                    <textarea class="form-control" id="ticketMessage" name="message" rows="4" placeholder="Describe your issue" required></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                <button type="submit" class="btn btn-primary">Open Ticket</button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -225,7 +285,6 @@ try {
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-
         //delete user report record
         function deleteReport(data) {
             // alert(data);
