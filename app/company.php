@@ -127,7 +127,7 @@ try{
 
                                                 <div class="mb-3">
                                                     <label for="example-textarea" class="form-label">Company Bio</label>
-                                                    <textarea class="form-control" id="example-textarea" placeholder="Write something interesting about your company...." rows="5" spellcheck="false"><?= htmlspecialchars($user_bio); ?></textarea>
+                                                    <textarea class="form-control" id="example-textarea" placeholder="Write something interesting about your company...." rows="10" spellcheck="false"><?= htmlspecialchars($user_bio); ?></textarea>
                                                     <span class="text-secondary">Brief description for your company.</span>
                                                 </div>
 

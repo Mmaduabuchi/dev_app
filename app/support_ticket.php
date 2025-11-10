@@ -1,0 +1,288 @@
+<?php
+require_once "config.php";
+// Start session and check authentication
+require_once "auth.php";
+//notification count
+require_once __DIR__ . '/fetch_notification_count.php';
+//get usertoken from session
+$usertoken = $_SESSION['user']['usertoken'] ?? null;
+
+try {
+    // fetch user data from database
+    $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+
+    //close stmt
+    $stmt->close();
+
+    //user details
+    $user_email = $user['email'];
+    $user_fullname = $user['fullname'];
+} catch (Exception $e) {
+    $conn->close();
+    error_log($e->getMessage());
+    echo "Something went wrong. Please try again later.";
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+
+<head>
+    <meta charset="utf-8" />
+    <title>Support Ticket | devhire - Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="<?php echo $base_url; ?>assets/images/favicon.ico">
+
+    <!-- App css -->
+    <link href="<?php echo $base_url; ?>assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
+
+    <!-- Icons -->
+    <link href="<?php echo $base_url; ?>assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+
+    <script src="<?php echo $base_url; ?>assets/js/head.js"></script>
+
+    <style>
+        .badge-dark{
+            background-color: black !important;
+            padding: 0.4rem !important;
+        }
+
+        .badge-success{
+            background-color: yellow !important;
+            padding: 0.4rem !important;
+        }
+
+        .badge-warning{
+            background-color: blueviolet !important;
+            padding: 0.4rem !important;
+        }
+
+        .badge-secondary{
+            background-color: #FFBF00 !important;
+            padding: 0.4rem !important;
+        }
+
+        .badge-primary{
+            background-color: green !important;
+            padding: 0.4rem !important;
+        }
+    </style>
+
+</head>
+
+<!-- body start -->
+
+<body data-menu-color="light" data-sidebar="default">
+
+    <!-- Begin page -->
+    <div id="app-layout">
+
+        <?php include "header.php" ?>
+
+        <div class="content-page">
+            <div class="content">
+
+                <!-- Start Content-->
+                <div class="container-fluid">
+
+                    <div class="py-3 d-flex align-items-sm-center flex-sm-row flex-column">
+                        <div class="flex-grow-1">
+                            <h4 class="fs-18 fw-semibold m-0">My Support Tickets</h4>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card overflow-hidden">
+                                <div class="card-header">
+                                    <div class="d-flex align-items-center">
+                                        <h5 class="card-title mb-0">Your ticket history</h5>
+                                    </div>
+                                </div>
+
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-traffic mb-0">
+
+                                            <thead>
+                                                <tr>
+                                                    <th>Department</th>
+                                                    <th>Subject</th>
+                                                    <th>Status</th>
+                                                    <th>Created Date</th>
+                                                </tr>
+                                            </thead>
+                                            <?php
+                                                function fetchTicketshistory(){
+                                                    global $conn;
+                                                    global $user_id;
+                                                    try {
+                                                        $stmt = $conn->prepare("SELECT * FROM `support_ticket` WHERE user_id = ? AND deleted_at IS NULL ORDER BY created_at DESC");
+                                                        if (!$stmt) {
+                                                            throw new Exception('Database error: ' . $conn->error);
+                                                        }
+                                                        $stmt->bind_param("i", $user_id);
+                                                        if ($stmt->execute()) {
+                                                            $result = $stmt->get_result();
+
+                                                            //Check if no tickets is found
+                                                            if ($result->num_rows < 1) {
+                                                                echo '<tr><td colspan="4" class="text-center text-muted">No support tickets found.</td></tr>';
+                                                                return;
+                                                            }
+
+                                                            while ($ticketData = $result->fetch_assoc()) {
+                                                                $rawDate = $ticketData['created_at'];
+                                                                $status = ucfirst($ticketData['status']);
+                                                                $subject = htmlspecialchars($ticketData['title']);
+                                                                $category = htmlspecialchars($ticketData['category'] ?? 'Support');
+                                                                $badgeColors = [
+                                                                    'open' => 'badge-success',
+                                                                    'in progress' => 'badge-warning',
+                                                                    'closed' => 'badge-dark',
+                                                                    'pending' => 'badge-secondary',
+                                                                    'resolved' => 'badge-primary'
+                                                                ];
+
+                                                                $badgeClass = $badgeColors[strtolower($status)] ?? 'badge-light';
+
+                                                                
+                                                                // Create DateTime object
+                                                                $date = new DateTime($rawDate);
+                                            ?>                                            
+                                                                <tr>
+                                                                    <td class="text-nowrap text-reset">
+                                                                        <?= $category ?>
+                                                                    </td>
+                                                                    <td>
+                                                                        <a href="#" class="text-reset"><?= $subject ?></a>
+                                                                    </td>
+                                                                    <td>
+                                                                        <a href="#" class="text-reset">
+                                                                            <span class="badge badge-pill <?= $badgeClass ?>"><?= $status ?></span>
+                                                                        </a>
+                                                                    </td>
+                                                                    <td class="text-nowrap text-reset">
+                                                                        <i data-feather="calendar" style="height: 18px; width: 18px;" class="me-1"></i>
+                                                                        <?= $date->format("l, F jS Y g:i:s A"); ?>
+                                                                    </td>
+                                                                </tr>
+                                            <?php
+                                                            }
+                                                        }
+                                                    } catch (Exception $e){
+                                                        $conn->close();
+                                                        error_log($e->getMessage());
+                                                        echo '<tr><td colspan="4" class="text-center text-danger">Something went wrong. Please try again later.</td></tr>';
+                                                    }
+                                                }
+                                                fetchTicketshistory();
+                                            ?>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div> <!-- container-fluid -->
+
+            </div> <!-- content -->
+
+            <!-- Footer Start -->
+            <?php include_once "footer.php"; ?>
+            <!-- end Footer -->
+
+        </div>
+
+
+    </div>
+    <!-- END wrapper -->
+
+    <!-- Vendor -->
+    <script src="<?php echo $base_url; ?>assets/libs/jquery/jquery.min.js"></script>
+    <script src="<?php echo $base_url; ?>assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="<?php echo $base_url; ?>assets/libs/simplebar/simplebar.min.js"></script>
+    <script src="<?php echo $base_url; ?>assets/libs/node-waves/waves.min.js"></script>
+    <script src="<?php echo $base_url; ?>assets/libs/waypoints/lib/jquery.waypoints.min.js"></script>
+    <script src="<?php echo $base_url; ?>assets/libs/jquery.counterup/jquery.counterup.min.js"></script>
+    <script src="<?php echo $base_url; ?>assets/libs/feather-icons/feather.min.js"></script>
+
+    <!-- App js-->
+    <script src="<?php echo $base_url; ?>assets/js/app.js"></script>
+
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+
+        //delete user report record
+        function deleteReport(data) {
+            // alert(data);
+            // Show confirmation dialog
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'Do you want to delete this report record? This action cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (!result.isConfirmed) {
+                    return; // User cancelled the action
+                }
+                // Continue with deletion below
+                const formData = new FormData();
+                formData.append('usertoken', <?php echo json_encode($usertoken); ?>);
+                formData.append('recordID', data);
+
+                fetch('<?php echo $base_url; ?>process/process_delete_user_report.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: data.message,
+                                showConfirmButton: false,
+                                timer: 2500
+                            });
+                            setTimeout(() => location.reload(), 2600);
+                        } else {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: data.message,
+                                showConfirmButton: false,
+                                timer: 2500
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire('Error', 'An error occurred while processing your request. Please try again later.', 'error');
+                    });
+            });
+        }
+    </script>
+
+</body>
+
+</html>

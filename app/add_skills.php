@@ -7,37 +7,52 @@ require_once __DIR__ . '/fetch_notification_count.php';
 //get usertoken from session
 $usertoken = $_SESSION['user']['usertoken'] ?? null;
 
-// fetch user data from database
-$stmt = $conn->prepare("SELECT * FROM `users` WHERE id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
-//user details
-$user_email = $user['email'];
-$user_fullname = $user['fullname'];
-$created_at = $user['created_at'];
-$stmt->close();
+try{
+    // fetch user data from database
+    $stmt = $conn->prepare("SELECT * FROM `users` WHERE id = ?");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+    //user details
+    $user_email = $user['email'];
+    $user_fullname = $user['fullname'];
+    $created_at = $user['created_at'];
+    $stmt->close();
 
-//count users work_experience_records
-$stmt = $conn->prepare("SELECT COUNT(*) AS record_count FROM `work_experience_records` WHERE user_id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$row = $result->fetch_assoc();
-$record_count = $row['record_count'];
-$stmt->close();
+    //count users work_experience_records
+    $stmt = $conn->prepare("SELECT COUNT(*) AS record_count FROM `work_experience_records` WHERE user_id = ?");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $record_count = $row['record_count'];
+    $stmt->close();
 
 
-//count users added skills
-$stmt = $conn->prepare("SELECT COUNT(*) AS skill_count FROM `user_skills` WHERE user_id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$row = $result->fetch_assoc();
-$skill_count = $row['skill_count'];
-$stmt->close();
+    //count users added skills
+    $stmt = $conn->prepare("SELECT COUNT(*) AS skill_count FROM `user_skills` WHERE user_id = ?");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $skill_count = $row['skill_count'];
+    $stmt->close();
 
+} catch (Exception $e){
+    $conn->close();
+    error_log($e->getMessage());
+    echo "Something went wrong. Please try again later.";
+}
 
 ?>
 <!DOCTYPE html>

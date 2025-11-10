@@ -7,45 +7,57 @@ require_once __DIR__ . '/fetch_notification_count.php';
 //get usertoken from session
 $usertoken = $_SESSION['user']['usertoken'] ?? null;
 
-// fetch user data from database
-$stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
-$stmt->close();
+try{
+    // fetch user data from database
+    $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+    $stmt->close();
 
-//fetch user phone number from developers_profiles table
-$stmt = $conn->prepare("SELECT * FROM developers_profiles WHERE user_id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$profile = $result->fetch_assoc();
+    //fetch user phone number from developers_profiles table
+    $stmt = $conn->prepare("SELECT * FROM developers_profiles WHERE user_id = ?");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $profile = $result->fetch_assoc();
 
-//user details
-$user_email = $user['email'];
-$user_fullname = $user['fullname'];
-$created_at = $user['created_at'];
+    //user details
+    $user_email = $user['email'];
+    $user_fullname = $user['fullname'];
+    $created_at = $user['created_at'];
 
-//more user details
-$user_phone = $profile['phone_number'];
-$profile_pic = "/devhire/" . $profile['profile_picture'];
-$user_bio = $profile['bio'];
-$user_legal_name = $profile['legal_name'];
-$user_location = $profile['location'];
-$user_github = empty($profile['github']) ? 'Not Specified' : $profile['github'];
-$user_website = empty($profile['website']) ? 'Not Specified' : $profile['website'];
-$user_linkedin = empty($profile['linkedin']) ? 'Not Specified' : $profile['linkedin'];
-$user_education_level = $profile['education_level'];
-$user_citizenship = $profile['citizenship'];
-$user_english_proficiency = $profile['english_proficiency'];
-$user_years_of_experience = $profile['years_of_experience'];
-$user_primary_job_interest = $profile['primary_job_interest'];
-$user_industry_experience = $profile['industry_experience'];
-$user_certifications =  empty($profile['certifications']) ? 'Not Specified' : $profile['certifications'];
-$user_job_commitment = $profile['job_commitment'];
-$user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
+    //more user details
+    $user_phone = $profile['phone_number'];
+    $profile_pic = "/devhire/" . $profile['profile_picture'];
+    $user_bio = $profile['bio'];
+    $user_legal_name = $profile['legal_name'];
+    $user_location = $profile['location'];
+    $user_github = empty($profile['github']) ? 'Not Specified' : $profile['github'];
+    $user_website = empty($profile['website']) ? 'Not Specified' : $profile['website'];
+    $user_linkedin = empty($profile['linkedin']) ? 'Not Specified' : $profile['linkedin'];
+    $user_education_level = $profile['education_level'];
+    $user_citizenship = $profile['citizenship'];
+    $user_english_proficiency = $profile['english_proficiency'];
+    $user_years_of_experience = $profile['years_of_experience'];
+    $user_primary_job_interest = $profile['primary_job_interest'];
+    $user_industry_experience = $profile['industry_experience'];
+    $user_certifications =  empty($profile['certifications']) ? 'Not Specified' : $profile['certifications'];
+    $user_job_commitment = $profile['job_commitment'];
+    $user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
 
+} catch (Exception $e){
+    $conn->close();
+    error_log($e->getMessage());
+    echo "Something went wrong. Please try again later.";
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

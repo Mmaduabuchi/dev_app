@@ -376,9 +376,9 @@
                 ?>
 
                 <li>
-                    <a class='tp-link' href='/devhire/dashboard/notification'>
-                        <i data-feather="bell"></i>
-                        <span> Notification </span>
+                    <a class='tp-link' href='/devhire/dashboard/support-ticket'>
+                        <i data-feather="help-circle"></i>
+                        <span> Support Ticket </span>
                     </a>
                 </li>
 

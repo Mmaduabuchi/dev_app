@@ -7,19 +7,29 @@ require_once __DIR__ . '/fetch_notification_count.php';
 //get usertoken from session
 $usertoken = $_SESSION['user']['usertoken'] ?? null;
 
-// fetch user data from database
-$stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
+try{
+    // fetch user data from database
+    $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
 
-//close stmt
-$stmt->close();
+    //close stmt
+    $stmt->close();
 
-//user details
-$user_email = $user['email'];
-$user_fullname = $user['fullname'];
+    //user details
+    $user_email = $user['email'];
+    $user_fullname = $user['fullname'];
+
+} catch (Exception $e){
+    $conn->close();
+    error_log($e->getMessage());
+    echo "Something went wrong. Please try again later.";
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

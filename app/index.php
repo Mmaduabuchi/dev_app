@@ -43,6 +43,9 @@ try{
         $stmt->close();
 
         $stmt = $conn->prepare("SELECT COUNT(*) as sent_request_count FROM `notifications` WHERE sender_id = ? AND deleted_at IS NULL");
+        if (!$stmt) {
+            throw new Exception('Database error: ' . $conn->error);
+        }
         $stmt->bind_param("i", $user_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -52,6 +55,9 @@ try{
         $stmt->close();
     }else{
         $stmt = $conn->prepare("SELECT COUNT(*) as recevied_request_count FROM `notifications` WHERE user_id = ? AND deleted_at IS NULL");
+        if (!$stmt) {
+            throw new Exception('Database error: ' . $conn->error);
+        }
         $stmt->bind_param("i", $user_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -71,11 +77,8 @@ try{
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
-
 <head>
-
     <meta charset="utf-8" />
     <title> Welcome to | Devhire -  Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

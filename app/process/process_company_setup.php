@@ -33,8 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         sendResponse('error', 'Invalid Company Bio.');
     }
     $CompanyBio = trim((string)$CompanyBio);
-    if ($CompanyBio !== '' && mb_strlen($CompanyBio, 'UTF-8') > 800) {
-        sendResponse('error', 'Company Bio must not exceed 800 characters.');
+    if ($CompanyBio !== '' && mb_strlen($CompanyBio, 'UTF-8') > 1500) {
+        sendResponse('error', 'Company Bio must not exceed 1500 characters.');
     }
 
     // Check if user is logged in

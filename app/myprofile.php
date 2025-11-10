@@ -7,37 +7,45 @@ require_once __DIR__ . '/fetch_notification_count.php';
 //get usertoken from session
 $usertoken = $_SESSION['user']['usertoken'] ?? null;
 
-// Fetch candidate profile from the database
-$stmt = $conn->prepare("SELECT dp.*, u.picture, u.fullname, u.email, u.role FROM developers_profiles dp JOIN users u ON dp.user_id = u.id WHERE u.usertoken = ? AND dp.action = 'completed'");
-$stmt->bind_param("s", $usertoken);
-$stmt->execute();
-$result = $stmt->get_result();
-$candidate = $result->fetch_assoc();
+try{
+    // Fetch candidate profile from the database
+    $stmt = $conn->prepare("SELECT dp.*, u.picture, u.fullname, u.email, u.role FROM developers_profiles dp JOIN users u ON dp.user_id = u.id WHERE u.usertoken = ? AND dp.action = 'completed'");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("s", $usertoken);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $candidate = $result->fetch_assoc();
 
-if (!$candidate) {
-    // Candidate not found, redirect to error page
-    header("Location: /devhire/dashboard/error/");
-    exit();
+    if (!$candidate) {
+        // Candidate not found, redirect to error page
+        header("Location: /devhire/dashboard/error/");
+        exit();
+    }
+
+    $profile_pic = $candidate['profile_picture'] ? '/devhire/' . $candidate['profile_picture'] :  $candidate['picture'];
+    $fullname = htmlspecialchars($candidate['legal_name']);
+    $email = htmlspecialchars($candidate['email']);
+    $role = htmlspecialchars($candidate['role']);
+    $bio = htmlspecialchars($candidate['bio']);
+    $years_of_experience = $candidate['years_of_experience'];
+    $english_proficiency = $candidate['english_proficiency'];
+    $preferred_hourly_rate = $candidate['preferred_hourly_rate'];
+    $primary_job_interest = $candidate['primary_job_interest'];
+    $job_commitment = $candidate['job_commitment'];
+    $location = htmlspecialchars($candidate['location']);
+    $age = htmlspecialchars($candidate['age']);
+    $citizenship = htmlspecialchars($candidate['citizenship']);
+    $website = htmlspecialchars($candidate['website']);
+    $github = htmlspecialchars($candidate['github']);
+    $linkedin = htmlspecialchars($candidate['linkedin']);
+
+} catch (Exception $e){
+    $conn->close();
+    error_log($e->getMessage());
+    echo "Something went wrong. Please try again later.";
 }
-
-$profile_pic = $candidate['profile_picture'] ? '/devhire/' . $candidate['profile_picture'] :  $candidate['picture'];
-$fullname = htmlspecialchars($candidate['legal_name']);
-$email = htmlspecialchars($candidate['email']);
-$role = htmlspecialchars($candidate['role']);
-$bio = htmlspecialchars($candidate['bio']);
-$years_of_experience = $candidate['years_of_experience'];
-$english_proficiency = $candidate['english_proficiency'];
-$preferred_hourly_rate = $candidate['preferred_hourly_rate'];
-$primary_job_interest = $candidate['primary_job_interest'];
-$job_commitment = $candidate['job_commitment'];
-$location = htmlspecialchars($candidate['location']);
-$age = htmlspecialchars($candidate['age']);
-$citizenship = htmlspecialchars($candidate['citizenship']);
-$website = htmlspecialchars($candidate['website']);
-$github = htmlspecialchars($candidate['github']);
-$linkedin = htmlspecialchars($candidate['linkedin']);
-
-
 ?>
 <!DOCTYPE html>
 <html lang="en">

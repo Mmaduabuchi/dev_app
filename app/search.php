@@ -11,6 +11,9 @@ $usertoken = $_SESSION['user']['usertoken'] ?? null;
 try {
     //Fetch user data
     $stmt = $conn->prepare("SELECT email, fullname FROM users WHERE id = ?");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -26,6 +29,9 @@ try {
 
     //mark all user notifications as read
     $stmt = $conn->prepare("UPDATE `notifications` SET status = 'read' WHERE user_id = ? AND deleted_at IS NULL");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
 } catch (Exception $e) {

@@ -1,3 +1,14 @@
+<?php
+require_once "config.php";
+// Start session and check authentication
+require_once "auth.php";
+//notification count
+require_once __DIR__ . '/fetch_notification_count.php';
+//get usertoken from session
+$usertoken = $_SESSION['user']['usertoken'] ?? null;
+
+
+?>
 <!DOCTYPE html>
 <html lang="en">
     
@@ -5,21 +16,20 @@
 <head>
 
         <meta charset="utf-8" />
-        <title>Widgets | Hando - Dashboard</title>
+        <title>Widgets | Devhire - Dashboard</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
         <!-- App favicon -->
-        <link rel="shortcut icon" href="assets/images/favicon.ico">
+        <link rel="shortcut icon" href="<?php echo $base_url; ?>assets/images/favicon.ico">
 
         <!-- App css -->
-        <link href="assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
+        <link href="<?php echo $base_url; ?>assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
 
         <!-- Icons -->
-        <link href="assets/css/icons.min.css" rel="stylesheet" type="text/css" />
+        <link href="<?php echo $base_url; ?>assets/css/icons.min.css" rel="stylesheet" type="text/css" />
 
-        <script src="assets/js/head.js"></script>
-
+        <script src="<?php echo $base_url; ?>assets/js/head.js"></script>
 
     </head>
 
@@ -30,11 +40,8 @@
         <div id="app-layout">
 
             <?php include "header.php" ?>
-            
-            <!-- ============================================================== -->
-            <!-- Start Page Content here -->
-            <!-- ============================================================== -->
-         
+
+
             <div class="content-page">
                 <div class="content">
 
@@ -43,13 +50,6 @@
                         <div class="py-3 d-flex align-items-sm-center flex-sm-row flex-column">
                             <div class="flex-grow-1">
                                 <h4 class="fs-18 fw-semibold m-0">Widgets</h4>
-                            </div>
-            
-                            <div class="text-end">
-                                <ol class="breadcrumb m-0 py-0">
-                                    <li class="breadcrumb-item"><a href="javascript: void(0);">General</a></li>
-                                    <li class="breadcrumb-item active">Widgets</li>
-                                </ol>
                             </div>
                         </div>
 
@@ -74,7 +74,7 @@
                                                 <li class="mb-2">
                                                     <div class="align-items-center d-flex rounded-2 p-2">
                                                         <div class="rounded-circle overflow-hidden me-3 shadow-lg">
-                                                            <img src="assets/images/widget/event.jpg" alt="user-images" width="40" height="40">
+                                                            <img src="<?php echo $base_url; ?>assets/images/widget/event.jpg" alt="user-images" width="40" height="40">
                                                         </div>
                                                         <div class="gap-1">
                                                             <h6 class="m-0 fw-semibold text-dark fs-15">Flutter community event worldwide</h6>
@@ -85,7 +85,7 @@
                                                 <li>
                                                     <div class="align-items-center d-flex rounded-2 p-2">
                                                         <div class="rounded-circle overflow-hidden me-3 shadow-lg">
-                                                            <img src="assets/images/widget/event-1.jpg" alt="user-images" width="40" height="40">
+                                                            <img src="<?php echo $base_url; ?>assets/images/widget/event-1.jpg" alt="user-images" width="40" height="40">
                                                         </div>
                                                         <div class="gap-1">
                                                             <h6 class="m-0 fw-semibold text-dark fs-15">Free shipping worldwide</h6>
@@ -124,7 +124,7 @@
                                                         <div class="flex-shrink-0">
                                                             <!-- Avatar -->
                                                             <div class="align-content-center text-center border border-dashed rounded-circle p-1">
-                                                                <img src="assets/images/users/user-19.jpg" class="avatar avatar-sm rounded-circle">
+                                                                <img src="<?php echo $base_url; ?>assets/images/users/user-19.jpg" class="avatar avatar-sm rounded-circle">
                                                                 <span class="profile-status rounded-circle online"></span>
                                                             </div>
                                                             <!-- End Avatar -->
@@ -147,7 +147,7 @@
                                                         <div class="flex-shrink-0">
                                                             <!-- Avatar -->
                                                             <div class="align-content-center text-center border border-dashed rounded-circle p-1">
-                                                                <img src="assets/images/users/user-20.jpg" class="avatar avatar-sm rounded-circle">
+                                                                <img src="<?php echo $base_url; ?>assets/images/users/user-20.jpg" class="avatar avatar-sm rounded-circle">
                                                                 <span class="profile-status rounded-circle busy"></span>
                                                             </div>
                                                             <!-- End Avatar -->
@@ -169,7 +169,7 @@
                                                         <div class="flex-shrink-0">
                                                             <!-- Avatar -->
                                                             <div class="align-content-center text-center border border-dashed rounded-circle p-1">
-                                                                <img src="assets/images/users/user-21.jpg" class="avatar avatar-sm rounded-circle">
+                                                                <img src="<?php echo $base_url; ?>assets/images/users/user-21.jpg" class="avatar avatar-sm rounded-circle">
                                                                 <span class="profile-status rounded-circle away"></span>
                                                             </div>
                                                             <!-- End Avatar -->
@@ -191,7 +191,7 @@
                                                         <div class="flex-shrink-0">
                                                             <!-- Avatar -->
                                                             <div class="align-content-center text-center border border-dashed rounded-circle p-1">
-                                                                <img src="assets/images/users/user-22.jpg" class="avatar avatar-sm rounded-circle">
+                                                                <img src="<?php echo $base_url; ?>assets/images/users/user-22.jpg" class="avatar avatar-sm rounded-circle">
                                                                 <span class="profile-status rounded-circle offline"></span>
                                                             </div>
                                                             <!-- End Avatar -->
@@ -213,7 +213,7 @@
                                                         <div class="flex-shrink-0">
                                                             <!-- Avatar -->
                                                             <div class="align-content-center text-center border border-dashed rounded-circle p-1">
-                                                                <img src="assets/images/users/user-23.jpg" class="avatar avatar-sm rounded-circle">
+                                                                <img src="<?php echo $base_url; ?>assets/images/users/user-23.jpg" class="avatar avatar-sm rounded-circle">
                                                                 <span class="profile-status rounded-circle busy"></span>
                                                             </div>
                                                             <!-- End Avatar -->
@@ -235,7 +235,7 @@
                                                         <div class="flex-shrink-0">
                                                             <!-- Avatar -->
                                                             <div class="align-content-center text-center border border-dashed rounded-circle p-1">
-                                                                <img src="assets/images/users/user-19.jpg" class="avatar avatar-sm rounded-circle">
+                                                                <img src="<?php echo $base_url; ?>assets/images/users/user-19.jpg" class="avatar avatar-sm rounded-circle">
                                                                 <span class="profile-status rounded-circle online"></span>
                                                             </div>
                                                             <!-- End Avatar -->
@@ -256,7 +256,7 @@
                                                         <div class="flex-shrink-0">
                                                             <!-- Avatar -->
                                                             <div class="align-content-center text-center border border-dashed rounded-circle p-1">
-                                                                <img src="assets/images/users/user-21.jpg" class="avatar avatar-sm rounded-circle">
+                                                                <img src="<?php echo $base_url; ?>assets/images/users/user-21.jpg" class="avatar avatar-sm rounded-circle">
                                                                 <span class="profile-status rounded-circle online"></span>
                                                             </div>
                                                             <!-- End Avatar -->
@@ -406,7 +406,7 @@
                                                     
                                                     <div class="col-md-6 col-xl-6">
                                                         <div class="text-end position-absolute">
-                                                            <img src="assets/images/svg/work-vector.svg" alt="modernize-img" class="img-fluid">
+                                                            <img src="<?php echo $base_url; ?>assets/images/svg/work-vector.svg" alt="modernize-img" class="img-fluid">
                                                         </div>
                                                     </div>
                                                     
@@ -575,7 +575,7 @@
                                                             </td>
                                                             <td>
                                                                 <div class="d-flex align-items-center">
-                                                                    <img src="assets/images/users/user-12.jpg" class="avatar avatar-sm rounded-circle me-2">
+                                                                    <img src="<?php echo $base_url; ?>assets/images/users/user-12.jpg" class="avatar avatar-sm rounded-circle me-2">
                                                                     <p class="mb-0">Jenny wilson</p>
                                                                 </div>
                                                             </td>
@@ -606,7 +606,7 @@
                                                             </td>
                                                             <td>
                                                                 <div class="d-flex align-items-center">
-                                                                    <img src="assets/images/users/user-15.jpg" class="avatar avatar-sm rounded-circle me-2">
+                                                                    <img src="<?php echo $base_url; ?>assets/images/users/user-15.jpg" class="avatar avatar-sm rounded-circle me-2">
                                                                     <p class="mb-0">Jenny wilson</p>
                                                                 </div>
                                                             </td>
@@ -637,7 +637,7 @@
                                                             </td>
                                                             <td>
                                                                 <div class="d-flex align-items-center">
-                                                                    <img src="assets/images/users/user-13.jpg" class="avatar avatar-sm rounded-circle me-2">
+                                                                    <img src="<?php echo $base_url; ?>assets/images/users/user-13.jpg" class="avatar avatar-sm rounded-circle me-2">
                                                                     <p class="mb-0">Cameron Williamson</p>
                                                                 </div>
                                                             </td>
@@ -668,7 +668,7 @@
                                                             </td>
                                                             <td>
                                                                 <div class="d-flex align-items-center">
-                                                                    <img src="assets/images/users/user-11.jpg" class="avatar avatar-sm rounded-circle me-2">
+                                                                    <img src="<?php echo $base_url; ?>assets/images/users/user-11.jpg" class="avatar avatar-sm rounded-circle me-2">
                                                                     <p class="mb-0">Jenny wilson</p>
                                                                 </div>
                                                             </td>
@@ -699,7 +699,7 @@
                                                             </td>
                                                             <td>
                                                                 <div class="d-flex align-items-center">
-                                                                    <img src="assets/images/users/user-14.jpg" class="avatar avatar-sm rounded-circle me-2">
+                                                                    <img src="<?php echo $base_url; ?>assets/images/users/user-14.jpg" class="avatar avatar-sm rounded-circle me-2">
                                                                     <p class="mb-0">Esther Howard</p>
                                                                 </div>
                                                             </td>
@@ -730,7 +730,7 @@
                                                             </td>
                                                             <td>
                                                                 <div class="d-flex align-items-center">
-                                                                    <img src="assets/images/users/user-3.jpg" class="avatar avatar-sm rounded-circle me-2">
+                                                                    <img src="<?php echo $base_url; ?>assets/images/users/user-3.jpg" class="avatar avatar-sm rounded-circle me-2">
                                                                     <p class="mb-0">Darlene Robertson</p>
                                                                 </div>
                                                             </td>
@@ -1392,7 +1392,7 @@
                                                 <tbody>
                                                     <tr>
                                                         <td class="pt-0">
-                                                            <img src="assets/images/browser/chrome-logo.png" alt="logo">
+                                                            <img src="<?php echo $base_url; ?>assets/images/browser/chrome-logo.png" alt="logo">
                                                         </td>
                                                         <td class="w-100 pt-0">Google Chrome</td>
                                                         <td class="text-end pt-0">
@@ -1401,7 +1401,7 @@
                                                     </tr>
                                                     <tr>
                                                         <td>
-                                                            <img src="assets/images/browser/firefox-logo.png" alt="logo">
+                                                            <img src="<?php echo $base_url; ?>assets/images/browser/firefox-logo.png" alt="logo">
                                                         </td>
                                                         <td class="w-100">Mozila Firefox</td>
                                                         <td class="ps-0 text-end">
@@ -1410,7 +1410,7 @@
                                                     </tr>
                                                     <tr>
                                                         <td>
-                                                            <img src="assets/images/browser/safari-logo.png" alt="logo">
+                                                            <img src="<?php echo $base_url; ?>assets/images/browser/safari-logo.png" alt="logo">
                                                         </td>
                                                         <td class="w-100">Apple Safari</td>
                                                         <td class="ps-0 text-end">
@@ -1419,7 +1419,7 @@
                                                     </tr>
                                                     <tr>
                                                         <td>
-                                                            <img src="assets/images/browser/edge-logo.png" alt="logo" class="rounded-circle">
+                                                            <img src="<?php echo $base_url; ?>assets/images/browser/edge-logo.png" alt="logo" class="rounded-circle">
                                                         </td>
                                                         <td class="w-100">Microsoft edge</td>
                                                         <td class="ps-0 text-end">
@@ -1428,7 +1428,7 @@
                                                     </tr>
                                                     <tr>
                                                         <td>
-                                                            <img src="assets/images/browser/opera-logo-1.png" alt="logo">
+                                                            <img src="<?php echo $base_url; ?>assets/images/browser/opera-logo-1.png" alt="logo">
                                                         </td>
                                                         <td class="w-100">Opera mini</td>
                                                         <td class="ps-0 text-end">
@@ -1446,7 +1446,7 @@
                                                     </tr>
                                                     <tr>
                                                         <td>
-                                                            <img src="assets/images/browser/operaGX-logo.png" alt="logo">
+                                                            <img src="<?php echo $base_url; ?>assets/images/browser/operaGX-logo.png" alt="logo">
                                                         </td>
                                                         <td class="w-100">Opera GX</td>
                                                         <td class="ps-0 text-end">
@@ -1455,7 +1455,7 @@
                                                     </tr>
                                                     <tr>
                                                         <td>
-                                                            <img src="assets/images/browser/uc-browser.png" alt="logo">
+                                                            <img src="<?php echo $base_url; ?>assets/images/browser/uc-browser.png" alt="logo">
                                                         </td>
                                                         <td class="w-100">UC Browser</td>
                                                         <td class="ps-0 text-end">
@@ -1495,7 +1495,7 @@
                                                     <tr>
                                                         <td>
                                                             <div class="d-flex align-items-center">
-                                                                <img src="assets/images/social/facebook.png" alt="logo" class="img-fluid me-2">
+                                                                <img src="<?php echo $base_url; ?>assets/images/social/facebook.png" alt="logo" class="img-fluid me-2">
                                                                 <p class="mb-0 fs-14">Facebook</p>   
                                                             </div>
                                                         </td>
@@ -1514,7 +1514,7 @@
                                                     <tr>
                                                         <td>
                                                             <div class="d-flex align-items-center">
-                                                                <img src="assets/images/social/google.png" alt="logo" class="img-fluid me-2">
+                                                                <img src="<?php echo $base_url; ?>assets/images/social/google.png" alt="logo" class="img-fluid me-2">
                                                                 <p class="mb-0 fs-14">Instagram</p>   
                                                             </div>
                                                         </td>
@@ -1533,7 +1533,7 @@
                                                     <tr>
                                                         <td>
                                                             <div class="d-flex align-items-center">
-                                                                <img src="assets/images/social/instagram.png" alt="logo" class="img-fluid me-2">
+                                                                <img src="<?php echo $base_url; ?>assets/images/social/instagram.png" alt="logo" class="img-fluid me-2">
                                                                 <p class="mb-0 fs-14">Google Ads</p>   
                                                             </div>
                                                         </td>
@@ -1553,7 +1553,7 @@
                                                     <tr>
                                                         <td>
                                                             <div class="d-flex align-items-center">
-                                                                <img src="assets/images/social/tiktok.png" alt="logo" class="img-fluid me-2">
+                                                                <img src="<?php echo $base_url; ?>assets/images/social/tiktok.png" alt="logo" class="img-fluid me-2">
                                                                 <p class="mb-0 fs-14">TikTok</p>   
                                                             </div>
                                                         </td>
@@ -1590,7 +1590,7 @@
 
                                                 <div class="col-md-6 col-xl-6 justify-content-center">
                                                     <div class="text-center">
-                                                        <img src="assets/images/svg/ecommerce-2.svg" alt="modernize-img" class="img-fluid">
+                                                        <img src="<?php echo $base_url; ?>assets/images/svg/ecommerce-2.svg" alt="modernize-img" class="img-fluid">
                                                     </div>
                                                 </div>
 
@@ -1656,7 +1656,7 @@
                                                         </a>
                                                     </td>
                                                     <td>
-                                                        <img src="assets/images/users/user-11.jpg" class="avatar avatar-sm rounded-2" />
+                                                        <img src="<?php echo $base_url; ?>assets/images/users/user-11.jpg" class="avatar avatar-sm rounded-2" />
                                                     </td>
                                                 </tr>
 
@@ -1688,7 +1688,7 @@
                                                         </a>
                                                     </td>
                                                     <td>
-                                                        <img src="assets/images/users/user-12.jpg" class="avatar avatar-sm rounded-2" />
+                                                        <img src="<?php echo $base_url; ?>assets/images/users/user-12.jpg" class="avatar avatar-sm rounded-2" />
                                                     </td>
                                                 </tr>
 
@@ -1720,7 +1720,7 @@
                                                         </a>
                                                     </td>
                                                     <td>
-                                                        <img src="assets/images/users/user-13.jpg" class="avatar avatar-sm img-fluid rounded-2" />
+                                                        <img src="<?php echo $base_url; ?>assets/images/users/user-13.jpg" class="avatar avatar-sm img-fluid rounded-2" />
                                                     </td>
                                                 </tr>
 
@@ -1752,7 +1752,7 @@
                                                         </a>
                                                     </td>
                                                     <td>
-                                                        <img src="assets/images/users/user-14.jpg" class="avatar avatar-sm img-fluid rounded-2" />
+                                                        <img src="<?php echo $base_url; ?>assets/images/users/user-14.jpg" class="avatar avatar-sm img-fluid rounded-2" />
                                                     </td>
                                                 </tr>
 
@@ -1784,7 +1784,7 @@
                                                         </a>
                                                     </td>
                                                     <td>
-                                                        <img src="assets/images/users/user-15.jpg" class="avatar avatar-sm img-fluid rounded-2" />
+                                                        <img src="<?php echo $base_url; ?>assets/images/users/user-15.jpg" class="avatar avatar-sm img-fluid rounded-2" />
                                                     </td>
                                                 </tr>
 
@@ -1816,7 +1816,7 @@
                                                         </a>
                                                     </td>
                                                     <td>
-                                                        <img src="assets/images/users/user-10.jpg" class="avatar avatar-sm img-fluid rounded-2" />
+                                                        <img src="<?php echo $base_url; ?>assets/images/users/user-10.jpg" class="avatar avatar-sm img-fluid rounded-2" />
                                                     </td>
                                                 </tr>
 
@@ -1844,34 +1844,30 @@
                 <!-- end Footer -->
 
             </div>
-            <!-- ============================================================== -->
-            <!-- End Page content -->
-            <!-- ============================================================== -->
-
 
         </div>
         <!-- END wrapper -->
 
         <!-- Vendor -->
-        <script src="assets/libs/jquery/jquery.min.js"></script>
-        <script src="assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
-        <script src="assets/libs/simplebar/simplebar.min.js"></script>
-        <script src="assets/libs/node-waves/waves.min.js"></script>
-        <script src="assets/libs/waypoints/lib/jquery.waypoints.min.js"></script>
-        <script src="assets/libs/jquery.counterup/jquery.counterup.min.js"></script>
-        <script src="assets/libs/feather-icons/feather.min.js"></script>
+        <script src="<?php echo $base_url; ?>assets/libs/jquery/jquery.min.js"></script>
+        <script src="<?php echo $base_url; ?>assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="<?php echo $base_url; ?>assets/libs/simplebar/simplebar.min.js"></script>
+        <script src="<?php echo $base_url; ?>assets/libs/node-waves/waves.min.js"></script>
+        <script src="<?php echo $base_url; ?>assets/libs/waypoints/lib/jquery.waypoints.min.js"></script>
+        <script src="<?php echo $base_url; ?>assets/libs/jquery.counterup/jquery.counterup.min.js"></script>
+        <script src="<?php echo $base_url; ?>assets/libs/feather-icons/feather.min.js"></script>
 
         <!-- Apexcharts JS -->
-        <script src="assets/libs/apexcharts/apexcharts.min.js"></script>
+        <script src="<?php echo $base_url; ?>assets/libs/apexcharts/apexcharts.min.js"></script>
 
         <!-- for basic area chart -->
-        <script src="../apexcharts.com/samples/assets/stock-prices.js"></script>
+        <script src="<?php echo $base_url; ?>../apexcharts.com/samples/assets/stock-prices.js"></script>
 
         <!-- Widgets Init Js -->
-        <script src="assets/js/pages/widgets.init.js"></script>
+        <script src="<?php echo $base_url; ?>assets/js/pages/widgets.init.js"></script>
 
         <!-- App js-->
-        <script src="assets/js/app.js"></script>
+        <script src="<?php echo $base_url; ?>assets/js/app.js"></script>
         
     </body>
 

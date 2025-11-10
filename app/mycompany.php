@@ -7,28 +7,37 @@ require_once __DIR__ . '/fetch_notification_count.php';
 //get usertoken from session
 $usertoken = $_SESSION['user']['usertoken'] ?? null;
 
-// Fetch empolyer profile from the database
-$stmt = $conn->prepare("SELECT ep.*, u.picture, u.fullname, u.email, u.role FROM employer_profiles ep JOIN users u ON ep.user_id = u.id WHERE u.usertoken = ? AND ep.action = 'completed'");
-$stmt->bind_param("s", $usertoken);
-$stmt->execute();
-$result = $stmt->get_result();
-$empolyer = $result->fetch_assoc();
+try{
+    // Fetch empolyer profile from the database
+    $stmt = $conn->prepare("SELECT ep.*, u.picture, u.fullname, u.email, u.role FROM employer_profiles ep JOIN users u ON ep.user_id = u.id WHERE u.usertoken = ? AND ep.action = 'completed'");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("s", $usertoken);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $empolyer = $result->fetch_assoc();
 
-if (!$empolyer) {
-    // empolyer not found, redirect to error page
-    header("Location: /devhire/dashboard/error");
-    exit();
+    if (!$empolyer) {
+        // empolyer not found, redirect to error page
+        header("Location: /devhire/dashboard/error");
+        exit();
+    }
+
+    $profile_pic = $empolyer['company_logo'] ? '/devhire/' . $empolyer['company_logo'] :  $empolyer['picture'];
+    $email = htmlspecialchars($empolyer['email']);
+    $bio = htmlspecialchars($empolyer['bio']);
+    $company_name = $empolyer['company_name'];
+    $company_size = $empolyer['company_size'];
+    $industry = $empolyer['industry'];
+    $company_logo = htmlspecialchars($empolyer['company_logo']);
+    $website = htmlspecialchars($empolyer['website']);
+
+} catch (Exception $e){
+    $conn->close();
+    error_log($e->getMessage());
+    echo "Something went wrong. Please try again later.";
 }
-
-$profile_pic = $empolyer['company_logo'] ? '/devhire/' . $empolyer['company_logo'] :  $empolyer['picture'];
-$email = htmlspecialchars($empolyer['email']);
-$bio = htmlspecialchars($empolyer['bio']);
-$company_name = $empolyer['company_name'];
-$company_size = $empolyer['company_size'];
-$industry = $empolyer['industry'];
-$company_logo = htmlspecialchars($empolyer['company_logo']);
-$website = htmlspecialchars($empolyer['website']);
-
 
 ?>
 <!DOCTYPE html>

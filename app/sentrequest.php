@@ -11,6 +11,9 @@ $usertoken = $_SESSION['user']['usertoken'] ?? null;
 try {
     //Fetch user data
     $stmt = $conn->prepare("SELECT email, fullname FROM users WHERE id = ?");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
