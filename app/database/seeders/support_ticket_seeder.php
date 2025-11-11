@@ -42,5 +42,7 @@ try {
 
     echo "20 fake support tickets inserted successfully!";
 } catch (Exception $e) {
-    echo "Error: " . $e->getMessage();
+    $conn->close();
+    error_log($e->getMessage());
+    echo "Something went wrong. Please try again later.";
 }

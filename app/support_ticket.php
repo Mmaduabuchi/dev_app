@@ -205,7 +205,7 @@ try {
                             <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                 <div class="modal-dialog modal-dialog-centered">
                                     <div class="modal-content">
-                                        <form id="openTicketForm" method="POST" action="/submit-ticket.php">
+                                        <form id="openTicketForm" method="POST" action="#">
                                             <div class="modal-header">
                                                 <h1 class="modal-title fs-5" id="exampleModalLabel">Support Ticket</h1>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -285,61 +285,77 @@ try {
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        //delete user report record
-        function deleteReport(data) {
-            // alert(data);
-            // Show confirmation dialog
-            Swal.fire({
-                title: 'Are you sure?',
-                text: 'Do you want to delete this report record? This action cannot be undone.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (!result.isConfirmed) {
-                    return; // User cancelled the action
-                }
-                // Continue with deletion below
-                const formData = new FormData();
-                formData.append('usertoken', <?php echo json_encode($usertoken); ?>);
-                formData.append('recordID', data);
+        document.querySelector("#openTicketForm").addEventListener("submit", (evt) => {
+            evt.preventDefault();
 
-                fetch('<?php echo $base_url; ?>process/process_delete_user_report.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            Swal.fire({
-                                toast: true,
-                                position: 'top-end',
-                                icon: 'success',
-                                title: data.message,
-                                showConfirmButton: false,
-                                timer: 2500
-                            });
-                            setTimeout(() => location.reload(), 2600);
-                        } else {
-                            Swal.fire({
-                                toast: true,
-                                position: 'top-end',
-                                icon: 'error',
-                                title: data.message,
-                                showConfirmButton: false,
-                                timer: 2500
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire('Error', 'An error occurred while processing your request. Please try again later.', 'error');
+            const form = evt.target;
+            //Create a FormData object from the form
+            const formData = new FormData(form);
+
+            //Get form values
+            const ticketTitle = formData.get("title");
+            const ticketCategory = formData.get("category");
+            const ticketPriority = formData.get("priority");
+            const ticketMessage = formData.get("message");
+
+            //validate user inputs
+            if (!ticketTitle || !ticketCategory || !ticketPriority || !ticketMessage) {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'All fields are required.',
+                    showConfirmButton: false,
+                    timer: 2500
+                });
+                return;
+            }
+
+            //Convert all form data to an object
+            const data = Object.fromEntries(formData.entries());
+            console.log(data);
+
+            //send data to server
+            fetch("<?php echo $base_url; ?>process/process_submit_ticket.php", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: data.message,
+                        showConfirmButton: false,
+                        timer: 2500
                     });
+                    setTimeout(() => location.reload(), 2600);
+                } else {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: data.message,
+                        showConfirmButton: false,
+                        timer: 2500
+                    });
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'An error occurred while processing your request. Please try again later.',
+                    showConfirmButton: false,
+                    timer: 2500
+                });
+                return;
             });
-        }
+        });
     </script>
 
 </body>

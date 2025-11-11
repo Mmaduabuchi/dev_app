@@ -46,14 +46,21 @@ try {
     $user_type = $user_data["user_type"];
     $role = $user_data["role"];
 
+    // Generate CSRF token if not exists
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    $csrf_token = $_SESSION['csrf_token'];
+
     //Employer/CEO: Allow direct access
     if ($user_type === "employer" && $role === "CEO") {
         // Employer can proceed to dashboard
         $user_global_variable = true;
         return;
     }
-    //fetch user data from database
-    $stmt = $conn->prepare("SELECT action FROM developers_profiles WHERE user_id = ?");
+
+    //fetch user data from developers_profiles database
+    $stmt = $conn->prepare("SELECT action FROM `developers_profiles` WHERE user_id = ?");
     if (!$stmt) {
         throw new Exception('Database error: ' . $conn->error);
     }

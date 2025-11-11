@@ -291,7 +291,7 @@ try{
                     });
                     return;
                 })
-        })
+        });
 
         //delete user report record
         function deleteReport(data) {
