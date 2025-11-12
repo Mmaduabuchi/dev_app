@@ -12,7 +12,7 @@ require_once __DIR__ . '/fetch_notification_count.php';
 
 <head>
     <meta charset="utf-8" />
-    <title>Subscriptions | devhire - Dashboard</title>
+    <title>Change Subscription Plane | devhire - Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
@@ -79,7 +79,7 @@ require_once __DIR__ . '/fetch_notification_count.php';
 
                     <div class="py-3 d-flex align-items-sm-center flex-sm-row flex-column">
                         <div class="flex-grow-1">
-                            <h4 class="fs-18 fw-semibold m-0">Subscriptions plan</h4>
+                            <h4 class="fs-18 fw-semibold m-0">Change subscription plan</h4>
                         </div>
                     </div>
 
@@ -155,7 +155,7 @@ require_once __DIR__ . '/fetch_notification_count.php';
 
                                         <div class="row align-items-center">
                                             <div class="col">
-                                                <button class="btn btn-primary subBtn rounded-4 text-light p-2 w-100">Choose Plan</button>
+                                                <button class="btn btn-primary subBtn rounded-4 text-light p-2 w-100">Upgrade Plan</button>
                                             </div>
                                         </div>
 
@@ -194,7 +194,7 @@ require_once __DIR__ . '/fetch_notification_count.php';
 
                                         <div class="row align-items-center">
                                             <div class="col">
-                                                <button class="btn btn-primary subBtn rounded-4 text-light p-2 w-100">Choose Plan</button>
+                                                <button class="btn btn-primary subBtn rounded-4 text-light p-2 w-100">Upgrade Plan</button>
                                             </div>
                                         </div>
 

@@ -10,18 +10,34 @@ function sendResponse($status, $message)
     exit;
 }
 
+// Fallback for getallheaders() if not available
+if (!function_exists('getallheaders')) {
+    function getallheaders()
+    {
+        $headers = [];
+        foreach ($_SERVER as $name => $value) {
+            if (substr($name, 0, 5) == 'HTTP_') {
+                $key = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))));
+                $headers[$key] = $value;
+            }
+        }
+        return $headers;
+    }
+}
+
 // Check if the request method is POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendResponse('error', 'Invalid request method.');
 } else {
-
-    $action = $_POST["cancel_subscription"] ?? null;
+    //get data
+    $data = json_decode(file_get_contents('php://input'), true);
+    $action = $data['action'] ?? null;
 
     $headers = getallheaders();
-    $csrfToken = $headers['X-CSRF-Token'] ?? '';
+    $csrfToken = $headers['X-Csrf-Token'] ?? '';
 
-    if (empty($csrfToken) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
-        sendResponse('error', 'Invalid CSRF token. Request denied..');
+    if (!isset($_SESSION['csrf_token']) || empty($csrfToken) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+        sendResponse('error', 'Invalid CSRF token. Request denied..'. $csrfToken);
     }
 
     if ($action === null || $action !== 'cancel_subscription') {

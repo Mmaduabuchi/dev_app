@@ -4,7 +4,8 @@ session_start();
 //database connection
 require_once __DIR__ . '/../../config/databaseconnection.php';
 //helper function for response
-function sendResponse($status, $message) { 
+function sendResponse($status, $message)
+{
     echo json_encode(['status' => $status, 'message' => $message]);
     exit;
 }
@@ -12,17 +13,37 @@ function sendResponse($status, $message) {
 // Check if the request method is POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendResponse('error', 'Invalid request method.');
-}else{
+} else {
     //get data from input
     $website = $_POST['website'] ?? '';
     $usertoken = $_POST['token'] ?? '';
 
     //validate inputs
+    $website = trim($website);
     if (empty($website)) {
         sendResponse('error', 'Website field is required.');
     }
+    // If scheme missing, prepend http:// to allow validation of common user input like "example.com"
+    if (!preg_match('#^https?://#i', $website)) {
+        $website = 'http://' . $website;
+    }
+    // Validate URL
+    if (!filter_var($website, FILTER_VALIDATE_URL)) {
+        sendResponse('error', 'Invalid website URL.');
+    }
+    // Restrict to http/https schemes
+    $parts = parse_url($website);
+    if (!in_array(strtolower($parts['scheme'] ?? ''), ['http', 'https'])) {
+        sendResponse('error', 'Website must use http or https.');
+    }
+    // Ensure host exists and ends with a valid TLD (e.g. .com, .ng, .org, .io, .uk, etc.)
+    $host = strtolower($parts['host'] ?? '');
+    if (empty($host) || !preg_match('/\.[a-z]{2,63}$/i', $host)) {
+        sendResponse('error', 'Website must end with a valid top-level domain like .com or .ng.');
+    }
+
     //validate usertoken
-    if(empty($usertoken)){
+    if (empty($usertoken)) {
         sendResponse('error', 'Invalid user token.');
     }
 
@@ -34,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     // Get user ID from session
     $userId = $_SESSION['user']['id'];
 
-    try{
+    try {
         //begin transaction
         $conn->begin_transaction();
 
@@ -65,6 +86,26 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         }
         $stmt->close();
 
+        //check user current subscription
+        $stmt = $conn->prepare("SELECT * FROM `subscriptions` WHERE user_id = ? ORDER BY created_at DESC LIMIT 1");
+        if (!$stmt) {
+            throw new Exception("Database error" . $conn->error);
+        }
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows < 1) {
+            sendResponse('error', 'This feature is available to subscribers only.');
+        }
+        $userSubscription = $result->fetch_assoc();
+
+        //check user subscription status
+        if ($userSubscription['status'] !== 'active') {
+            sendResponse('error', 'Renew or upgrade your plan to access this feature.');
+        }
+        $stmt->close();
+
         //insert website into developer_profiles table
         $stmt = $conn->prepare("UPDATE `developers_profiles` SET website = ? WHERE user_id = ?");
         if (!$stmt) {
@@ -81,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         $conn->commit();
 
         sendResponse('success', 'Website added successfully.');
-    }catch (Exception $e) {
+    } catch (Exception $e) {
         //rollback transaction on error
         $conn->rollback();
         sendResponse('error', $e->getMessage());

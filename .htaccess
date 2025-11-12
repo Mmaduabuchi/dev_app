@@ -48,6 +48,7 @@ RewriteRule ^dashboard/search/?$ app/search.php [NC,L]
 RewriteRule ^dashboard/support-ticket/?$ app/support_ticket.php [NC,L]
 RewriteRule ^dashboard/widgets/?$ app/widgets.php [NC,L]
 RewriteRule ^dashboard/viewticket/?$ app/viewticket.php [NC,L]
+RewriteRule ^dashboard/change-plan/?$ app/change_plan.php [NC,L]
 
 #CEO routes
 RewriteRule ^dashboard/mycompany/?$ app/mycompany.php [NC,L]

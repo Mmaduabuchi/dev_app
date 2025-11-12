@@ -25,7 +25,7 @@ $categories = ['Technical Support', 'Billing', 'Account Issue', 'Feedback', 'Gen
 $statuses = ['Open', 'In Progress', 'Closed', 'Resolved', 'Pending'];
 
 try {
-    for ($i = 1; $i <= 20; $i++) {
+    for ($i = 1; $i <= 10; $i++) {
         $user_id = rand(1, 5);
         $ticket_reference = generateTicketRef($i);
         $title = 'Issue #' . $i . ': ' . randomText(rand(5, 12));
@@ -40,7 +40,7 @@ try {
         $stmt->execute();
     }
 
-    echo "20 fake support tickets inserted successfully!";
+    echo "10 fake support tickets inserted successfully!";
 } catch (Exception $e) {
     $conn->close();
     error_log($e->getMessage());

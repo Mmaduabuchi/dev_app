@@ -221,10 +221,10 @@
                         </a>
 
                         <!-- item-->
-                        <a class='dropdown-item notify-item' href='/devhire/dashboard/notification'>
+                        <!-- <a class='dropdown-item notify-item' href='/devhire/dashboard/notification'>
                             <i class="mdi mdi-bell-outline fs-16 align-middle"></i>
                             <span>Notification</span>
-                        </a>
+                        </a> -->
 
                         <div class="dropdown-divider"></div>
 

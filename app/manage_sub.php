@@ -5,34 +5,52 @@ require_once "auth.php";
 //notification count
 require_once __DIR__ . '/fetch_notification_count.php';
 
+//get usertoken from session
+$usertoken = $_SESSION['user']['usertoken'] ?? null;
+$no_sub = false;
 
+try{
+    // Fetch latest subscription and join with plan details
+    $query = " SELECT 
+            sp.name,
+            sp.price,
+            sp.duration_days,
+            s.status,
+            s.end_date
+        FROM subscriptions s
+        INNER JOIN subscription_plans sp ON s.plan_id = sp.id
+        WHERE s.user_id = ? ORDER BY s.created_at DESC LIMIT 1
+    ";
 
-// Determine current page
-$limit = 5; // records per page
-$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
-$offset = ($page - 1) * $limit;
-
-// Fetch paginated subscriptions
-try {
-    $stmt = $conn->prepare("
-        SELECT us.*, sp.name AS plan_name, sp.price AS plan_price
-        FROM subscriptions us
-        INNER JOIN subscription_plans sp ON us.plan_id = sp.id
-        WHERE us.user_id = ?
-        ORDER BY us.created_at DESC
-        LIMIT ? OFFSET ?
-    ");
-    if (!$stmt) throw new Exception('Prepare failed: ' . $conn->error);
-    $stmt->bind_param("iii", $user_id, $limit, $offset);
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
+    $subscription = $result->fetch_assoc();
 
-    // Fetch total count for pagination
-    $totalStmt = $conn->prepare("SELECT COUNT(*) as total FROM subscriptions WHERE user_id = ?");
-    $totalStmt->bind_param("i", $user_id);
-    $totalStmt->execute();
-    $totalRecords = $totalStmt->get_result()->fetch_assoc()['total'];
-    $totalPages = ceil($totalRecords / $limit);
+    if (!$subscription) {
+        $no_sub = true;
+        exit;
+    }
+
+    $planName = htmlspecialchars($subscription['name']);
+    $price = htmlspecialchars($subscription['price']);
+    $cycle = htmlspecialchars($subscription['duration_days']);
+    switch ($cycle) {
+        case 90:
+            $cycle = "Quarterly";
+            break;
+        case 365:
+            $cycle = "Yearly";
+            break;
+        default:
+            $cycle = "Monthly";
+    }
+    $status = htmlspecialchars($subscription['status']);
+    $renewDate = !empty($subscription['end_date']) ? date('M d, Y', strtotime($subscription['end_date'])) : 'N/A';
+
+    // Badge color class
+    $badgeClass = ($status === 'active') ? 'text-success bg-success-subtle' : 'text-danger bg-danger-subtle';
 
 } catch (Exception $e) {
     $conn->close();
@@ -49,6 +67,7 @@ try {
     <title>Manage Subscription | devhire - Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="csrf-token" content="<?php echo $_SESSION['csrf_token']; ?>">
 
     <!-- App favicon -->
     <link rel="shortcut icon" href="<?php echo $base_url; ?>assets/images/favicon.ico">
@@ -100,18 +119,37 @@ try {
                                             <p>Manage your plan and payments</p>
                                         </div>
                                         <div class="col-12 col-md-6 text-end pt-2">
+                                            <?php
+                                                if($no_sub === false):
+                                            ?>
                                             <button class="btn btn-outline-dark" id="Cancelsub">Cancel subscription</button>
+                                            <?php
+                                                endif;
+                                            ?>
                                             <button class="btn btn-outline-dark">Manage payments</button>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="card-body bg-light-subtle">
+                                    <?php
+                                        if($no_sub === true):
+                                    ?>
+                                    <div class="row">
+                                        <div class="col-12 text-center mt-3">
+                                            <p class="text-danger">No active subscription found.</p>
+                                        </div>
+                                    </div>
+                                    <?php
+                                        else:
+                                    ?>
                                     <div class="row">
                                         <div class="col-12 col-md-6">
                                             <h5 class="text-dark">Current Plan</h5>
                                         </div>
                                         <div class="col-12 col-md-6 text-end">
-                                            <button class="btn btn-outline-dark">Change Plan</button>
+                                            <a href="/devhire/dashboard/change-plan">
+                                                <button class="btn btn-outline-dark">Change Plan</button>
+                                            </a>
                                         </div>
                                     </div>
                                     <div class="row mt-3">
@@ -121,16 +159,16 @@ try {
                                                     <div class="widget-first">
 
                                                         <div class="d-flex justify-content-between align-items-center mb-2">
-                                                            <p class="mb-0 text-dark fs-15">Monthly Plan</p>
+                                                            <p class="mb-0 text-dark fs-15"><?php echo $planName . ' Plan'; ?></p>
                                                             <div>
-                                                                <span class="badge text-success badge-custom-second bg-success-subtle fw-medium rounded-4 fs-14 me-2 contact-badge">
-                                                                    Active
+                                                                <span class="badge <?php echo $badgeClass; ?> badge-custom-second fw-medium rounded-4 fs-14 me-2 contact-badge">
+                                                                    <?php echo ucfirst($status); ?>
                                                                 </span>
                                                             </div>
                                                         </div>
 
                                                         <div class="d-flex justify-content-between align-items-center">
-                                                            <h3 class="mb-0 fs-22 text-dark me-3">$50/Monthly</h3>
+                                                            <h3 class="mb-0 fs-22 text-dark me-3">$<?php echo $price . '/' . ucfirst($cycle); ?></h3>
                                                         </div>
 
                                                     </div>
@@ -147,7 +185,7 @@ try {
                                                         </div>
 
                                                         <div class="d-flex justify-content-between align-items-center">
-                                                            <h3 class="mb-0 fs-22 text-dark me-3">Oct 26, 2025</h3>
+                                                            <h3 class="mb-0 fs-22 text-dark me-3"><?php echo $renewDate; ?></h3>
                                                         </div>
 
                                                     </div>
@@ -155,6 +193,9 @@ try {
                                             </div>
                                         </div>
                                     </div>
+                                    <?php
+                                        endif;
+                                    ?>
                                 </div>
                             </div>
                         </div>
@@ -170,14 +211,14 @@ try {
                                     <div class="d-flex align-items-center">
                                         <h5 class="card-title mb-0">Subscription History / Logs</h5>
                                         <div class="ms-auto">
-                                            <button class="btn btn-sm bg-light border dropdown-toggle fw-medium" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <!-- <button class="btn btn-sm bg-light border dropdown-toggle fw-medium" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                 View All <i class="mdi mdi-chevron-down ms-1 fs-14"></i>
                                             </button>
                                             <div class="dropdown-menu dropdown-menu-end">
                                                 <a class="dropdown-item" href="#">Today</a>
                                                 <a class="dropdown-item" href="#">This Week</a>
                                                 <a class="dropdown-item" href="#">Last Week</a>
-                                            </div>
+                                            </div> -->
                                         </div>
                                     </div>
                                 </div>
@@ -196,6 +237,39 @@ try {
                                             </thead>
                                             <tbody>
                                                 <?php
+                                                // Determine current page
+                                                $limit = 5; // records per page
+                                                $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+                                                $offset = ($page - 1) * $limit;
+
+                                                // Fetch paginated subscriptions
+                                                try {
+                                                    $stmt = $conn->prepare("
+                                                        SELECT us.*, sp.name AS plan_name, sp.price AS plan_price
+                                                        FROM subscriptions us
+                                                        INNER JOIN subscription_plans sp ON us.plan_id = sp.id
+                                                        WHERE us.user_id = ?
+                                                        ORDER BY us.created_at DESC
+                                                        LIMIT ? OFFSET ?
+                                                    ");
+                                                    if (!$stmt) throw new Exception('Prepare failed: ' . $conn->error);
+                                                    $stmt->bind_param("iii", $user_id, $limit, $offset);
+                                                    $stmt->execute();
+                                                    $result = $stmt->get_result();
+
+                                                    // Fetch total count for pagination
+                                                    $totalStmt = $conn->prepare("SELECT COUNT(*) as total FROM subscriptions WHERE user_id = ?");
+                                                    $totalStmt->bind_param("i", $user_id);
+                                                    $totalStmt->execute();
+                                                    $totalRecords = $totalStmt->get_result()->fetch_assoc()['total'];
+                                                    $totalPages = ceil($totalRecords / $limit);
+                                                } catch (Exception $e) {
+                                                    $conn->close();
+                                                    error_log($e->getMessage());
+                                                    echo "Something went wrong. Please try again later.";
+                                                }
+
+                                                //render
                                                 if ($result->num_rows < 1) {
                                                     echo '<tr><td colspan="5" class="text-center text-muted">No subscriptions record found.</td></tr>';
                                                 } else {
@@ -207,18 +281,25 @@ try {
                                                         $transactionId = $data['transaction_id'];
 
                                                         // Optional: badge color based on status
-                                                        switch(strtolower($data['status'])){
-                                                            case 'active': $badgeClass = 'bg-success-subtle text-success'; break;
-                                                            case 'expired': $badgeClass = 'bg-danger-subtle text-danger'; break;
-                                                            case 'cancelled': $badgeClass = 'bg-secondary-subtle text-secondary'; break;
-                                                            default: $badgeClass = 'bg-primary-subtle text-primary';
+                                                        switch (strtolower($data['status'])) {
+                                                            case 'active':
+                                                                $badgeClass = 'bg-success-subtle text-success';
+                                                                break;
+                                                            case 'expired':
+                                                                $badgeClass = 'bg-danger-subtle text-danger';
+                                                                break;
+                                                            case 'cancelled':
+                                                                $badgeClass = 'bg-secondary-subtle text-secondary';
+                                                                break;
+                                                            default:
+                                                                $badgeClass = 'bg-primary-subtle text-primary';
                                                         }
 
                                                         echo "<tr>
                                                             <td class='text-center'><p class='mb-0 fs-14'>{$date}</p></td>
-                                                            <td><span class='badge {$badgeClass} fw-semibold'>{$planName}</span></td>
+                                                            <td><p class='mb-0 fw-semibold'>{$planName}</p></td>
                                                             <td><p class='mb-0 fw-medium'>\${$amount}</p></td>
-                                                            <td><p class='mb-0 fw-medium'>{$status}</p></td>
+                                                            <td><span class='badge {$badgeClass} fw-semibold'>{$status}</span></td>
                                                             <td><a href='/invoice.php?txn={$transactionId}' class='mb-0 fw-medium'>[Download]</a></td>
                                                         </tr>";
                                                     }
@@ -231,21 +312,21 @@ try {
                                         <?php if ($totalPages > 1): ?>
                                             <nav>
                                                 <ul class="pagination justify-content-center mt-3">
-                                                    <?php if($page > 1): ?>
+                                                    <?php if ($page > 1): ?>
                                                         <li class="page-item">
-                                                            <a class="page-link" href="?page=<?= $page-1 ?>">Previous</a>
+                                                            <a class="page-link" href="?page=<?= $page - 1 ?>">Previous</a>
                                                         </li>
                                                     <?php endif; ?>
 
-                                                    <?php for($i=1; $i<=$totalPages; $i++): ?>
-                                                        <li class="page-item <?= $i==$page?'active':'' ?>">
+                                                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                                                        <li class="page-item <?= $i == $page ? 'active' : '' ?>">
                                                             <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
                                                         </li>
                                                     <?php endfor; ?>
 
-                                                    <?php if($page < $totalPages): ?>
+                                                    <?php if ($page < $totalPages): ?>
                                                         <li class="page-item">
-                                                            <a class="page-link" href="?page=<?= $page+1 ?>">Next</a>
+                                                            <a class="page-link" href="?page=<?= $page + 1 ?>">Next</a>
                                                         </li>
                                                     <?php endif; ?>
                                                 </ul>
@@ -302,7 +383,7 @@ try {
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const cancelBtn = document.querySelector("#Cancelsub");
-            if (!cancelBtn) return; 
+            if (!cancelBtn) return;
 
             cancelBtn.addEventListener("click", () => {
                 // Confirm action
@@ -321,56 +402,58 @@ try {
                     //Disable button to prevent double-click
                     cancelBtn.disabled = true;
 
+                    const token = document.querySelector('meta[name="csrf-token"]').content;
+
                     fetch('<?php echo $base_url; ?>process/process_cancel_user_subscription.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-Token': '<?php echo $_SESSION["csrf_token"]; ?>'
-                        },
-                        body: JSON.stringify({
-                            action: 'cancel_subscription'
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-Token': token
+                            },
+                            body: JSON.stringify({
+                                action: 'cancel_subscription'
+                            })
                         })
-                    })
-                    .then(response => {
-                        if (!response.ok) throw new Error('Network response was not ok.');
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.status === 'success') {
-                            Swal.fire({
-                                toast: true,
-                                position: 'top-end',
-                                icon: 'success',
-                                title: data.message || 'Subscription cancelled successfully.',
-                                showConfirmButton: false,
-                                timer: 2500
-                            });
-                            setTimeout(() => location.reload(), 2600);
-                        } else {
+                        .then(response => {
+                            if (!response.ok) throw new Error('Network response was not ok.');
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.status === 'success') {
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'success',
+                                    title: data.message || 'Subscription cancelled successfully.',
+                                    showConfirmButton: false,
+                                    timer: 2500
+                                });
+                                setTimeout(() => location.reload(), 2600);
+                            } else {
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'error',
+                                    title: data.message || 'Failed to cancel subscription.',
+                                    showConfirmButton: false,
+                                    timer: 2500
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
                             Swal.fire({
                                 toast: true,
                                 position: 'top-end',
                                 icon: 'error',
-                                title: data.message || 'Failed to cancel subscription.',
+                                title: 'An unexpected error occurred. Please try again later.',
                                 showConfirmButton: false,
                                 timer: 2500
                             });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'error',
-                            title: 'An unexpected error occurred. Please try again later.',
-                            showConfirmButton: false,
-                            timer: 2500
+                        })
+                        .finally(() => {
+                            cancelBtn.disabled = false; // Re-enable the button
                         });
-                    })
-                    .finally(() => {
-                        cancelBtn.disabled = false; // Re-enable the button
-                    });
                 });
             });
         });

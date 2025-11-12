@@ -24,8 +24,8 @@ try {
         throw new Exception("No users or plans found. Make sure users and subscription_plans tables have data.");
     }
 
-    // Seed 20 subscriptions
-    for ($i = 0; $i < 20; $i++) {
+    // Seed 10 subscriptions
+    for ($i = 0; $i < 10; $i++) {
         // Random user and plan
         $userId = $userIds[array_rand($userIds)];
         $plan = $plans[array_rand($plans)];
@@ -64,7 +64,7 @@ try {
         }
     }
 
-    echo "20 user subscriptions seeded successfully!";
+    echo "10 user subscriptions seeded successfully!";
 } catch (Exception $e) {
     $conn->close();
     error_log($e->getMessage());

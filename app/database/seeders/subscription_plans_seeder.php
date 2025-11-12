@@ -17,13 +17,13 @@ try {
         ],
         [
             'name' => 'Standard',
-            'price' => 12000.00,
+            'price' => 9.00,
             'duration_days' => 90,
             'features' => 'All Basic features + Priority support, Additional reports'
         ],
         [
             'name' => 'Premium',
-            'price' => 45000.00,
+            'price' => 15.00,
             'duration_days' => 365,
             'features' => 'All Standard features + Dedicated account manager, Advanced analytics'
         ]

@@ -2,8 +2,11 @@
 require_once "config.php";
 // Start session and check authentication
 require_once "auth.php";
+//authorize user subscription
+require_once "auth_on_subscription.php";
 //notification count
 require_once __DIR__ . '/fetch_notification_count.php';
+
 //get usertoken from session
 $usertoken = $_SESSION['user']['usertoken'] ?? null;
 

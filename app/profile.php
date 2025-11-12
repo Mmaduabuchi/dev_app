@@ -7,6 +7,8 @@ require_once __DIR__ . '/fetch_notification_count.php';
 //get usertoken from session
 $usertoken = $_SESSION['user']['usertoken'] ?? null;
 
+$user_subscription_status = false;
+
 try{
     // fetch user data from database
     $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
@@ -53,6 +55,31 @@ try{
     $user_job_commitment = $profile['job_commitment'];
     $user_preferred_hourly_rate = $profile['preferred_hourly_rate'];
 
+
+
+    //check user current subscription
+    $stmt = $conn->prepare("SELECT * FROM `subscriptions` WHERE user_id = ? ORDER BY created_at DESC LIMIT 1");
+    if(!$stmt){
+        throw new Exception("Database error" . $conn->error);
+    }
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if($result->num_rows < 1){
+        $user_subscription_status = false;
+        return;
+    }
+
+    $userSubscription = $result->fetch_assoc();
+
+    //check user subscription status
+    if($userSubscription['status'] === 'active'){
+        $user_subscription_status = true;
+    }
+
+    $stmt->close();
+
 } catch (Exception $e){
     $conn->close();
     error_log($e->getMessage());
@@ -86,6 +113,16 @@ try{
             height: 80px;
             border-radius: 20%;
             object-fit: cover;
+        }
+        .btn-primary-non{
+            background-color: antiquewhite;
+            border: 0.7px solid red;
+        }
+
+        .btn-primary-non:hover{
+            background-color: red;
+            border: 0.7px solid yellow;
+            color: white;
         }
     </style>
 
@@ -232,18 +269,6 @@ try{
                                                     <input class="form-control" type="text" value="<?= $user_preferred_hourly_rate . ' USD'; ?>" readonly aria-label="readonly input example">
                                                 </div>
 
-                                                <!-- <div>
-                                                        <label for="exampleDataList" class="form-label">Datalist example</label>
-                                                        <input class="form-control" list="datalistOptions" id="exampleDataList" placeholder="Type to search...">
-                                                        <datalist id="datalistOptions">
-                                                            <option value="San Francisco">
-                                                            <option value="New York">
-                                                            <option value="Seattle">
-                                                            <option value="Los Angeles">
-                                                            <option value="Chicago">
-                                                        </datalist>
-                                                    </div> -->
-
                                             </form>
                                         </div>
                                         <div class="col-12">
@@ -305,7 +330,18 @@ try{
                                             <input type="text" id="example-input-normal" name="website" class="form-control" placeholder="e.g., https://websitename.com/">
                                         </div>
                                         <div>
+                                            <?php
+                                                if($user_subscription_status === true):
+                                            ?>
                                             <button type="submit" class="btn btn-primary">Add Website</button>
+                                            <?php
+                                                else:
+                                            ?>
+                                            <span class="btn btn-primary-non">Add Website</span>
+                                            <span class="text-danger">This feature is available to subscribers only.</span>
+                                            <?php
+                                                endif;
+                                            ?>
                                         </div>
                                     </form>
                                 </div>
@@ -339,56 +375,6 @@ try{
                             </div>
                         </div>
                     </div>
-
-
-                    <!-- <div class="row">
-                        <div class="col-lg-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">Input Group</h5>
-                                </div>
-
-                                <div class="card-body">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1">@</span>
-                                        <input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
-                                    </div>
-
-                                    <div class="input-group mb-3">
-                                        <input type="text" class="form-control" placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="basic-addon2">
-                                        <span class="input-group-text" id="basic-addon2">@example.com</span>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="basic-url" class="form-label">Your vanity URL</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text" id="basic-addon3">https://example.com/users/</span>
-                                            <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3 basic-addon4">
-                                        </div>
-                                        <div class="form-text" id="basic-addon4">Example help text goes outside the input group.</div>
-                                    </div>
-
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text">$</span>
-                                        <input type="text" class="form-control" aria-label="Amount (to the nearest dollar)">
-                                        <span class="input-group-text">.00</span>
-                                    </div>
-
-                                    <div class="input-group mb-3">
-                                        <input type="text" class="form-control" placeholder="Username" aria-label="Username">
-                                        <span class="input-group-text">@</span>
-                                        <input type="text" class="form-control" placeholder="Server" aria-label="Server">
-                                    </div>
-
-                                    <div class="input-group">
-                                        <span class="input-group-text">With textarea</span>
-                                        <textarea class="form-control" aria-label="With textarea"></textarea>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div> -->
 
                 </div> <!-- container-fluid -->
 

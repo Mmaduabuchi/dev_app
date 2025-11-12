@@ -7,10 +7,10 @@ require_once __DIR__ . '/fetch_notification_count.php';
 //get usertoken from session
 $usertoken = $_SESSION['user']['usertoken'] ?? null;
 $employer_status = true;
-try{
+try {
     //fetch all users details
     $stmt = $conn->prepare("SELECT * FROM `users` WHERE usertoken = ? AND id = ?");
-    if(!$stmt){
+    if (!$stmt) {
         throw new Exception('Database error: ' . $conn->error);
     }
     $stmt->bind_param("si", $usertoken, $user_id);
@@ -19,9 +19,9 @@ try{
     $user = $result->fetch_assoc();
     $stmt->close();
 
-    if($user_global_variable !== false){
+    if ($user_global_variable !== false) {
         $stmt = $conn->prepare("SELECT * FROM `employer_profiles` WHERE user_id = ?");
-        if(!$stmt){
+        if (!$stmt) {
             throw new Exception('Database error: ' . $conn->error);
         }
         $stmt->bind_param("i", $user_id);
@@ -53,7 +53,7 @@ try{
         //response with notification count
         $sent_request_count = isset($data['sent_request_count']) ? (int)$data['sent_request_count'] : 0;
         $stmt->close();
-    }else{
+    } else {
         $stmt = $conn->prepare("SELECT COUNT(*) as recevied_request_count FROM `notifications` WHERE user_id = ? AND deleted_at IS NULL");
         if (!$stmt) {
             throw new Exception('Database error: ' . $conn->error);
@@ -66,8 +66,7 @@ try{
         $recevied_request_count = isset($data['recevied_request_count']) ? (int)$data['recevied_request_count'] : 0;
         $stmt->close();
     }
-
-} catch(exception $e){
+} catch (exception $e) {
     $conn->close();
     error_log($e->getMessage());
     // echo "Something went wrong. Please try again later.";
@@ -78,9 +77,10 @@ try{
 <!DOCTYPE html>
 <html lang="en">
 <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+
 <head>
     <meta charset="utf-8" />
-    <title> Welcome to | Devhire -  Dashboard</title>
+    <title> Welcome to | Devhire - Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
@@ -154,7 +154,7 @@ try{
                                             <div
                                                 class="p-2 border border-secondary border-opacity-10 bg-secondary-subtle rounded-2 me-2">
                                                 <div class="bg-secondary rounded-circle widget-size text-center">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="#ffffff"   width="20" height="20" viewBox="0 0 24 24" stroke-width="1.0" stroke="currentColor" class="size-6">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="#ffffff" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.0" stroke="currentColor" class="size-6">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                                     </svg>
@@ -180,35 +180,35 @@ try{
                                         <div class="d-flex align-items-center mb-2">
                                             <div class="p-2 border border-danger border-opacity-10 bg-danger-subtle rounded-2 me-2">
                                                 <div class="bg-danger rounded-circle widget-size text-center">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="#ffffff"  width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="" class="size-6">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="#ffffff" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="" class="size-6">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
                                                     </svg>
                                                 </div>
                                             </div>
                                             <?php
-                                                if($user_global_variable !== false):
+                                            if ($user_global_variable !== false):
                                             ?>
                                                 <p class="mb-0 text-dark fs-15">Sent Requests</p>
                                             <?php
-                                                else:
+                                            else:
                                             ?>
                                                 <p class="mb-0 text-dark fs-15">Requests</p>
                                             <?php
-                                                endif;
+                                            endif;
                                             ?>
                                         </div>
 
                                         <div class="d-flex justify-content-between align-items-center">
                                             <?php
-                                                if($user_global_variable !== false):
+                                            if ($user_global_variable !== false):
                                             ?>
                                                 <h3 class="mb-0 fs-22 text-dark me-3"><?php echo $sent_request_count; ?></h3>
                                             <?php
-                                                else:
+                                            else:
                                             ?>
                                                 <h3 class="mb-0 fs-22 text-dark me-3"><?php echo $recevied_request_count; ?></h3>
                                             <?php
-                                                endif;
+                                            endif;
                                             ?>
                                         </div>
 
@@ -224,7 +224,7 @@ try{
                     <div class="row">
                         <div class="col">
                             <?php
-                                if($employer_status === false):
+                            if ($employer_status === false):
                             ?>
                                 <div class="alert alert-warning" role="alert">
                                     <div class="row">
@@ -239,7 +239,7 @@ try{
                                     </div>
                                 </div>
                             <?php
-                                endif;
+                            endif;
                             ?>
                         </div>
                     </div>
@@ -321,12 +321,12 @@ try{
                                         <h5 class="card-title mb-0">Subscription History / Logs</h5>
 
                                         <div class="ms-auto">
-                                            <button class="btn btn-sm bg-light border dropdown-toggle fw-medium" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">View All<i class="mdi mdi-chevron-down ms-1 fs-14"></i></button>
+                                            <!-- <button class="btn btn-sm bg-light border dropdown-toggle fw-medium" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">View All<i class="mdi mdi-chevron-down ms-1 fs-14"></i></button>
                                             <div class="dropdown-menu dropdown-menu-end">
                                                 <a class="dropdown-item" href="#">Today</a>
                                                 <a class="dropdown-item" href="#">This Week</a>
                                                 <a class="dropdown-item" href="#">Last Week</a>
-                                            </div>
+                                            </div> -->
                                         </div>
                                     </div>
                                 </div>
@@ -335,7 +335,6 @@ try{
                                 <div class="card-body p-0">
                                     <div class="table-responsive">
                                         <table class="table table-traffic mb-0">
-
                                             <thead>
                                                 <tr>
                                                     <th>Date</th>
@@ -345,123 +344,105 @@ try{
                                                     <th>Invoice</th>
                                                 </tr>
                                             </thead>
+                                            <tbody>
+                                                <?php
 
-                                            <tr>
-                                                <td class="text-center">
-                                                    <div class="d-flex align-items-center">
-                                                        <!-- <span class="avatar mb-0 position-relative">
-                                                            <img class="avatar avatar-sm rounded-2 me-3 bg-primary-subtle rounded-circle p-1" src="<?php echo $base_url; ?>assets/images/products/bag.png" alt="product-image" />
-                                                        </span> -->
-                                                        <p class="mb-0 fs-14">Oct 5, 2025</p>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-primary-subtle text-primary fw-semibold">Premium</span>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0 fw-medium">$15.00</p>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0 fw-medium">Success</p>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0 fw-medium">[Download]</p>
-                                                </td>
-                                            </tr>
+                                                // Determine current page
+                                                $limit = 5; // records per page
+                                                $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+                                                $offset = ($page - 1) * $limit;
 
-                                            <tr>
-                                                <td class="text-center">
-                                                    <div class="d-flex align-items-center">
-                                                        <!-- <span class="avatar mb-0 position-relative">
-                                                            <img class="avatar avatar-sm rounded-2 me-3 bg-primary-subtle rounded-circle p-1" src="<?php echo $base_url; ?>assets/images/products/watch.png" alt="product-image" />
-                                                        </span> -->
-                                                        <p class="mb-0 fs-14">Nov 5, 2025</p>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-primary-subtle text-primary fw-semibold">Standard</span>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0 fw-medium">$9.00</p>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0 fw-medium">Success</p>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0 fw-medium">[Download]</p>
-                                                </td>
-                                            </tr>
+                                                // Fetch paginated subscriptions
+                                                try {
+                                                    $stmt = $conn->prepare("
+                                                        SELECT us.*, sp.name AS plan_name, sp.price AS plan_price
+                                                        FROM subscriptions us
+                                                        INNER JOIN subscription_plans sp ON us.plan_id = sp.id
+                                                        WHERE us.user_id = ?
+                                                        ORDER BY us.created_at DESC
+                                                        LIMIT ? OFFSET ?
+                                                    ");
+                                                    if (!$stmt) throw new Exception('Prepare failed: ' . $conn->error);
+                                                    $stmt->bind_param("iii", $user_id, $limit, $offset);
+                                                    $stmt->execute();
+                                                    $result = $stmt->get_result();
 
-                                            <tr>
-                                                <td class="text-center">
-                                                    <div class="d-flex align-items-center">
-                                                        <!-- <span class="avatar mb-0 position-relative">
-                                                            <img class="avatar avatar-sm rounded-2 me-3 bg-primary-subtle rounded-circle p-1" src="<?php echo $base_url; ?>assets/images/products/headphone.png" alt="product-image" />
-                                                        </span> -->
-                                                        <p class="mb-0 fs-14">Oct 5, 2024</p>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-primary-subtle text-primary fw-semibold">Premium</span>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0 fw-medium">$15.00</p>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0 fw-medium">Success</p>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0 fw-medium">[Download]</p>
-                                                </td>
-                                            </tr>
+                                                    // Fetch total count for pagination
+                                                    $totalStmt = $conn->prepare("SELECT COUNT(*) as total FROM subscriptions WHERE user_id = ?");
+                                                    $totalStmt->bind_param("i", $user_id);
+                                                    $totalStmt->execute();
+                                                    $totalRecords = $totalStmt->get_result()->fetch_assoc()['total'];
+                                                    $totalPages = ceil($totalRecords / $limit);
+                                                } catch (Exception $e) {
+                                                    $conn->close();
+                                                    error_log($e->getMessage());
+                                                    echo "Something went wrong. Please try again later.";
+                                                }
 
-                                            <tr>
-                                                <td class="text-center">
-                                                    <div class="d-flex align-items-center">
-                                                        <!-- <span class="avatar mb-0 position-relative">
-                                                            <img class="avatar avatar-sm rounded-2 me-3 bg-primary-subtle rounded-circle p-1" src="<?php echo $base_url; ?>assets/images/products/leather-jacket.png" alt="product-image" />
-                                                        </span> -->
-                                                        <p class="mb-0 fs-14">Oct 5, 2023</p>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-primary-subtle text-primary fw-semibold">Standard</span>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0 fw-medium">$9.00</p>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0 fw-medium">Success</p>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0 fw-medium">[Download]</p>
-                                                </td>
-                                            </tr>
+                                                //render
+                                                if ($result->num_rows < 1) {
+                                                    echo '<tr><td colspan="5" class="text-center text-muted">No subscriptions record found.</td></tr>';
+                                                } else {
+                                                    while ($data = $result->fetch_assoc()) {
+                                                        $date = date("M d, Y", strtotime($data['created_at']));
+                                                        $planName = $data['plan_name'];
+                                                        $amount = number_format($data['plan_price'], 2);
+                                                        $status = ucfirst($data['status']);
+                                                        $transactionId = $data['transaction_id'];
 
-                                            <tr>
-                                                <td class="text-center">
-                                                    <div class="d-flex align-items-center">
-                                                            <!-- <span class="avatar mb-0 position-relative">
-                                                                <img class="avatar avatar-sm rounded-2 me-3 bg-primary-subtle rounded-circle p-1" src="<?php echo $base_url; ?>assets/images/products/shoes.png" alt="product-image" />
-                                                            </span> -->
-                                                        <p class="mb-0 fs-14">Oct 5, 2022</p>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-primary-subtle text-primary fw-semibold">Premium</span>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0 fw-medium">$15.00</p>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0 fw-medium">Success</p>
-                                                </td>
-                                                <td>
-                                                    <p class="mb-0 fw-medium">[Download]</p>
-                                                </td>
-                                            </tr>
+                                                        // Optional: badge color based on status
+                                                        switch (strtolower($data['status'])) {
+                                                            case 'active':
+                                                                $badgeClass = 'bg-success-subtle text-success';
+                                                                break;
+                                                            case 'expired':
+                                                                $badgeClass = 'bg-danger-subtle text-danger';
+                                                                break;
+                                                            case 'cancelled':
+                                                                $badgeClass = 'bg-secondary-subtle text-secondary';
+                                                                break;
+                                                            default:
+                                                                $badgeClass = 'bg-primary-subtle text-primary';
+                                                        }
 
+                                                        echo "<tr>
+                                                            <td class='text-center'><p class='mb-0 fs-14'>{$date}</p></td>
+                                                            <td><p class='mb-0 fw-semibold'>{$planName}</p></td>
+                                                            <td><p class='mb-0 fw-medium'>\${$amount}</p></td>
+                                                            <td><span class='badge {$badgeClass} fw-semibold'>{$status}</span></td>
+                                                            <td><a href='/invoice.php?txn={$transactionId}' class='mb-0 fw-medium'>[Download]</a></td>
+                                                        </tr>";
+                                                    }
+                                                }
+                                                ?>
+                                            </tbody>
                                         </table>
+
+                                        <!-- Pagination -->
+                                        <?php if ($totalPages > 1): ?>
+                                            <nav>
+                                                <ul class="pagination justify-content-center mt-3">
+                                                    <?php if ($page > 1): ?>
+                                                        <li class="page-item">
+                                                            <a class="page-link" href="?page=<?= $page - 1 ?>">Previous</a>
+                                                        </li>
+                                                    <?php endif; ?>
+
+                                                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                                                        <li class="page-item <?= $i == $page ? 'active' : '' ?>">
+                                                            <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                                                        </li>
+                                                    <?php endfor; ?>
+
+                                                    <?php if ($page < $totalPages): ?>
+                                                        <li class="page-item">
+                                                            <a class="page-link" href="?page=<?= $page + 1 ?>">Next</a>
+                                                        </li>
+                                                    <?php endif; ?>
+                                                </ul>
+                                            </nav>
+                                        <?php endif; ?>
+
                                     </div>
                                 </div>
                                 <!-- end card body -->
