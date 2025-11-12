@@ -28,7 +28,6 @@ RewriteRule ^hire/commitment/?$ hire/onboarding_step5.php [NC,L]
 RewriteRule ^hire/ready-to-start/?$ hire/onboarding_step6.php [NC,L]
 RewriteRule ^hire/contacts/?$ hire/onboarding_step7.php [NC,L]
 
-
 #dashboard
 RewriteRule ^dashboard/?$ app/index.php [NC,L]
 RewriteRule ^dashboard/setting/?$ app/forms-validation.php [NC,L]
@@ -55,3 +54,6 @@ RewriteRule ^dashboard/mycompany/?$ app/mycompany.php [NC,L]
 RewriteRule ^dashboard/company/?$ app/company.php [NC,L]
 RewriteRule ^dashboard/sentrequest/?$ app/sentrequest.php [NC,L]
 RewriteRule ^dashboard/setup/?$ app/setup_company.php [NC,L]
+
+#Admin routes
+RewriteRule ^admin/log/login?$ admin_login/login.php [NC,L]
