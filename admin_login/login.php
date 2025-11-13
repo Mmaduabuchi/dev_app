@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Admin Login | DevHire</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
         body {
@@ -110,7 +111,7 @@
             <p>Welcome back! Please log in to continue.</p>
         </div>
 
-        <form method="POST" action="process_login.php" class="mt-4 position-relative">
+        <form method="POST" id="admin_login_form" action="#" class="mt-4 position-relative">
             <div class="mb-3 position-relative">
                 <label class="form-label">Email Address</label>
                 <input type="email" class="form-control" name="email" placeholder="Enter your email" required>
@@ -130,8 +131,9 @@
 
     <!-- Bootstrap JS + Icons -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function togglePassword() {
             const password = document.getElementById("password");
@@ -144,6 +146,55 @@
                 icon.classList.replace("bi-eye", "bi-eye-slash");
             }
         }
+
+
+        function showToast(icon, message) {
+            if (typeof Swal !== 'undefined') {
+                Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3500,
+                    timerProgressBar: true
+                }).fire({
+                    icon,
+                    title: message
+                });
+            } else {
+                alert(message);
+            }
+        }
+
+        document.querySelector("#admin_login_form").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const email = document.querySelector("input[name='email']").value.trim();
+            const password = document.querySelector("input[name='password']").value.trim();
+
+            if (!email || !password) return showToast('warning', 'All fields are required.');
+
+            const formData = new FormData();
+            formData.append('email', email);
+            formData.append('password', password);
+
+            try {
+                const response = await fetch('<?php echo $base_url; ?>../../admin_login/process/process_login_admin.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showToast('success', data.message || 'Login successful.');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showToast('error', data.message || 'Failed to login.');
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('error', 'An error occurred while logging in.');
+            }
+
+        });
     </script>
 
 </body>
