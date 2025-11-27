@@ -60,6 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
             // Set session variables
             $_SESSION['admin'] = $admin_details;
+            $_SESSION['admin_logged_in'] = true;
 
             sendResponse('success', 'Login successful.');
         } else {

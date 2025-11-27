@@ -1,4 +1,5 @@
 <?php
+//start session
 session_start();
 
 // Unset all session variables
@@ -18,9 +19,10 @@ if (ini_get("session.use_cookies")) {
     );
 }
 
-// Destroy the session
+
+//destory session
 session_destroy();
 
-// Redirect to homepage or login page
-header("Location: /devhire/");
-exit;
+//redirect to login page
+header("Location: /devhire/admin/log/login");
+exit();

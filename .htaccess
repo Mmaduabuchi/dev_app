@@ -55,5 +55,24 @@ RewriteRule ^dashboard/company/?$ app/company.php [NC,L]
 RewriteRule ^dashboard/sentrequest/?$ app/sentrequest.php [NC,L]
 RewriteRule ^dashboard/setup/?$ app/setup_company.php [NC,L]
 
-#Admin routes
+#Admin authentication routes
 RewriteRule ^admin/log/login?$ admin_login/login.php [NC,L]
+RewriteRule ^admin/log/logout?$ admin_login/logout.php [NC,L]
+
+#Admin management panel routes
+RewriteRule ^admin/dashboard/?$ admin/index.php [NC,L]
+RewriteRule ^admin/dashboard/home?$ admin/index.php [NC,L]
+RewriteRule ^admin/dashboard/users_management?$ admin/users_management.php [NC,L]
+RewriteRule ^admin/dashboard/settings?$ admin/settings.php [NC,L]
+RewriteRule ^admin/dashboard/reports?$ admin/reported.php [NC,L]
+RewriteRule ^admin/dashboard/transactions?$ admin/transactions.php [NC,L]
+RewriteRule ^admin/dashboard/subscriptions?$ admin/subscriptions.php [NC,L]
+RewriteRule ^admin/dashboard/search_ranking?$ admin/search_ranking.php [NC,L]
+RewriteRule ^admin/dashboard/messages?$ admin/messages.php [NC,L]
+RewriteRule ^admin/dashboard/job_post?$ admin/job_post.php [NC,L]
+RewriteRule ^admin/dashboard/notifications?$ admin/notifications.php [NC,L]
+RewriteRule ^admin/dashboard/admin_account?$ admin/admin_account.php [NC,L]
+RewriteRule ^admin/dashboard/profile_settings?$ admin/profile_settings.php [NC,L]
+RewriteRule ^admin/dashboard/open_tickets?$ admin/open_tickets.php [NC,L]
+RewriteRule ^admin/dashboard/activity_log?$ admin/activity_log.php [NC,L]
+RewriteRule ^admin/dashboard/admin_logout?$ admin/logout.php [NC,L]
