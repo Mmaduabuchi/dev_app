@@ -37,8 +37,8 @@
             <!-- Admin Profile Dropdown -->
             <div class="dropdown">
                 <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <img src="https://placehold.co/40x40/0A66C2/ffffff?text=AD" alt="Admin" width="40" height="40" class="rounded-circle me-2">
-                    <span class="d-none d-sm-inline me-1 text-dark">Jane Doe</span>
+                    <img src="https://placehold.co/40x40/0A66C2/ffffff?text=SA" alt="Admin" width="40" height="40" class="rounded-circle me-2">
+                    <span class="d-none d-sm-inline me-1 text-dark"><?= $admin_name; ?></span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
                     <li><a class="dropdown-item" href="<?php echo $url . 'profile_settings' ?>">Profile Settings</a></li>

@@ -76,3 +76,4 @@ RewriteRule ^admin/dashboard/profile_settings?$ admin/profile_settings.php [NC,L
 RewriteRule ^admin/dashboard/open_tickets?$ admin/open_tickets.php [NC,L]
 RewriteRule ^admin/dashboard/activity_log?$ admin/activity_log.php [NC,L]
 RewriteRule ^admin/dashboard/admin_logout?$ admin/logout.php [NC,L]
+RewriteRule ^admin/dashboard/errorpage/error?$ admin/errorpage/index.php [NC,L]

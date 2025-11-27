@@ -33,8 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     try {
 
         // Prepare and execute the query
-        $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? LIMIT 1");
-        if (!$stmt) {
+        $stmt = $conn->prepare("SELECT * FROM `users` WHERE email = ? LIMIT 1");
+        if ($stmt === false) {
             sendResponse('error', 'Database error: ' . $conn->error);
         }
 
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         $admin_details = $result->fetch_assoc();
 
         //check authority
-        if ($admin_details['user_type'] !== 'admin' && $admin_details['role'] !== 'administrator') {
+        if ($admin_details['user_type'] !== 'admin' || $admin_details['role'] !== 'administrator') {
             sendResponse('error', 'Access denied. Not an admin user.');
         }
 

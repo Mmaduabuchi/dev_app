@@ -8,3 +8,33 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     header('Location: /devhire/admin/log/login');
     exit();
 }
+
+//admin_id
+$admin_id = $_SESSION['admin']['id'] ?? null;
+$admin_name = $_SESSION['admin']['fullname'];
+$admin_role = $_SESSION['admin']['role'];
+$admin_email = $_SESSION['admin']['email'];
+
+try{
+    //fetch admin details
+    $stmt = $conn->prepare("SELECT * FROM `users` WHERE id = ? AND auth = 'admin'");
+    if ($stmt === false) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $admin_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows === 0) {
+        throw new Exception('Admin not found');
+    }
+    $admin = $result->fetch_assoc();
+
+    $admin_name = $admin['fullname'];
+    $admin_email = $admin['email'];
+    $admin_auth = $admin['auth'];
+
+} catch (Exception $e) {
+    $_SESSION['error'] = $e->getMessage();
+    header('Location: /devhire/admin/dashboard/errorpage/error');
+    exit();
+}
