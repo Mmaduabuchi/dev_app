@@ -30,11 +30,6 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="sidebar-link" href="<?php echo $url . 'search_ranking'?>" data-page="search-rankings">
-                    <i class="bi bi-sort-numeric-down-alt"></i> Search Rankings
-                </a>
-            </li>
-            <li class="nav-item">
                 <a class="sidebar-link" href="<?php echo $url . 'reports'?>" data-page="reported-accounts">
                     <i class="bi bi-flag-fill"></i> Reported Accounts
                 </a>
@@ -49,11 +44,11 @@
                     <i class="bi bi-person-gear"></i> Admin Accounts
                 </a>
             </li>
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a class="sidebar-link" href="<?php echo $url . 'settings' ?>" data-page="website-settings">
                     <i class="bi bi-gear-fill"></i> Website Settings
                 </a>
-            </li>
+            </li> -->
         </ul>
     </div>
     <div class="mt-auto p-3 border-top border-secondary opacity-75">

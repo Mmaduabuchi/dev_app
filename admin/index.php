@@ -5,6 +5,41 @@ include_once "auth.php";
 //include route
 include_once "route.php";
 
+$totalUsers = $totalEmployers = 0;
+
+try{
+    // Get total number of users
+    $stmt = $conn->prepare("SELECT COUNT(*) as total_users FROM `users` WHERE auth = 'user' AND user_type = 'talent' AND deleted_at IS NULL");
+    if($stmt === false){
+        throw new Exception("Failed to prepare statement: " . $conn->error);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if($result->num_rows > 0){
+        $row = $result->fetch_assoc();
+        $totalUsers = (int)$row['total_users'];
+    }
+    $stmt->close();
+
+    // Get total number of Employers
+    $stmt = $conn->prepare("SELECT COUNT(*) as total_employers FROM `users` WHERE auth = 'user' AND user_type = 'employer' AND deleted_at IS NULL");
+    if($stmt === false){
+        throw new Exception("Failed to prepare statement: " . $conn->error);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if($result->num_rows > 0){
+        $row = $result->fetch_assoc();
+        $totalEmployers = (int)$row['total_employers'];
+    }
+    $stmt->close();
+
+} catch (Exception $e){
+    $_SESSION['error'] = $e->getMessage();
+    header('Location: /devhire/admin/dashboard/errorpage/error');
+    exit();
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -150,7 +185,7 @@ include_once "route.php";
                                 <i class="bi bi-person-badge-fill fs-2 text-primary me-3"></i>
                                 <div>
                                     <p class="text-muted mb-0 small">Total Talents</p>
-                                    <h4 class="fw-bold mb-0">12,450</h4>
+                                    <h4 class="fw-bold mb-0"><?= $totalUsers ?></h4>
                                 </div>
                                 <span class="badge bg-success-subtle text-success ms-auto">+1.2%</span>
                             </div>
@@ -162,7 +197,7 @@ include_once "route.php";
                                 <i class="bi bi-buildings-fill fs-2 text-info me-3"></i>
                                 <div>
                                     <p class="text-muted mb-0 small">Total Employers</p>
-                                    <h4 class="fw-bold mb-0">2,810</h4>
+                                    <h4 class="fw-bold mb-0"><?= $totalEmployers ?></h4>
                                 </div>
                                 <span class="badge bg-danger-subtle text-danger ms-auto">-0.5%</span>
                             </div>
@@ -176,7 +211,7 @@ include_once "route.php";
                                     <p class="text-muted mb-0 small">Active Subscriptions</p>
                                     <h4 class="fw-bold mb-0">5,120</h4>
                                 </div>
-                                <span class="badge bg-success-subtle text-success ms-auto">+3.1%</span>
+                                <!-- <span class="badge bg-success-subtle text-success ms-auto">+3.1%</span> -->
                             </div>
                         </div>
                     </div>

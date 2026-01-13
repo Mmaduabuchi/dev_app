@@ -93,7 +93,7 @@
             <div class="mb-6 input-group relative">
                 <label for="email" class="block text-sm font-medium mb-1 text-gray-700">Email Address</label>
                 <!-- Mail Icon (Requested Asset: Icon) -->
-                <svg class="absolute left-3 top-1/2 mt-1 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                <svg class="absolute left-3 top-1/2 mt-[12px] transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                 <input type="email" id="email" placeholder="name@company.com" class="w-full p-2.5 pl-12 rounded-lg border focus:ring-1 focus:ring-blue-500 transition-all duration-150" aria-label="Email Address" required>
                 <p id="email-error" class="text-red-500 text-xs mt-1 hidden flex items-center">
                     <svg class="h-3 w-3 mr-1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
@@ -105,11 +105,11 @@
             <div class="mb-8 input-group relative">
                 <label for="password" class="block text-sm font-medium mb-1 text-gray-700">Password</label>
                 <!-- Lock Icon (Requested Asset: Icon) -->
-                <svg class="absolute left-3 top-1/2 mt-1 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <svg class="absolute left-3 top-1/2 mt-[12px] transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 <input type="password" id="password" placeholder="••••••••" class="w-full p-2.5 pl-12 pr-12 rounded-lg border focus:ring-1 focus:ring-blue-500 transition-all duration-150" aria-label="Password" required>
 
                 <!-- Toggle Password Visibility Button -->
-                <button type="button" id="toggle-password" class="absolute right-3 top-1/2 mt-1 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1" aria-label="Toggle password visibility">
+                <button type="button" id="toggle-password" class="absolute right-3 top-1/2 mt-[12px] transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1" aria-label="Toggle password visibility">
                     <!-- Eye Icon (Requested Asset: Icon) -->
                     <svg id="eye-icon" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>

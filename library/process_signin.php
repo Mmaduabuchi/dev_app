@@ -45,6 +45,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($user_suspended_at !== null) {
         response('error', 'Account is suspended. Please contact support for more information.');
     }
+    //validate user role and auth
+    $user_role = $user['role'] ?? '';
+    $user_auth = $user['auth'] ?? '';
+    if ($user_role === 'administrator' && $user_auth === 'admin') {
+        response('error', 'Access Denied. Users only.');
+    }
     // Verify password
     if ($user && password_verify($password, $user['password'])) {
         // Regenerate session for security
