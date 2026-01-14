@@ -5,6 +5,41 @@ include_once "auth.php";
 //include route
 include_once "route.php";
 
+
+try{
+    // Get total number of users
+    $stmt = $conn->prepare("SELECT COUNT(*) as total_users FROM `users` WHERE auth = 'user' AND user_type = 'talent' AND deleted_at IS NULL");
+    if($stmt === false){
+        throw new Exception("Failed to prepare statement: " . $conn->error);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if($result->num_rows > 0){
+        $row = $result->fetch_assoc();
+        $totalUsers = (int)$row['total_users'];
+    }
+    $stmt->close();
+
+    // Get total number of Employers
+    $stmt = $conn->prepare("SELECT COUNT(*) as total_employers FROM `users` WHERE auth = 'user' AND user_type = 'employer' AND deleted_at IS NULL");
+    if($stmt === false){
+        throw new Exception("Failed to prepare statement: " . $conn->error);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if($result->num_rows > 0){
+        $row = $result->fetch_assoc();
+        $totalEmployers = (int)$row['total_employers'];
+    }
+    $stmt->close();
+
+} catch (Exception $e){
+    $_SESSION['error'] = $e->getMessage();
+    header('Location: /devhire/admin/dashboard/errorpage/error');
+    exit();
+}
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -152,7 +187,7 @@ include_once "route.php";
                         <!-- 2A. Talents Page -->
                         <div class="tab-pane fade show active" id="talents-pane" role="tabpanel" aria-labelledby="talent-tab">
                             <div class="card p-4">
-                                <h5 class="card-title fw-bold mb-3">Talent Roster (12,450 Total)</h5>
+                                <h5 class="card-title fw-bold mb-3">Talent Roster (<?= $totalUsers ?> Total)</h5>
 
                                 <!-- Filters & Search -->
                                 <div class="d-flex flex-wrap gap-2 mb-3">
@@ -177,61 +212,168 @@ include_once "route.php";
                                         <thead>
                                             <tr>
                                                 <th>Name</th>
-                                                <th>Skills</th>
+                                                <!-- <th>Skills</th> -->
+                                                <th>Nationality</th>
+                                                <th>Location</th>
                                                 <th>Subscription</th>
-                                                <th>Ranking Score</th>
                                                 <th>Status</th>
                                                 <th>Last Seen</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr>
-                                                <td>Alex Johnson</td>
-                                                <td><span class="badge bg-primary">Frontend</span> <span class="badge bg-secondary">React</span></td>
-                                                <td><span class="badge bg-warning">Premium</span></td>
-                                                <td class="fw-bold">8.9/10</td>
-                                                <td><span class="badge bg-success">Verified</span></td>
-                                                <td>Just now</td>
-                                                <td>
-                                                    <button class="btn btn-sm btn-outline-info me-1" title="View Profile"><i class="bi bi-eye"></i></button>
-                                                    <button class="btn btn-sm btn-outline-danger" title="Suspend"><i class="bi bi-slash-circle"></i></button>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Maria Garcia</td>
-                                                <td><span class="badge bg-dark">Designer</span> <span class="badge bg-secondary">Figma</span></td>
-                                                <td><span class="badge bg-secondary">Basic</span></td>
-                                                <td>4.2/10</td>
-                                                <td><span class="badge bg-secondary">Pending</span></td>
-                                                <td>1 week ago</td>
-                                                <td>
-                                                    <button class="btn btn-sm btn-outline-info me-1"><i class="bi bi-eye"></i></button>
-                                                    <button class="btn btn-sm btn-success" title="Verify"><i class="bi bi-check"></i></button>
-                                                </td>
-                                            </tr>
-                                            <!-- More Talent Rows... -->
+                                            <?php
+                                                try{
+                                                    $limit = 15; // rows per page
+                                                    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+                                                    $page = max($page, 1); // ensure page is at least 1
+                                                    $offset = ($page - 1) * $limit;
+
+                                                    // get total users for pagination
+                                                    $totalUsersStmt = $conn->prepare("SELECT COUNT(*) as total FROM users u WHERE u.user_type = 'talent' AND u.deleted_at IS NULL");
+                                                    $totalUsersStmt->execute();
+                                                    $totalUsersResult = $totalUsersStmt->get_result()->fetch_assoc();
+                                                    $totalUsers = $totalUsersResult['total'];
+                                                    $totalPages = ceil($totalUsers / $limit);
+
+                                                    $stmt = $conn->prepare("SELECT u.id, u.fullname, u.email, u.user_type, u.is_profile_complete, u.suspended_at, dp.*
+                                                    FROM users u LEFT JOIN developers_profiles dp ON u.id = dp.user_id WHERE u.user_type = 'talent' AND u.deleted_at IS NULL  ORDER BY u.created_at DESC LIMIT ? OFFSET ?");
+                                                    if($stmt === false){
+                                                        throw new Exception("Failed to prepare statement.");
+                                                    }
+                                                    $stmt->bind_param("ii", $limit, $offset);
+                                                    $stmt->execute();
+                                                    $result = $stmt->get_result();
+                                                    if($result->num_rows > 0){
+                                                        while ($user = $result->fetch_assoc()) {
+                                                            $status = ((int)$user["is_profile_complete"] === 1) ? "Verified" : "Not Verified";
+                                            ?>
+                                                            <tr>
+                                                                <td><?= htmlspecialchars($user['fullname']) ?></td>
+                                                                <!-- <td><span class="badge bg-primary">Frontend</span> <span class="badge bg-secondary">React</span></td> -->
+                                                                <td><?= htmlspecialchars(ucfirst($user["citizenship"])) ?></td>
+                                                                <td><?= htmlspecialchars(ucfirst($user["location"])) ?></td>
+                                                                <td><span class="badge bg-warning">Premium</span></td>
+                                                                <td><span class="badge bg-<?= ($user["is_profile_complete"] == 1) ? "success" : "secondary" ?>"><?= $status ?></span></td>
+                                                                <td>Just now</td>
+                                                                <td>
+                                                                    <button class="btn btn-sm btn-outline-info me-1 view-profile-btn" 
+                                                                        data-fullname="<?= htmlspecialchars($user['fullname']) ?>" 
+                                                                        data-legalname="<?= htmlspecialchars($user['legal_name']) ?>" 
+                                                                        data-citizenship="<?= htmlspecialchars($user['citizenship']) ?>" 
+                                                                        data-location="<?= htmlspecialchars($user['location']) ?>" 
+                                                                        data-status="<?= htmlspecialchars($status) ?>" 
+                                                                        data-phonenumber="<?= htmlspecialchars($user["phone_number"]) ?>" 
+                                                                        data-yearsofexperience="<?= htmlspecialchars($user["years_of_experience"]) ?>" 
+                                                                        data-educationlevel="<?= htmlspecialchars($user["education_level"]) ?>" 
+                                                                        data-industryexperience="<?= htmlspecialchars($user["industry_experience"]) ?>" 
+                                                                        data-jobcommitment="<?= htmlspecialchars($user["job_commitment"]) ?>" 
+                                                                        data-preferredhourlyrate="<?= htmlspecialchars($user["preferred_hourly_rate"]) ?>" 
+                                                                        data-englishproficiency="<?= htmlspecialchars($user["english_proficiency"]) ?>" 
+                                                                        data-bio="<?= htmlspecialchars($user["bio"]) ?>"
+                                                                    title="View Profile">
+                                                                            <i class="bi bi-eye"></i>
+                                                                    </button>
+                                                                    <?php
+                                                                        if($user["suspended_at"] !== null):
+                                                                    ?>
+                                                                        <button class="btn btn-sm btn-outline-danger" title="Suspend"><i class="bi bi-slash-circle"></i></button>
+                                                                    <?php
+                                                                        else:
+                                                                    ?>
+                                                                        <button class="btn btn-sm btn-success" title="Verify"><i class="bi bi-check"></i></button>
+                                                                    <?php
+                                                                        endif;
+                                                                    ?>
+                                                                </td>
+                                                            </tr>
+                                            <?php
+                                                        }
+                                                    } else {
+                                                        echo "<tr>";
+                                                        echo "<td colspan='6' class='text-center'>No Talents found.</td>";
+                                                        echo "</tr>";
+                                                    }
+                                                } catch (Exception $e) {
+                                                    echo "<tr><td colspan='6'>Error: " . htmlspecialchars($e->getMessage()) . "</td></tr>";
+                                                }
+                                            ?>
                                         </tbody>
                                     </table>
+
+                                    <!-- Single modal -->
+                                    <div class="modal fade" id="viewUserModal" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content text-dark">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">User Profile Details</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <section class="overflow-auto" style="height: 200px;">
+                                                        <p><strong>Full Name:</strong> <span id="modalFullName"></span></p>
+                                                        <p><strong>Legal Name:</strong> <span id="modalLegalName"></span></p>
+                                                        <p><strong>Citizenship:</strong> <span id="modalCitizenship"></span></p>
+                                                        <p><strong>Location:</strong> <span id="modalLocation"></span></p>
+                                                        <p><strong>Status:</strong> <span class="badge bg-success" id="modalStatus"></span></p>
+                                                        <p><strong>Gender:</strong> <span id="modalGender"></span></p>
+                                                        <p><strong>Phone Number:</strong> <span id="modalPhoneNumber"></span></p>
+                                                        <p><strong>Email:</strong> <span id="modalEmail"></span></p>
+                                                        <p><strong>Education Level:</strong> <span id="modalEducationLevel"></span></p>
+                                                        <p><strong>Industry Experience:</strong> <span id="modalIndustryExperience"></span></p>
+                                                        <p><strong>Job Commitment:</strong> <span id="modalJobCommitment"></span></p>
+                                                        <p><strong>Preferred Hourly Rate:</strong> <span id="modalPreferredHourlyRate"></span></p>
+                                                        <p><strong>English Proficiency:</strong> <span id="modalEnglishProficiency"></span></p>
+                                                    </section>
+                                                    <div class="mt-3">
+                                                        <label for="modalBio" class="form-label"><strong>Bio:</strong></label>
+                                                        <textarea id="modalBio" class="form-control" rows="6" readonly></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-danger" id="btnDeleteUser">
+                                                        <i class="bi bi-trash"></i> Delete
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning" id="btnSuspendUser">
+                                                        <i class="bi bi-person-dash"></i> Suspend
+                                                    </button>
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
 
                                 <!-- Pagination -->
                                 <nav>
                                     <ul class="pagination justify-content-center">
-                                        <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
-                                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                        <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                        <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                                        <!-- Previous button -->
+                                        <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                                            <a class="page-link" href="?page=<?= $page - 1 ?>">Previous</a>
+                                        </li>
+
+                                        <!-- Page numbers -->
+                                        <?php for($i = 1; $i <= $totalPages; $i++): ?>
+                                            <li class="page-item <?= ($page == $i) ? 'active' : '' ?>">
+                                                <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                                            </li>
+                                        <?php endfor; ?>
+
+                                        <!-- Next button -->
+                                        <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
+                                            <a class="page-link" href="?page=<?= $page + 1 ?>">Next</a>
+                                        </li>
                                     </ul>
                                 </nav>
+
                             </div>
                         </div>
 
                         <!-- 2B. Employers / CEOs Page -->
                         <div class="tab-pane fade" id="employers-pane" role="tabpanel" aria-labelledby="employer-tab">
                             <div class="card p-4">
-                                <h5 class="card-title fw-bold mb-3">Employer Roster (2,810 Total)</h5>
+                                <h5 class="card-title fw-bold mb-3">Employer Roster (<?= $totalEmployers ?> Total)</h5>
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle small">
                                         <thead>
@@ -289,7 +431,42 @@ include_once "route.php";
         <!-- Load Bootstrap JS Bundle (includes Popper for dropdowns/modals) -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
+            document.querySelectorAll('.view-profile-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const fullname = button.dataset.fullname;
+                    const legalname = button.dataset.legalname;
+                    const citizenship = button.dataset.citizenship;
+                    const location = button.dataset.location;
+                    const status = button.dataset.status;
+                    const Bio = button.dataset.bio;
+                    const gender = button.dataset.gender;
+                    const phonenumber = button.dataset.phonenumber;
+                    const email = button.dataset.email;
+                    const educationlevel = button.dataset.educationlevel;
+                    const industryexperience = button.dataset.industryexperience;
+                    const jobcommitment = button.dataset.jobcommitment;
+                    const preferredhourlyrate = button.dataset.preferredhourlyrate;
+                    const englishproficiency = button.dataset.englishproficiency;
 
+                    document.getElementById('modalFullName').textContent = fullname;
+                    document.getElementById('modalLegalName').textContent = legalname;
+                    document.getElementById('modalCitizenship').textContent = citizenship;
+                    document.getElementById('modalLocation').textContent = location;
+                    document.getElementById('modalStatus').textContent = status;
+                    document.getElementById('modalBio').textContent = Bio;
+                    document.getElementById('modalGender').textContent = gender;
+                    document.getElementById('modalPhoneNumber').textContent = phonenumber;
+                    document.getElementById('modalEmail').textContent = email;
+                    document.getElementById('modalEducationLevel').textContent = educationlevel;
+                    document.getElementById('modalIndustryExperience').textContent = industryexperience;
+                    document.getElementById('modalJobCommitment').textContent = jobcommitment;
+                    document.getElementById('modalPreferredHourlyRate').textContent = preferredhourlyrate;
+                    document.getElementById('modalEnglishProficiency').textContent = englishproficiency;
+
+                    const modal = new bootstrap.Modal(document.getElementById('viewUserModal'));
+                    modal.show();
+                });
+            });
             
         </script>
     </body>

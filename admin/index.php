@@ -34,6 +34,19 @@ try{
     }
     $stmt->close();
 
+    // Get total number of active subscriptions
+    $stmt = $conn->prepare("SELECT COUNT(*) as total_active_subscriptions FROM `subscriptions` WHERE status = 'active'");
+    if($stmt === false){
+        throw new Exception("Failed to prepare statement: " . $conn->error);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if($result->num_rows > 0){
+        $row = $result->fetch_assoc();
+        $totalActiveSubscriptions = (int)$row['total_active_subscriptions'];
+    }
+    $stmt->close();
+
 } catch (Exception $e){
     $_SESSION['error'] = $e->getMessage();
     header('Location: /devhire/admin/dashboard/errorpage/error');
@@ -187,7 +200,7 @@ try{
                                     <p class="text-muted mb-0 small">Total Talents</p>
                                     <h4 class="fw-bold mb-0"><?= $totalUsers ?></h4>
                                 </div>
-                                <span class="badge bg-success-subtle text-success ms-auto">+1.2%</span>
+                                <!-- <span class="badge bg-success-subtle text-success ms-auto">+1.2%</span> -->
                             </div>
                         </div>
                     </div>
@@ -199,7 +212,7 @@ try{
                                     <p class="text-muted mb-0 small">Total Employers</p>
                                     <h4 class="fw-bold mb-0"><?= $totalEmployers ?></h4>
                                 </div>
-                                <span class="badge bg-danger-subtle text-danger ms-auto">-0.5%</span>
+                                <!-- <span class="badge bg-danger-subtle text-danger ms-auto">-0.5%</span> -->
                             </div>
                         </div>
                     </div>
@@ -209,7 +222,7 @@ try{
                                 <i class="bi bi-star-fill fs-2 text-warning me-3"></i>
                                 <div>
                                     <p class="text-muted mb-0 small">Active Subscriptions</p>
-                                    <h4 class="fw-bold mb-0">5,120</h4>
+                                    <h4 class="fw-bold mb-0"><?= $totalActiveSubscriptions ?></h4>
                                 </div>
                                 <!-- <span class="badge bg-success-subtle text-success ms-auto">+3.1%</span> -->
                             </div>
@@ -223,7 +236,7 @@ try{
                                     <p class="text-muted mb-0 small">Monthly Revenue</p>
                                     <h4 class="fw-bold mb-0">$85,340</h4>
                                 </div>
-                                <span class="badge bg-success-subtle text-success ms-auto">+8.9%</span>
+                                <!-- <span class="badge bg-success-subtle text-success ms-auto">+8.9%</span> -->
                             </div>
                         </div>
                     </div>
@@ -241,34 +254,57 @@ try{
                                             <th>User</th>
                                             <th>Type</th>
                                             <th>Registered</th>
-                                            <th>Status</th>
+                                            <th>Profile status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td>Jane Smith</td>
-                                            <td><span class="badge bg-primary">Talent</span></td>
-                                            <td>2 mins ago</td>
-                                            <td><span class="badge bg-warning-subtle text-warning">Pending</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Innovate Solutions</td>
-                                            <td><span class="badge bg-info">Employer</span></td>
-                                            <td>1 hr ago</td>
-                                            <td><span class="badge bg-success">Verified</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Max D.</td>
-                                            <td><span class="badge bg-primary">Talent</span></td>
-                                            <td>5 hrs ago</td>
-                                            <td><span class="badge bg-success">Verified</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Global Tech Inc.</td>
-                                            <td><span class="badge bg-info">Employer</span></td>
-                                            <td>1 day ago</td>
-                                            <td><span class="badge bg-warning-subtle text-warning">Pending</span></td>
-                                        </tr>
+                                        <?php
+                                            try{
+                                                $valid_userType = ["talent", "employer"];
+                                                $stmt = $conn->prepare("SELECT * FROM `users` WHERE user_type IN (?, ?) AND suspended_at IS NULL AND deleted_at IS NULL LIMIT 5");
+                                                if($stmt === false){
+                                                    throw new Exception("Failed to prepare statement.");
+                                                }
+                                                $stmt->bind_param("ss", $valid_userType[0], $valid_userType[1]);
+                                                $stmt->execute();
+                                                $result = $stmt->get_result();
+                                                if($result->num_rows > 0){
+                                                    while ($user = $result->fetch_assoc()) {
+                                                        $status = ($user["is_profile_complete"] == 1) ? "Complete" : "Incomplete";
+                                        ?>
+                                                        <tr>
+                                                            <td><?= htmlspecialchars(ucfirst($user['fullname'])) ?></td>
+
+                                                            <td>
+                                                                <span class="badge bg-<?= ($user['user_type'] == 'talent') ? 'primary' : 'info' ?>">
+                                                                    <?= ucfirst($user['user_type']) ?>
+                                                                </span>
+                                                            </td>
+
+                                                            <td>
+                                                                <?= date("d M Y, h:i A", strtotime($user['created_at'])) ?>
+                                                            </td>
+
+                                                            <td>
+                                                                <span class="badge bg-<?= ($user['is_profile_complete'] == 1) ? "success" : "warning" ?>-subtle text-<?= ($user['is_profile_complete'] == 1) ? "success" : "warning" ?>">
+                                                                    <?= $status ?>
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                        <?php
+                                                    }
+                                                }else{
+                                                    echo "<tr>";
+                                                    echo "<td colspan='4' class='text-center'>No recent users found.</td>";
+                                                    echo "</tr>";
+                                                }
+
+
+                                            } catch (Exception $e) {
+                                                echo "<tr><td colspan='4'>Error: " . htmlspecialchars($e->getMessage()) . "</td></tr>";
+                                            }
+                                        ?>
+                                        
                                     </tbody>
                                 </table>
                             </div>
