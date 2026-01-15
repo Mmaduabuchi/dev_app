@@ -178,8 +178,12 @@ include_once "route.php";
                                                         <td><span class="badge bg-<?= ($row["auth"] == "admin") ? 'danger' : 'secondary' ?>"><?= ($row["auth"] == "admin") ? 'Super Admin' : ucfirst($row["user_type"]) ?></span></td>
                                                         <td><?php echo $row["last_login"] ?? "N/A"; ?></td>
                                                         <td>
-                                                            <button class="btn btn-sm btn-outline-info me-1" title="Edit Permissions"><i class="bi bi-pencil-square"></i></button>
-                                                            <button class="btn btn-sm btn-outline-danger" value="<?= $row["id"] ?>" onclick="removeAdmin(this.value)" title="Remove"><i class="bi bi-trash"></i></button>
+                                                            <button class="btn btn-sm btn-outline-info me-1" value="<?= $row["id"] ?>" onclick="editAdmin(this.value, '<?= addslashes($row['email']) ?>')" title="Edit Permissions">
+                                                                <i class="bi bi-pencil-square"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-outline-danger" value="<?= $row["id"] ?>" onclick="removeAdmin(this.value)" title="Remove">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
                                                         </td>
                                                     </tr>
                                     <?php
@@ -263,6 +267,41 @@ include_once "route.php";
                 </div>
             </div>
 
+            <!-- Modal for Editing Administrator Password -->
+            <div class="modal fade" id="editAdminModal" tabindex="-1" aria-labelledby="editAdminModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold" id="editAdminModalLabel">Edit Administrator Password</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form id="editAdminForm">
+                            <div class="modal-body">
+                                <input type="hidden" id="edit_admin_id" name="admin_id">
+                                <div class="mb-3">
+                                    <label for="edit_email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control bg-light" id="edit_email" name="email" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit_password" class="form-label">New Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="edit_password" name="password" required>
+                                        <span class="input-group-text" style="cursor: pointer;">
+                                            <i class="bi bi-eye" id="editToggleIcon"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 pt-0">
+                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Update Password</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
         </div>
 
         <?php include_once "footer.php"; ?>
@@ -287,6 +326,23 @@ include_once "route.php";
                     password.type = 'password';
                     toggleIcon.classList.remove('bi-eye-slash');
                     toggleIcon.classList.add('bi-eye');
+                }
+            });
+        
+            // Select the password input and the toggle icon
+            const editPasswordInput = document.getElementById('edit_password');
+            const editToggleIcon = document.getElementById('editToggleIcon');
+
+            // Add click event to the eye icon
+            editToggleIcon.addEventListener('click', () => {
+                if (editPasswordInput.type === 'password') {
+                    editPasswordInput.type = 'text';
+                    editToggleIcon.classList.remove('bi-eye');
+                    editToggleIcon.classList.add('bi-eye-slash');
+                } else {
+                    editPasswordInput.type = 'password';
+                    editToggleIcon.classList.remove('bi-eye-slash');
+                    editToggleIcon.classList.add('bi-eye');
                 }
             });
 
@@ -387,6 +443,65 @@ include_once "route.php";
                         setTimeout(() => {
                             window.location.reload();
                         }, 2500);
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        toast: true,
+                        icon: 'error',
+                        title: error,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                    console.error("Error:", error);
+                });
+            });
+
+            function editAdmin(administratorID, administratorEmail){
+                document.getElementById("edit_admin_id").value = administratorID;
+                document.getElementById("edit_email").value = administratorEmail;
+                
+                // show bootstrap modal properly
+                const modal = new bootstrap.Modal(
+                    document.getElementById('editAdminModal')
+                );
+                modal.show();
+            }
+
+            document.getElementById("editAdminForm").addEventListener("submit", function (e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                fetch("./../process/process_edit_administrator.php", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        Swal.fire({
+                            toast: true,
+                            icon: 'success',
+                            title: data.message,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2500);
+                    } else {
+                        Swal.fire({
+                            toast: true,
+                            icon: 'error',
+                            title: data.message,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
                     }
                 })
                 .catch(error => {
