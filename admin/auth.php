@@ -16,12 +16,13 @@ $admin_role = $_SESSION['admin']['role'];
 $admin_email = $_SESSION['admin']['email'];
 
 try{
+    $administrator_arr = ["admin", "subadmin", "moderator"];
     //fetch admin details
-    $stmt = $conn->prepare("SELECT * FROM `users` WHERE id = ? AND auth = 'admin'");
+    $stmt = $conn->prepare("SELECT * FROM `users` WHERE id = ? AND auth IN (?, ?, ?) LIMIT 1");
     if ($stmt === false) {
         throw new Exception('Database error: ' . $conn->error);
     }
-    $stmt->bind_param("i", $admin_id);
+    $stmt->bind_param("isss", $admin_id, $administrator_arr[0], $administrator_arr[1], $administrator_arr[2]);
     $stmt->execute();
     $result = $stmt->get_result();
     if ($result->num_rows === 0) {

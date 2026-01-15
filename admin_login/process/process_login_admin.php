@@ -47,9 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         }
         $admin_details = $result->fetch_assoc();
 
+        $administrator_arr = ["admin", "subadmin", "moderator"];
+
         //check authority
-        if ($admin_details['user_type'] !== 'admin' || $admin_details['role'] !== 'administrator') {
-            sendResponse('error', 'Access denied. Not an admin user.');
+        if (!in_array($admin_details['user_type'], $administrator_arr) || !in_array($admin_details['auth'], $administrator_arr)) {
+            sendResponse('error', 'Access denied. Not an administrator user.');
         }
 
         // Verify password
