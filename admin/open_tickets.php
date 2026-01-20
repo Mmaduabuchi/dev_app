@@ -5,6 +5,39 @@ include_once "auth.php";
 //include route
 include_once "route.php";
 
+$totalOpen = $highPriority = $newToday = 0;
+try{
+    // Total open tickets
+    $totalOpenStmt = $conn->prepare("SELECT COUNT(*) AS total FROM support_ticket WHERE deleted_at IS NULL");
+    if($totalOpenStmt === false){
+        throw new Exception("Failed to prepare statement.");
+    }
+    $totalOpenStmt->execute();
+    $totalOpen = $totalOpenStmt->get_result()->fetch_assoc()['total'];
+    $totalOpenStmt->close();
+
+    // High priority open tickets
+    $highPriorityStmt = $conn->prepare("SELECT COUNT(*) AS total FROM support_ticket WHERE deleted_at IS NULL AND priority = 'High'");
+    if($highPriorityStmt === false){
+        throw new Exception("Failed to prepare statement.");
+    }
+    $highPriorityStmt->execute();
+    $highPriority = $highPriorityStmt->get_result()->fetch_assoc()['total'];
+    $highPriorityStmt->close();
+
+    // New tickets today
+    $stmt = $conn->prepare("SELECT COUNT(*) AS total FROM support_ticket WHERE deleted_at IS NULL AND DATE(created_at) = CURDATE()");
+    if($stmt === false){
+        throw new Exception("Failed to prepare statement.");
+    }
+    $stmt->execute();
+    $newToday = $stmt->get_result()->fetch_assoc()['total'];
+    $stmt->close();
+
+} catch (Exception $e) {
+    $totalOpen = $highPriority = $newToday = 0;
+    // echo "SERVER ERROR:: " . $e->getMessage();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -142,19 +175,19 @@ include_once "route.php";
                         <div class="col-md-4 mb-3">
                             <div class="card p-3">
                                 <h5 class="card-title text-muted">Total Open Tickets</h5>
-                                <p class="card-text fs-3 fw-bold">125</p>
+                                <p class="card-text fs-3 fw-bold"><?= $totalOpen ?></p>
                             </div>
                         </div>
                         <div class="col-md-4 mb-3">
                             <div class="card p-3">
                                 <h5 class="card-title text-muted">High Priority</h5>
-                                <p class="card-text fs-3 fw-bold text-danger">15</p>
+                                <p class="card-text fs-3 fw-bold text-danger"><?= $highPriority ?></p>
                             </div>
                         </div>
                         <div class="col-md-4 mb-3">
                             <div class="card p-3">
                                 <h5 class="card-title text-muted">New Today</h5>
-                                <p class="card-text fs-3 fw-bold">5</p>
+                                <p class="card-text fs-3 fw-bold"><?= $newToday ?></p>
                             </div>
                         </div>
                     </div>
@@ -172,7 +205,7 @@ include_once "route.php";
                                 <table class="table table-hover align-middle">
                                     <thead>
                                         <tr>
-                                            <th>#</th>
+                                            <th>Ticket Reference</th>
                                             <th>Subject</th>
                                             <th>Status</th>
                                             <th>Priority</th>
@@ -181,59 +214,92 @@ include_once "route.php";
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td>1001</td>
-                                            <td>Website not loading correctly</td>
-                                            <td><span class="badge bg-warning text-dark">Open</span></td>
-                                            <td><span class="badge bg-danger">High</span></td>
-                                            <td>2023-10-26</td>
-                                            <td>
-                                                <a href="#" class="btn btn-sm btn-primary"><i class="bi bi-eye"></i> View</a>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>1002</td>
-                                            <td>Database connection error</td>
-                                            <td><span class="badge bg-warning text-dark">Open</span></td>
-                                            <td><span class="badge bg-danger">High</span></td>
-                                            <td>2023-10-25</td>
-                                            <td>
-                                                <a href="#" class="btn btn-sm btn-primary"><i class="bi bi-eye"></i> View</a>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>1003</td>
-                                            <td>Feature request: Dark mode</td>
-                                            <td><span class="badge bg-warning text-dark">Open</span></td>
-                                            <td><span class="badge bg-info">Medium</span></td>
-                                            <td>2023-10-24</td>
-                                            <td>
-                                                <a href="#" class="btn btn-sm btn-primary"><i class="bi bi-eye"></i> View</a>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>1004</td>
-                                            <td>Login page redirect loop</td>
-                                            <td><span class="badge bg-warning text-dark">Open</span></td>
-                                            <td><span class="badge bg-danger">High</span></td>
-                                            <td>2023-10-23</td>
-                                            <td>
-                                                <a href="#" class="btn btn-sm btn-primary"><i class="bi bi-eye"></i> View</a>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>1005</td>
-                                            <td>Typo on contact page</td>
-                                            <td><span class="badge bg-warning text-dark">Open</span></td>
-                                            <td><span class="badge bg-success">Low</span></td>
-                                            <td>2023-10-22</td>
-                                            <td>
-                                                <a href="#" class="btn btn-sm btn-primary"><i class="bi bi-eye"></i> View</a>
-                                            </td>
-                                        </tr>
+                                        <?php
+                                            try{
+                                                $limit = 15; // tickets per page
+                                                $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+                                                $page = max($page, 1);
+                                                $offset = ($page - 1) * $limit;
+
+                                                /* Get total tickets */
+                                                $countStmt = $conn->prepare("SELECT COUNT(*) AS total FROM support_ticket WHERE deleted_at IS NULL");
+                                                $countStmt->execute();
+                                                $totalResult = $countStmt->get_result()->fetch_assoc();
+                                                $totalTickets = $totalResult['total'];
+
+                                                $totalPages = ceil($totalTickets / $limit);
+
+                                                //get support_ticket
+                                                $stmt = $conn->prepare("SELECT * FROM support_ticket WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT ? OFFSET ?");
+                                                if($stmt === false){
+                                                    throw new Exception("Failed to prepare statement.");
+                                                }
+                                                $stmt->bind_param("ii", $limit, $offset);
+                                                $stmt->execute();
+                                                $result = $stmt->get_result();
+                                                if ($result->num_rows < 1) {
+                                                    echo "<tr><td colspan='6'>No open tickets found.</td></tr>";
+                                                } else{
+                                                    while ($row = $result->fetch_assoc()) {
+                                                        $priority = $row['priority'];
+                                                        $priority_status = "";
+                                                        if ($priority == "High") {
+                                                            $priority_status = "danger";
+                                                        } else if ($priority == "Medium") {
+                                                            $priority_status = "info";
+                                                        } else {
+                                                            $priority_status = "success";
+                                                        }
+
+                                        ?>
+                                                        <tr>
+                                                            <td><?= htmlspecialchars($row['ticket_reference']) ?></td>
+                                                            <td><?= htmlspecialchars($row['category']) ?></td>
+                                                            <td><span class="badge bg-warning text-dark">Open</span></td>
+                                                            <td><span class="badge bg-<?= $priority_status ?>"><?= ucfirst($priority) ?></span></td>
+                                                            <td>
+                                                                <?php 
+                                                                    $date = new DateTime($row['created_at']);
+                                                                    echo $date->format('M d, Y h:i A');
+                                                                ?>
+                                                            </td>
+                                                            <td>
+                                                                <a href="#" class="btn btn-sm btn-primary"><i class="bi bi-eye"></i> View</a>
+                                                            </td>
+                                                        </tr>                                       
+                                        
+                                        <?php
+                                                    }
+                                                }
+                                            } catch (Exception $e) {
+                                                echo "<tr><td colspan='6'>" . $e->getMessage() . "</td></tr>";
+                                            }
+                                        ?>
                                     </tbody>
                                 </table>
                             </div>
+
+
+                            <nav aria-label="Tickets pagination">
+                                <ul class="pagination justify-content-end mt-3 flex-wrap">
+                                    <!-- Previous -->
+                                    <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+                                        <a class="page-link" href="?page=<?= $page - 1 ?>">Previous</a>
+                                    </li>
+
+                                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                                        <li class="page-item <?= $i === $page ? 'active' : '' ?>">
+                                            <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                                        </li>
+                                    <?php endfor; ?>
+
+                                    <!-- Next -->
+                                    <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
+                                        <a class="page-link" href="?page=<?= $page + 1 ?>">Next</a>
+                                    </li>
+                                </ul>
+                            </nav>
+
                         </div>
                     </div>
 

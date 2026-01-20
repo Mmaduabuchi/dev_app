@@ -486,6 +486,14 @@ try{
                                                 <p><strong>Years of Experience:</strong> <?php echo $years_of_experience . ' years'; ?> </p>
                                             </div>
                                         </div>
+                                        <div class="col-12">
+                                            <hr>
+                                            <div class="mt-3">
+                                                <button type="button" class="btn btn-outline-danger btn-sm" id="report-account-btn">
+                                                    <i class="mdi mdi-alert-octagon-outline mr-1"></i> Report Account
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -550,6 +558,52 @@ try{
                 </div>
             </div>
 
+            <!-- Report Account Modal -->
+            <div class="modal fade" id="reportAccountModal" tabindex="-1" aria-labelledby="reportAccountModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <form method="post" id="reportForm">
+                            <div class="modal-header">
+                                <h5 class="modal-title text-danger" id="reportAccountModalLabel">
+                                    <i class="mdi mdi-alert-octagon-outline me-1"></i> Report this Account
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Reason for Report</label>
+                                    <select name="report_reason" class="form-select" required>
+                                        <option value="">-- Select reason --</option>
+                                        <option value="Fraud">Fraud / Scam</option>
+                                        <option value="Abusive Behavior">Abusive Behavior</option>
+                                        <option value="Spam">Spam</option>
+                                        <option value="Impersonation">Impersonation</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Additional Details (optional)</label>
+                                    <textarea name="report_message" class="form-control" rows="4" placeholder="Describe the issue..." maxlength="300"></textarea>
+                                    <small class="text-muted">Note: Maximum 300 characters allowed.</small>
+                                </div>
+
+                                <input type="hidden" name="reported_user_id" value="<?= $user_id ?? '' ?>">
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" name="report_account" class="btn btn-danger">
+                                    Submit Report
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
 
             <!-- Footer Start -->
             <?php include_once "footer.php"; ?>
@@ -570,10 +624,10 @@ try{
     <script src="<?php echo $base_url; ?>assets/libs/feather-icons/feather.min.js"></script>
 
     <!-- Apexcharts JS -->
-    <script src="<?php echo $base_url; ?>assets/libs/apexcharts/apexcharts.min.js"></script>
+    <!-- <script src="<?php echo $base_url; ?>assets/libs/apexcharts/apexcharts.min.js"></script> -->
 
     <!-- for basic area chart -->
-    <script src="../../../apexcharts.com/samples/assets/stock-prices.js"></script>
+    <!-- <script src="../../../apexcharts.com/samples/assets/stock-prices.js"></script> -->
 
     <!-- Vector map-->
     <script src="<?php echo $base_url; ?>assets/libs/jsvectormap/js/jsvectormap.min.js"></script>
@@ -588,6 +642,11 @@ try{
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        document.getElementById('report-account-btn').addEventListener('click', function () {
+            const modal = new bootstrap.Modal(document.getElementById('reportAccountModal'));
+            modal.show();
+        });
+
         const sendRequestBtn = document.getElementById('send_request');
         const requestTitleSelect = document.getElementById('request_title');
         const requestEmailInput = document.getElementById('email');
@@ -704,6 +763,76 @@ try{
                         alert('An error occurred while sending the request.');
                     }
                 });
+        });
+
+        const reportForm = document.getElementById("reportForm");
+        //Toast config
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        reportForm.addEventListener("submit", (e)=>{
+            e.preventDefault();
+
+            const submitBtn = reportForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Submitting...';
+
+            const formData = new FormData(reportForm);
+            fetch("<?php echo $base_url; ?>process/process_report_user_account.php", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status == "success"){
+                    Toast.fire({
+                        icon: 'success',
+                        title: data.message || 'Account reported successfully!'
+                    });
+
+                    // Reset form
+                    reportForm.reset();
+
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Submit Report';
+
+                    // Close modal
+                    const modalEl = document.getElementById('reportAccountModal');
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    modalInstance.hide();
+                } else {
+                    Toast.fire({
+                        icon: 'error',
+                        title: data.message
+                    });
+
+                    // Reset form
+                    reportForm.reset();
+
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Submit Report';
+                }
+            })
+            .catch(error => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Submit Report';
+
+                Toast.fire({
+                    icon: 'error',
+                    title: 'Network error. Please try again.'
+                });
+
+                console.log('Error:', error);
+            });
         });
     </script>
 

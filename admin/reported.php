@@ -5,6 +5,22 @@ include_once "auth.php";
 //include route
 include_once "route.php";
 
+$total_account_reports = 0;
+try{
+    // Total account_reports
+    $stmt = $conn->prepare("SELECT COUNT(*) AS total FROM account_reports");
+    if($stmt === false){
+        throw new Exception("Failed to prepare statement.");
+    }
+    $stmt->execute();
+    $total_account_reports = $stmt->get_result()->fetch_assoc()['total'];
+    $stmt->close();
+
+} catch (Exception $e) {
+    $total_account_reports = 0;
+    // echo "SERVER ERROR:: " . $e->getMessage();
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -139,7 +155,7 @@ include_once "route.php";
                 <div class="page-content" id="reported-accounts">
                     <h1 class="mb-4 fs-3">Reported Accounts</h1>
                     <div class="card p-4">
-                        <h5 class="card-title fw-bold mb-3">Reports Pending Review (14 total)</h5>
+                        <h5 class="card-title fw-bold mb-3">Reports Pending Review (<?= $total_account_reports ?> total)</h5>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle small">
                                 <thead>
@@ -153,35 +169,102 @@ include_once "route.php";
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>#RPT-0014</td>
-                                        <td>Talent: John D.</td>
-                                        <td>Fake portfolio / Plagiarism</td>
-                                        <td>Employer: Acme Corp</td>
-                                        <td>2024-05-20</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-info me-1" title="View Evidence" data-bs-toggle="modal" data-bs-target="#evidenceModal"><i class="bi bi-search"></i></button>
-                                            <button class="btn btn-sm btn-warning me-1" title="Warn User"><i class="bi bi-exclamation-triangle"></i></button>
-                                            <button class="btn btn-sm btn-danger" title="Ban"><i class="bi bi-x-octagon"></i></button>
-                                            <button class="btn btn-sm btn-success ms-2" title="Dismiss"><i class="bi bi-check-lg"></i></button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>#RPT-0013</td>
-                                        <td>Employer: BadAds LLC</td>
-                                        <td>Posting scam job / Spam</td>
-                                        <td>Talent: Sarah K.</td>
-                                        <td>2024-05-19</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-info me-1" title="View Evidence" data-bs-toggle="modal" data-bs-target="#evidenceModal"><i class="bi bi-search"></i></button>
-                                            <button class="btn btn-sm btn-danger" title="Ban Immediately"><i class="bi bi-x-octagon-fill"></i></button>
-                                            <button class="btn btn-sm btn-success ms-2" title="Dismiss"><i class="bi bi-check-lg"></i></button>
-                                        </td>
-                                    </tr>
-                                    <!-- More Reports... -->
+                                    <?php
+                                        $limit = 15; // reports per page 
+                                        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+                                        $page = max($page, 1);
+                                        $offset = ($page - 1) * $limit;
+
+                                        // Get total reports
+                                        $totalStmt = $conn->prepare("SELECT COUNT(*) AS total FROM account_reports");
+                                        $totalStmt->execute();
+                                        $totalResult = $totalStmt->get_result()->fetch_assoc();
+                                        $totalReports = $totalResult['total'];
+                                        $totalPages = ceil($totalReports / $limit);
+                                        $totalStmt->close();
+
+                                        // Fetch reports with pagination
+                                        try{
+                                            $stmt = $conn->prepare("SELECT 
+                                                    ar.report_id, ar.reason, ar.created_at,
+                                                    reported.fullname AS reported_name,
+                                                    reported.email AS reported_email,
+                                                    reporter.fullname AS reporter_name,
+                                                    reporter.email AS reporter_email
+                                                FROM account_reports ar
+                                                LEFT JOIN users reported ON ar.reported_user_id = reported.id
+                                                LEFT JOIN users reporter ON ar.reported_by = reporter.id
+                                                ORDER BY ar.created_at DESC LIMIT ? OFFSET ?
+                                            ");
+                                            if($stmt === false){
+                                                throw new Exception("Failed to prepare statement.");
+                                            }
+                                            $stmt->bind_param("ii", $limit, $offset);
+                                            $stmt->execute();
+                                            $result = $stmt->get_result();
+                                            if ($result->num_rows < 1) {
+                                                echo "<tr><td colspan='6'>No open reports found.</td></tr>";
+                                            } else{
+                                                while($row = $result->fetch_assoc()){
+                                                    $reported_by = $row['reported_by'];
+                                                    $reported_user_id = $row['reported_user_id'];
+                                    ?>
+                                                    <tr>
+                                                        <td><?= htmlspecialchars($row['report_id']) ?></td>
+                                                        <td>
+                                                            <?= htmlspecialchars($row['reported_name']) ?> <br>
+                                                            <small class="text-muted"><?= htmlspecialchars($row['reported_email']) ?></small>
+                                                        </td>
+                                                        <td><?= htmlspecialchars($row['reason']) ?></td>
+                                                        <td>
+                                                            <?= htmlspecialchars($row['reporter_name']) ?><br>
+                                                            <small class="text-muted"><?= htmlspecialchars($row['reporter_email']) ?></small>
+                                                        </td>
+                                                        <td>
+                                                            <?php 
+                                                                $date = new DateTime($row['created_at']);
+                                                                echo $date->format('M d, Y h:i A');
+                                                            ?>
+                                                        </td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-info me-1" title="View Evidence" data-bs-toggle="modal" data-bs-target="#evidenceModal"><i class="bi bi-search"></i></button>
+                                                            <button class="btn btn-sm btn-warning me-1" title="Warn User"><i class="bi bi-exclamation-triangle"></i></button>
+                                                            <button class="btn btn-sm btn-danger" title="Ban"><i class="bi bi-x-octagon"></i></button>
+                                                            <button class="btn btn-sm btn-success ms-2" title="Dismiss"><i class="bi bi-check-lg"></i></button>
+                                                        </td>
+                                                    </tr>
+                                    
+                                    <?php
+                                                }
+                                            }
+
+                                        } catch (Exception $e) {
+                                            echo "<tr><td colspan='6' class='text-center text-danger'>" . $e->getMessage() . "</td></tr>";
+                                        }
+                                    ?>
                                 </tbody>
                             </table>
                         </div>
+                        <!-- Pagination -->
+                        <nav aria-label="Reports pagination">
+                            <ul class="pagination justify-content-end mt-3 flex-wrap">
+                                <!-- Previous -->
+                                <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+                                    <a class="page-link" href="?page=<?= $page - 1 ?>">Previous</a>
+                                </li>
+
+                                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                                    <li class="page-item <?= $i === $page ? 'active' : '' ?>">
+                                        <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                                    </li>
+                                <?php endfor; ?>
+
+                                <!-- Next -->
+                                <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
+                                    <a class="page-link" href="?page=<?= $page + 1 ?>">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
                 <!-- End Reported Accounts -->
