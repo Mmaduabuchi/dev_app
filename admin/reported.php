@@ -164,6 +164,7 @@ try{
                                         <th>Reported User</th>
                                         <th>Report Reason</th>
                                         <th>Submitted By</th>
+                                        <th>Status</th>
                                         <th>Date</th>
                                         <th>Actions</th>
                                     </tr>
@@ -186,7 +187,7 @@ try{
                                         // Fetch reports with pagination
                                         try{
                                             $stmt = $conn->prepare("SELECT 
-                                                    ar.report_id, ar.reason, ar.created_at,
+                                                    ar.*,
                                                     reported.fullname AS reported_name,
                                                     reported.email AS reported_email,
                                                     reporter.fullname AS reporter_name,
@@ -206,8 +207,10 @@ try{
                                                 echo "<tr><td colspan='6'>No open reports found.</td></tr>";
                                             } else{
                                                 while($row = $result->fetch_assoc()){
-                                                    $reported_by = $row['reported_by'];
-                                                    $reported_user_id = $row['reported_user_id'];
+                                                    $msg = htmlspecialchars($row['message']);
+                                                    if($msg === null || $msg === ''){
+                                                        $msg = 'No message provided';
+                                                    }
                                     ?>
                                                     <tr>
                                                         <td><?= htmlspecialchars($row['report_id']) ?></td>
@@ -220,6 +223,7 @@ try{
                                                             <?= htmlspecialchars($row['reporter_name']) ?><br>
                                                             <small class="text-muted"><?= htmlspecialchars($row['reporter_email']) ?></small>
                                                         </td>
+                                                        <td><?= (htmlspecialchars($row['status']) == "") ? "Open" : "Resolved" ?></td>
                                                         <td>
                                                             <?php 
                                                                 $date = new DateTime($row['created_at']);
@@ -227,13 +231,29 @@ try{
                                                             ?>
                                                         </td>
                                                         <td>
-                                                            <button class="btn btn-sm btn-info me-1" title="View Evidence" data-bs-toggle="modal" data-bs-target="#evidenceModal"><i class="bi bi-search"></i></button>
-                                                            <button class="btn btn-sm btn-warning me-1" title="Warn User"><i class="bi bi-exclamation-triangle"></i></button>
-                                                            <button class="btn btn-sm btn-danger" title="Ban"><i class="bi bi-x-octagon"></i></button>
-                                                            <button class="btn btn-sm btn-success ms-2" title="Dismiss"><i class="bi bi-check-lg"></i></button>
+                                                            <button class="btn btn-sm btn-info me-1 view-evidence" title="View Evidence" data-bs-toggle="modal" data-bs-target="#evidenceModal"
+                                                                data-message="<?= $msg ?>"
+                                                                data-reason="<?= htmlspecialchars($row['reason']) ?>"
+                                                                data-report-id="<?= htmlspecialchars($row['report_id']) ?>">
+                                                                <i class="bi bi-search"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-warning me-1 warn-user" title="Warn User"
+                                                                data-user-id="<?= htmlspecialchars($row['reported_user_id']) ?>"
+                                                                data-report-id="<?= htmlspecialchars($row['report_id']) ?>">
+                                                                <i class="bi bi-exclamation-triangle"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-danger ban-user" title="Ban"
+                                                                data-user-id="<?= htmlspecialchars($row['reported_user_id']) ?>"
+                                                                data-report-id="<?= htmlspecialchars($row['report_id']) ?>">
+                                                                <i class="bi bi-x-octagon"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-success ms-2 dismiss-report" title="Dismiss"
+                                                                data-user-id="<?= htmlspecialchars($row['reported_user_id']) ?>"
+                                                                data-report-id="<?= htmlspecialchars($row['report_id']) ?>">
+                                                                <i class="bi bi-check-lg"></i>
+                                                            </button>
                                                         </td>
-                                                    </tr>
-                                    
+                                                    </tr>                                    
                                     <?php
                                                 }
                                             }
@@ -266,33 +286,57 @@ try{
                             </ul>
                         </nav>
                     </div>
-                </div>
-                <!-- End Reported Accounts -->
-            
+                </div>            
             </div>
         </div>
         
-        <!-- Modal for Reported Accounts Evidence (reused for simulation) -->
+        <!-- Modal for Reported Accounts Evidence -->
         <div class="modal fade" id="evidenceModal" tabindex="-1" aria-labelledby="evidenceModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="evidenceModalLabel">Report Evidence for #RPT-0014</h5>
+                        <h5 class="modal-title" id="evidenceModalLabel">Report Evidence for <span class="fw-bold"> RPT-164508547</span> </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
-                        <p class="fw-bold">Report Reason:</p>
-                        <p>Talent profile claims experience with 'Quantum Computing' but their GitHub is empty.</p>
-                        <p class="fw-bold">Screenshot Evidence:</p>
-                        <img src="https://placehold.co/400x200/ced4da/000000?text=Mock+Screenshot+of+Empty+GitHub" class="img-fluid rounded" alt="Evidence Screenshot">
+                    <div class="modal-body" id="evidenceModalBody">
+                        <!-- <p>                            
+                            <span class="fw-bold">Report Reason: </span> 
+                            <span>Abusive Behavior</span> 
+                        </p>                        
+                        <p class="fw-bold">Report Message:</p>
+                        <p>Talent profile claims experience with 'Quantum Computing' but their GitHub is empty.</p> -->
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-danger">Suspend Account</button>
                     </div>
                 </div>
             </div>
         </div>
+
+
+        <!-- Action Confirmation Modal -->
+        <div class="modal fade" id="actionConfirmModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="actionModalTitle">Confirm Action</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body" id="actionModalBody">
+                        Are you sure you want to proceed?
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button class="btn" id="confirmActionBtn">Confirm</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
 
         
 
@@ -300,9 +344,142 @@ try{
 
         <!-- Load Bootstrap JS Bundle (includes Popper for dropdowns/modals) -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
 
-            
+            document.addEventListener("click", function(e) {
+                if (e.target.closest(".view-evidence")) {
+                    const btn = e.target.closest(".view-evidence");
+                    const reportId = btn.dataset.reportId;
+                    const reason = btn.dataset.reason;
+                    const message = btn.dataset.message;
+
+                    // Set modal content
+                    document.getElementById("evidenceModalLabel").innerHTML = `Report Evidence for <span class="fw-bold">${reportId}</span>`;
+                    document.getElementById("evidenceModalBody").innerHTML = `
+                        <p><span class="fw-bold">Report Reason: </span> <span>${reason}</span></p>
+                        <p class="fw-bold">Report Message:</p>
+                        <p>${message}</p>
+                    `;
+                }
+            });
+
+            let pendingAction = {
+                action: null,
+                userId: null,
+                reportId: null
+            };
+
+            // SweetAlert Toast Config
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3500,
+                timerProgressBar: true
+            });
+
+            document.addEventListener("click", function (e) {
+
+                // WARN USER
+                if (e.target.closest(".warn-user")) {
+                    const btn = e.target.closest(".warn-user");
+                    openModal({
+                        action: "warn",
+                        userId: btn.dataset.userId,
+                        reportId: btn.dataset.reportId,
+                        title: "Warn User",
+                        body: "Are you sure you want to <strong>warn</strong> this user?",
+                        btnClass: "btn-warning"
+                    });
+                }
+
+                // BAN USER
+                if (e.target.closest(".ban-user")) {
+                    const btn = e.target.closest(".ban-user");
+                    openModal({
+                        action: "ban",
+                        userId: btn.dataset.userId,
+                        reportId: btn.dataset.reportId,
+                        title: "Ban User",
+                        body: "<span class='text-danger fw-bold'>This will permanently ban this user.</span><br>Are you sure?",
+                        btnClass: "btn-danger"
+                    });
+                }
+
+                // DISMISS REPORT
+                if (e.target.closest(".dismiss-report")) {
+                    const btn = e.target.closest(".dismiss-report");
+                    openModal({
+                        action: "dismiss",
+                        userId: null,
+                        reportId: btn.dataset.reportId,
+                        title: "Dismiss Report",
+                        body: "This report will be dismissed with no action on the user.",
+                        btnClass: "btn-success"
+                    });
+                }
+            });
+
+            function openModal({ action, userId, reportId, title, body, btnClass }) {
+                pendingAction = { action, userId, reportId };
+
+                document.getElementById("actionModalTitle").innerText = title;
+                document.getElementById("actionModalBody").innerHTML = body;
+
+                const confirmBtn = document.getElementById("confirmActionBtn");
+                confirmBtn.className = `btn ${btnClass}`;
+                confirmBtn.innerText = "Yes, Continue";
+
+                new bootstrap.Modal(
+                    document.getElementById("actionConfirmModal")
+                ).show();
+            }
+
+            // CONFIRM BUTTON
+            document.getElementById("confirmActionBtn").addEventListener("click", function () {
+
+                this.disabled = true;
+                this.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Processing`;
+
+                fetch("./../process/process_report_action.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(pendingAction)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    bootstrap.Modal.getInstance(
+                        document.getElementById("actionConfirmModal")
+                    ).hide();
+
+                    if (data.status === "success") {
+                        Toast.fire({
+                            icon: "success",
+                            title: data.message || "Action completed successfully"
+                        });
+
+                        setTimeout(() => location.reload(), 1200);
+                    } else {
+                        Toast.fire({
+                            icon: "error",
+                            title: data.message || "Action failed"
+                        });
+                    }
+                })
+                .catch(() => {
+                    Toast.fire({
+                        icon: "error",
+                        title: "Server error occurred"
+                    });
+                })
+                .finally(() => {
+                    const btn = document.getElementById("confirmActionBtn");
+                    btn.disabled = false;
+                    btn.innerText = "Confirm";
+                });
+            });
         </script>
+
     </body>
 </html>
