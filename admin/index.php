@@ -47,6 +47,15 @@ try{
     }
     $stmt->close();
 
+    // Total account_reports
+    $stmt = $conn->prepare("SELECT COUNT(*) AS total FROM account_reports");
+    if($stmt === false){
+        throw new Exception("Failed to prepare statement.");
+    }
+    $stmt->execute();
+    $total_account_reports = $stmt->get_result()->fetch_assoc()['total'];
+    $stmt->close();
+
 } catch (Exception $e){
     $_SESSION['error'] = $e->getMessage();
     header('Location: /devhire/admin/dashboard/errorpage/error');
@@ -323,7 +332,7 @@ try{
                                 </a>
                                 <a href="<?php echo $url . 'reports' ?>" class="list-group-item list-group-item-action d-flex align-items-center rounded-3 mb-2">
                                     <i class="bi bi-trash-fill text-danger fs-5 me-3"></i>
-                                    Review Reported Users (14)
+                                    Review Reported Users (<?= $total_account_reports ?>)
                                 </a>
                                 <a href="<?php echo $url . 'subscriptions' ?>" class="list-group-item list-group-item-action d-flex align-items-center rounded-3 mb-2">
                                     <i class="bi bi-gear-fill text-secondary fs-5 me-3"></i>

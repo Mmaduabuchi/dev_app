@@ -5,6 +5,50 @@ include_once "auth.php";
 //include route
 include_once "route.php";
 
+try{
+    $planIds = [1,2,3];
+    
+    $placeholders = implode(',', array_fill(0, count($planIds), '?'));
+
+    $stmt = $conn->prepare("SELECT * FROM subscription_plans WHERE id IN ($placeholders)");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $types = str_repeat('i', count($planIds));
+    $stmt->bind_param($types, ...$planIds);
+
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $plans = [];
+    while ($row = $result->fetch_assoc()) {
+        $plans[$row['id']] = $row;
+    }
+
+    $stmt->close();
+
+    // Assign values
+    $sub_one_data = $plans[1];
+    $sub_two_data = $plans[2];
+    $sub_three_data = $plans[3];
+
+    $sub_one_data_name = $sub_one_data["name"];
+    $sub_one_data_price = number_format($sub_one_data["price"], 2);
+    $sub_one_data_duration_days = $sub_one_data["duration_days"];
+
+    $sub_two_data_name = $sub_two_data["name"];
+    $sub_two_data_price = number_format($sub_two_data["price"], 2);
+    $sub_two_data_duration_days = $sub_two_data["duration_days"];
+
+    $sub_three_data_name = $sub_three_data["name"];
+    $sub_three_data_price = number_format($sub_three_data["price"], 2);
+    $sub_three_data_duration_days = $sub_three_data["duration_days"];
+
+} catch (Exception $e) {
+    $conn->close();
+    error_log($e->getMessage());
+    echo "Something went wrong. Please try again later.";
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -147,43 +191,43 @@ include_once "route.php";
                                     <!-- Plan 1: Basic -->
                                     <div class="col-md-4">
                                         <div class="card border-secondary h-100 text-center p-3">
-                                            <h6 class="text-secondary fw-bold">Basic</h6>
-                                            <h2 class="display-6 fw-bold mb-3">$29<span class="fs-6 fw-normal text-muted">/mo</span></h2>
+                                            <h6 class="text-secondary fw-bold"><?= ucfirst($sub_one_data_name) ?></h6>
+                                            <h2 class="display-6 fw-bold mb-3">$<?= $sub_one_data_price ?><span class="fs-6 fw-normal text-muted">/mo</span></h2>
                                             <p class="small text-muted mb-4">Limited visibility & features</p>
                                             <ul class="list-unstyled text-start small mb-4">
                                                 <li><i class="bi bi-check-circle-fill text-success me-2"></i> 5 Job Slots (Employer)</li>
                                                 <li><i class="bi bi-check-circle-fill text-success me-2"></i> Standard Profile (Talent)</li>
                                                 <li><i class="bi bi-x-circle-fill text-danger me-2"></i> No Search Boost</li>
                                             </ul>
-                                            <button class="btn btn-outline-primary btn-sm mt-auto"><i class="bi bi-pencil"></i> Edit Plan</button>
+                                            <button data-bs-toggle="modal" data-bs-target="#editPlanModal" data-plan="<?= ucfirst($sub_one_data_name) ?>" class="btn btn-outline-primary btn-sm mt-auto"><i class="bi bi-pencil"></i> Edit Plan</button>
                                         </div>
                                     </div>
                                     <!-- Plan 2: Standard -->
                                     <div class="col-md-4">
                                         <div class="card border-primary border-3 h-100 text-center p-3">
-                                            <h6 class="text-primary fw-bold">Standard (Most Popular)</h6>
-                                            <h2 class="display-6 fw-bold mb-3">$79<span class="fs-6 fw-normal text-muted">/mo</span></h2>
+                                            <h6 class="text-primary fw-bold"><?= ucfirst($sub_two_data_name) ?></h6>
+                                            <h2 class="display-6 fw-bold mb-3">$<?= $sub_two_data_price ?><span class="fs-6 fw-normal text-muted">/mo</span></h2>
                                             <p class="small text-muted mb-4">Balanced feature set</p>
                                             <ul class="list-unstyled text-start small mb-4">
                                                 <li><i class="bi bi-check-circle-fill text-success me-2"></i> Unlimited Job Slots</li>
                                                 <li><i class="bi bi-check-circle-fill text-success me-2"></i> Featured Profile Option</li>
                                                 <li><i class="bi bi-check-circle-fill text-success me-2"></i> 15% Search Boost</li>
                                             </ul>
-                                            <button class="btn btn-primary btn-sm mt-auto"><i class="bi bi-pencil"></i> Edit Plan</button>
+                                            <button data-bs-toggle="modal" data-bs-target="#editPlanModal" data-plan="<?= ucfirst($sub_two_data_name) ?>" class="btn btn-primary btn-sm mt-auto"><i class="bi bi-pencil"></i> Edit Plan</button>
                                         </div>
                                     </div>
                                     <!-- Plan 3: Premium -->
                                     <div class="col-md-4">
                                         <div class="card border-warning h-100 text-center p-3">
-                                            <h6 class="text-warning fw-bold">Premium</h6>
-                                            <h2 class="display-6 fw-bold mb-3">$149<span class="fs-6 fw-normal text-muted">/mo</span></h2>
+                                            <h6 class="text-warning fw-bold"><?= ucfirst($sub_three_data_name) ?></h6>
+                                            <h2 class="display-6 fw-bold mb-3">$<?= $sub_three_data_price ?><span class="fs-6 fw-normal text-muted">/mo</span></h2>
                                             <p class="small text-muted mb-4">Maximum visibility and tools</p>
                                             <ul class="list-unstyled text-start small mb-4">
                                                 <li><i class="bi bi-check-circle-fill text-success me-2"></i> Dedicated Account Manager</li>
                                                 <li><i class="bi bi-check-circle-fill text-success me-2"></i> Premium Profile Badge</li>
                                                 <li><i class="bi bi-check-circle-fill text-success me-2"></i> 50% Search Boost</li>
                                             </ul>
-                                            <button class="btn btn-outline-primary btn-sm mt-auto"><i class="bi bi-pencil"></i> Edit Plan</button>
+                                            <button data-bs-toggle="modal" data-bs-target="#editPlanModal" data-plan="<?= ucfirst($sub_three_data_name) ?>" data-name="<?= $sub_three_data_name ?>" class="btn btn-outline-primary btn-sm mt-auto"><i class="bi bi-pencil"></i> Edit Plan</button>
                                         </div>
                                     </div>
                                 </div>
@@ -201,16 +245,13 @@ include_once "route.php";
                             <div class="col-md-6 d-flex align-items-center">
                                 <ul class="list-group list-group-flush w-100">
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Premium <span class="badge bg-warning rounded-pill">1,024</span>
+                                        <?= ucfirst($sub_three_data_name) ?> <span class="badge bg-warning rounded-pill">1,024</span>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Standard <span class="badge bg-primary rounded-pill">2,500</span>
+                                        <?= ucfirst($sub_two_data_name) ?> <span class="badge bg-primary rounded-pill">2,500</span>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Basic <span class="badge bg-secondary rounded-pill">1,596</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        Free / Trial <span class="badge bg-light text-dark rounded-pill">7,330</span>
+                                        <?= ucfirst($sub_one_data_name) ?> <span class="badge bg-secondary rounded-pill">1,596</span>
                                     </li>
                                 </ul>
                             </div>
@@ -223,6 +264,55 @@ include_once "route.php";
             </div>
         </div>
 
+
+        <!-- Edit Plan Modal -->
+        <div class="modal fade" id="editPlanModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form id="editPlanForm" method="POST" action="update-plan.php">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit Subscription Plan</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <input type="hidden" name="plan_type" id="planType">
+
+                            <div class="mb-3">
+                                <label class="form-label">Plan Name</label>
+                                <input type="text" name="plan_name" id="planName" class="form-control" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Monthly Price ($)</label>
+                                <input type="number" name="plan_price" id="planPrice" class="form-control" required>
+                            </div>
+
+                            <!-- Features Section -->
+                            <div class="mb-3">
+                                <label class="form-label">Plan Features</label>
+                                <div id="featureList"></div>
+                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="addFeature">
+                                    + Add Feature
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <!-- Close Button -->
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+                                Close
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
         
 
         <?php include_once "footer.php"; ?>
@@ -231,8 +321,73 @@ include_once "route.php";
         <!-- Load Bootstrap JS Bundle (includes Popper for dropdowns/modals) -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
+            document.addEventListener("DOMContentLoaded", function () {
 
-            
+                const editButtons = document.querySelectorAll(".edit-plan-btn");
+                const featureList = document.getElementById("featureList");
+                const addFeatureBtn = document.getElementById("addFeature");
+
+                function createFeatureInput(value = "") {
+                    const div = document.createElement("div");
+                    div.className = "input-group mb-2";
+
+                    div.innerHTML = `
+                        <input type="text" name="features[]" class="form-control" value="${value}" required>
+                        <button type="button" class="btn btn-danger remove-feature"><i class="bi bi-trash"></i></button>
+                    `;
+
+                    div.querySelector(".remove-feature").addEventListener("click", () => {
+                        div.remove();
+                    });
+
+                    return div;
+                }
+
+                editButtons.forEach(button => {
+                    button.addEventListener("click", function () {
+
+                        const plan = this.getAttribute("data-plan");
+                        const name = this.getAttribute("data-name");
+                        const price = this.getAttribute("data-price");
+                        const features = this.getAttribute("data-features");
+
+                        document.getElementById("planType").value = plan;
+                        document.getElementById("planName").value = name;
+                        document.getElementById("planPrice").value = price;
+
+                        // Clear old features
+                        featureList.innerHTML = "";
+
+                        // Load features
+                        if (features) {
+                            features.split("|").forEach(f => {
+                                featureList.appendChild(createFeatureInput(f));
+                            });
+                        }
+                    });
+                });
+
+                // Add new feature
+                addFeatureBtn.addEventListener("click", () => {
+                    featureList.appendChild(createFeatureInput());
+                });
+
+            });
+
+            document.addEventListener("DOMContentLoaded", function () {
+
+                const modal = document.getElementById("editPlanModal");
+                const form = document.getElementById("editPlanForm");
+                const featureList = document.getElementById("featureList");
+
+                // Reset modal when closed
+                modal.addEventListener("hidden.bs.modal", function () {
+                    form.reset();
+                    featureList.innerHTML = "";
+                });
+
+            });
         </script>
+
     </body>
 </html>

@@ -138,14 +138,14 @@ include_once "route.php";
 
                 <div class="page-content" id="payments-transactions">
                     <h1 class="mb-4 fs-3">Payments & Transactions</h1>
-                    <div class="row g-4 mb-4">
+                    <!-- <div class="row g-4 mb-4">
                         <div class="col-lg-12">
                             <div class="card p-4">
                                 <h5 class="card-title fw-bold mb-3">Monthly Revenue Graph</h5>
                                 <canvas id="monthlyRevenueChart" height="100"></canvas>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
                     <div class="card p-4">
                         <h5 class="card-title fw-bold mb-3">Transaction History</h5>

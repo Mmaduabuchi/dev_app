@@ -5,6 +5,69 @@ require_once "auth.php";
 //notification count
 require_once __DIR__ . '/fetch_notification_count.php';
 
+
+try{
+    $sub_one = 1;
+    $sub_two = 2;
+    $sub_three = 3;
+
+    // fetch user data from database
+    $stmt = $conn->prepare("SELECT * FROM subscription_plans WHERE id = ?");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $sub_one);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $sub_one_data = $result->fetch_assoc();
+
+    $sub_one_data_name = $sub_one_data["name"];
+    $sub_one_data_price = number_format($sub_one_data["price"], 2);
+    $sub_one_data_duration_days = $sub_one_data["duration_days"];
+
+    //close stmt
+    $stmt->close();
+
+    // fetch user data from database
+    $stmt = $conn->prepare("SELECT * FROM subscription_plans WHERE id = ?");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $sub_two);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $sub_two_data = $result->fetch_assoc();
+
+    $sub_two_data_name = $sub_two_data["name"];
+    $sub_two_data_price = number_format($sub_two_data["price"], 2);
+    $sub_two_data_duration_days = $sub_two_data["duration_days"];
+
+    //close stmt
+    $stmt->close();
+
+    // fetch user data from database
+    $stmt = $conn->prepare("SELECT * FROM subscription_plans WHERE id = ?");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $sub_three);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $sub_three_data = $result->fetch_assoc();
+
+    $sub_three_data_name = $sub_three_data["name"];
+    $sub_three_data_price = number_format($sub_three_data["price"], 2);
+    $sub_three_data_duration_days = $sub_three_data["duration_days"];
+
+    //close stmt
+    $stmt->close();
+
+} catch (Exception $e) {
+    $conn->close();
+    error_log($e->getMessage());
+    echo "Something went wrong. Please try again later.";
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -93,12 +156,12 @@ require_once __DIR__ . '/fetch_notification_count.php';
 
                                         <div class="d-flex align-items-center mb-3">
                                             <div>
-                                                <p class="mb-0 text-dark fs-16">Free</p>
+                                                <p class="mb-0 text-dark fs-16"><?= ucfirst($sub_one_data_name) ?></p>
                                             </div>
                                         </div>
 
                                         <div class="d-flex align-items-center mb-3">
-                                            <h3 class="mb-0 fs-26 text-dark me-2 me-3">$0.00 <sub> / Month</sub> </h3>
+                                            <h3 class="mb-0 fs-26 text-dark me-2 me-3">$<?= $sub_one_data_price ?> <sub> / Month</sub> </h3>
                                         </div>
 
                                         <p class="text-muted fs-14 mb-2">
@@ -132,12 +195,12 @@ require_once __DIR__ . '/fetch_notification_count.php';
 
                                         <div class="d-flex align-items-center mb-3">
                                             <div>
-                                                <p class="mb-0 text-dark fs-16">Standard</p>
+                                                <p class="mb-0 text-dark fs-16"><?= ucfirst($sub_two_data_name) ?></p>
                                             </div>
                                         </div>
 
                                         <div class="d-flex align-items-center mb-3">
-                                            <h3 class="mb-0 fs-26 text-dark me-2 me-3">$9.00 <sub> / Quarterly</sub> </h3>
+                                            <h3 class="mb-0 fs-26 text-dark me-2 me-3">$<?= $sub_two_data_price ?> <sub> / Quarterly</sub> </h3>
                                         </div>
 
                                         <p class="text-muted fs-14 mb-2">
@@ -171,12 +234,12 @@ require_once __DIR__ . '/fetch_notification_count.php';
 
                                         <div class="d-flex align-items-center mb-3">
                                             <div>
-                                                <p class="mb-0 text-dark fs-16">Premium</p>
+                                                <p class="mb-0 text-dark fs-16"><?= ucfirst($sub_three_data_name) ?></p>
                                             </div>
                                         </div>
 
                                         <div class="d-flex align-items-center mb-3">
-                                            <h3 class="mb-0 fs-26 text-dark me-2 me-3">$15.00 <sub> / Yearly</sub> </h3>
+                                            <h3 class="mb-0 fs-26 text-dark me-2 me-3">$<?= $sub_three_data_price ?> <sub> / Yearly</sub> </h3>
                                         </div>
 
                                         <p class="text-muted fs-14 mb-2">
