@@ -13,28 +13,28 @@ try {
             'name' => 'Free',
             'price' => 0.00,
             'duration_days' => 30,
-            'features' => 'Access to basic features, Email support'
+            'description' => 'Access to basic features, Email support'
         ],
         [
             'name' => 'Standard',
             'price' => 9.00,
             'duration_days' => 90,
-            'features' => 'All Basic features + Priority support, Additional reports'
+            'description' => 'All Basic features + Priority support, Additional reports'
         ],
         [
             'name' => 'Premium',
             'price' => 15.00,
             'duration_days' => 365,
-            'features' => 'All Standard features + Dedicated account manager, Advanced analytics'
+            'description' => 'All Standard features + Dedicated account manager, Advanced analytics'
         ]
     ];
 
     foreach ($plans as $plan) {
-        $stmt = $conn->prepare("INSERT INTO `subscription_plans` (name, price, duration_days, features, created_at)  VALUES (?, ?, ?, ?, NOW())");
+        $stmt = $conn->prepare("INSERT INTO `subscription_plans` (name, price, duration_days, description, created_at)  VALUES (?, ?, ?, ?, NOW())");
         if (!$stmt) {
             throw new Exception('Database error: ' . $conn->error);
         }
-        $stmt->bind_param("sdis",$plan['name'],$plan['price'], $plan['duration_days'], $plan['features']);
+        $stmt->bind_param("sdis",$plan['name'],$plan['price'], $plan['duration_days'], $plan['description']);
         if (!$stmt->execute()) {
             throw new Exception('Execution error: ' . $stmt->error);
         }

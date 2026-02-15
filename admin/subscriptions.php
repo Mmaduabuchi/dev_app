@@ -32,14 +32,17 @@ try{
     $sub_two_data = $plans[2];
     $sub_three_data = $plans[3];
 
+    $sub_one_data_id = $sub_one_data["id"];
     $sub_one_data_name = $sub_one_data["name"];
     $sub_one_data_price = number_format($sub_one_data["price"], 2);
     $sub_one_data_duration_days = $sub_one_data["duration_days"];
 
+    $sub_two_data_id = $sub_two_data["id"];
     $sub_two_data_name = $sub_two_data["name"];
     $sub_two_data_price = number_format($sub_two_data["price"], 2);
     $sub_two_data_duration_days = $sub_two_data["duration_days"];
 
+    $sub_three_data_id = $sub_three_data["id"];
     $sub_three_data_name = $sub_three_data["name"];
     $sub_three_data_price = number_format($sub_three_data["price"], 2);
     $sub_three_data_duration_days = $sub_three_data["duration_days"];

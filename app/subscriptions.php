@@ -22,6 +22,8 @@ try{
     $sub_one_data = $result->fetch_assoc();
 
     $sub_one_data_name = $sub_one_data["name"];
+    $sub_one_data_id = $sub_one_data["id"];
+    $sub_one_data_description = $sub_one_data["description"];
     $sub_one_data_price = number_format($sub_one_data["price"], 2);
     $sub_one_data_duration_days = $sub_one_data["duration_days"];
 
@@ -39,6 +41,8 @@ try{
     $sub_two_data = $result->fetch_assoc();
 
     $sub_two_data_name = $sub_two_data["name"];
+    $sub_two_data_id = $sub_two_data["id"];
+    $sub_two_data_description = $sub_two_data["description"];
     $sub_two_data_price = number_format($sub_two_data["price"], 2);
     $sub_two_data_duration_days = $sub_two_data["duration_days"];
 
@@ -56,6 +60,8 @@ try{
     $sub_three_data = $result->fetch_assoc();
 
     $sub_three_data_name = $sub_three_data["name"];
+    $sub_three_data_id = $sub_three_data["id"];
+    $sub_three_data_description = $sub_three_data["description"];
     $sub_three_data_price = number_format($sub_three_data["price"], 2);
     $sub_three_data_duration_days = $sub_three_data["duration_days"];
 
@@ -165,7 +171,7 @@ try{
                                         </div>
 
                                         <p class="text-muted fs-14 mb-2">
-                                            Perfect for new users. Explore DevHire, connect with talent or employers, and get started with basic access.
+                                            <?= htmlspecialchars($sub_one_data_description) ?>
                                         </p>
 
                                         <ul class="text-muted fs-13 mb-3 list-unstyled planList">
@@ -204,7 +210,7 @@ try{
                                         </div>
 
                                         <p class="text-muted fs-14 mb-2">
-                                            Ideal for active users who want more visibility and better control over connections. Get your profile displayed prominently to attract more opportunities.
+                                            <?= htmlspecialchars($sub_two_data_description) ?>
                                         </p>
 
                                         <ul class="text-muted fs-13 mb-3 list-unstyled planList">
@@ -243,7 +249,7 @@ try{
                                         </div>
 
                                         <p class="text-muted fs-14 mb-2">
-                                            Designed for power users — whether employers or talent — who want maximum visibility, full analytics, and priority support. Your profile gets premium placement and access to advanced features.
+                                            <?= htmlspecialchars($sub_three_data_description) ?>
                                         </p>
 
                                         <ul class="text-muted fs-13 mb-3 list-unstyled planList">
