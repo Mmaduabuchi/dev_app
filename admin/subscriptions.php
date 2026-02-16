@@ -47,6 +47,24 @@ try{
     $sub_three_data_price = number_format($sub_three_data["price"], 2);
     $sub_three_data_duration_days = $sub_three_data["duration_days"];
 
+    // Fetch features for all plans
+    $planFeatures = [];
+
+    $stmt = $conn->prepare("SELECT plan_id, feature_text, icon_type FROM plan_features WHERE plan_id IN ($placeholders) ORDER BY id ASC");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param($types, ...$planIds);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    while ($row = $result->fetch_assoc()) {
+        $planFeatures[$row['plan_id']][] = $row;
+    }
+
+    $stmt->close();
+
+
 } catch (Exception $e) {
     $conn->close();
     error_log($e->getMessage());
@@ -163,6 +181,10 @@ try{
                 background-color: #2D3748 !important;
                 border-color: #4A5568;
             }
+            .modal-body {
+                max-height: 400px; /* adjust as needed */
+                overflow-y: auto;
+            }
         </style>
     </head>
     <body class="d-flex">
@@ -198,11 +220,26 @@ try{
                                             <h2 class="display-6 fw-bold mb-3">$<?= $sub_one_data_price ?><span class="fs-6 fw-normal text-muted">/mo</span></h2>
                                             <p class="small text-muted mb-4">Limited visibility & features</p>
                                             <ul class="list-unstyled text-start small mb-4">
-                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> 5 Job Slots (Employer)</li>
-                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> Standard Profile (Talent)</li>
-                                                <li><i class="bi bi-x-circle-fill text-danger me-2"></i> No Search Boost</li>
+                                                <?php if (!empty($planFeatures[$sub_one_data_id])): ?>
+                                                    <?php foreach ($planFeatures[$sub_one_data_id] as $feature): ?>
+                                                        <li>
+                                                            <?php if ($feature['icon_type'] === 'check'): ?>
+                                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                            <?php else: ?>
+                                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                            <?php endif; ?>
+                                                            <?= htmlspecialchars($feature['feature_text']) ?>
+                                                        </li>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
                                             </ul>
-                                            <button data-bs-toggle="modal" data-bs-target="#editPlanModal" data-plan="<?= ucfirst($sub_one_data_name) ?>" class="btn btn-outline-primary btn-sm mt-auto"><i class="bi bi-pencil"></i> Edit Plan</button>
+                                            <button data-bs-toggle="modal" data-bs-target="#editPlanModal" class="btn btn-outline-primary btn-sm mt-auto edit-plan-btn"
+                                                data-name="<?= ucfirst($sub_one_data_name) ?>" 
+                                                data-plan="<?= $sub_one_data_id ?>" 
+                                                data-price="<?= $sub_one_data_price ?>"
+                                                data-features="<?= implode('|', array_map(fn($f) => $f['icon_type'] . '::' . $f['feature_text'], $planFeatures[$sub_one_data_id] ?? [])) ?>">
+                                                <i class="bi bi-pencil"></i> Edit Plan
+                                            </button>
                                         </div>
                                     </div>
                                     <!-- Plan 2: Standard -->
@@ -212,11 +249,23 @@ try{
                                             <h2 class="display-6 fw-bold mb-3">$<?= $sub_two_data_price ?><span class="fs-6 fw-normal text-muted">/mo</span></h2>
                                             <p class="small text-muted mb-4">Balanced feature set</p>
                                             <ul class="list-unstyled text-start small mb-4">
-                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> Unlimited Job Slots</li>
-                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> Featured Profile Option</li>
-                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> 15% Search Boost</li>
+                                                <?php if (!empty($planFeatures[$sub_two_data_id])): ?>
+                                                    <?php foreach ($planFeatures[$sub_two_data_id] as $feature): ?>
+                                                        <li>
+                                                            <?php if ($feature['icon_type'] === 'check'): ?>
+                                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                            <?php else: ?>
+                                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                            <?php endif; ?>
+                                                            <?= htmlspecialchars($feature['feature_text']) ?>
+                                                        </li>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
                                             </ul>
-                                            <button data-bs-toggle="modal" data-bs-target="#editPlanModal" data-plan="<?= ucfirst($sub_two_data_name) ?>" class="btn btn-primary btn-sm mt-auto"><i class="bi bi-pencil"></i> Edit Plan</button>
+
+                                            <button data-bs-toggle="modal" data-bs-target="#editPlanModal" data-name="<?= ucfirst($sub_two_data_name) ?>" data-plan="<?= $sub_two_data_id ?>" data-price="<?= $sub_two_data_price ?>" data-features="<?= implode('|', array_map(fn($f) => $f['icon_type'] . '::' . $f['feature_text'], $planFeatures[$sub_two_data_id] ?? [])) ?>" class="btn btn-primary btn-sm mt-auto edit-plan-btn">
+                                                <i class="bi bi-pencil"></i> Edit Plan
+                                            </button>
                                         </div>
                                     </div>
                                     <!-- Plan 3: Premium -->
@@ -226,11 +275,22 @@ try{
                                             <h2 class="display-6 fw-bold mb-3">$<?= $sub_three_data_price ?><span class="fs-6 fw-normal text-muted">/mo</span></h2>
                                             <p class="small text-muted mb-4">Maximum visibility and tools</p>
                                             <ul class="list-unstyled text-start small mb-4">
-                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> Dedicated Account Manager</li>
-                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> Premium Profile Badge</li>
-                                                <li><i class="bi bi-check-circle-fill text-success me-2"></i> 50% Search Boost</li>
+                                                <?php if (!empty($planFeatures[$sub_three_data_id])): ?>
+                                                    <?php foreach ($planFeatures[$sub_three_data_id] as $feature): ?>
+                                                        <li>
+                                                            <?php if ($feature['icon_type'] === 'check'): ?>
+                                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                            <?php else: ?>
+                                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                            <?php endif; ?>
+                                                            <?= htmlspecialchars($feature['feature_text']) ?>
+                                                        </li>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
                                             </ul>
-                                            <button data-bs-toggle="modal" data-bs-target="#editPlanModal" data-plan="<?= ucfirst($sub_three_data_name) ?>" data-name="<?= $sub_three_data_name ?>" class="btn btn-outline-primary btn-sm mt-auto"><i class="bi bi-pencil"></i> Edit Plan</button>
+                                            <button data-bs-toggle="modal" data-bs-target="#editPlanModal" data-name="<?= ucfirst($sub_three_data_name) ?>" data-plan="<?= $sub_three_data_id ?>" data-price="<?= $sub_three_data_price ?>" data-features="<?= implode('|', array_map(fn($f) => $f['icon_type'] . '::' . $f['feature_text'], $planFeatures[$sub_three_data_id] ?? [])) ?>" class="btn btn-outline-primary btn-sm mt-auto edit-plan-btn">
+                                                <i class="bi bi-pencil"></i> Edit Plan
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -272,7 +332,7 @@ try{
         <div class="modal fade" id="editPlanModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <form id="editPlanForm" method="POST" action="update-plan.php">
+                    <form id="editPlanForm">
                         <div class="modal-header">
                             <h5 class="modal-title">Edit Subscription Plan</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -323,6 +383,7 @@ try{
 
         <!-- Load Bootstrap JS Bundle (includes Popper for dropdowns/modals) -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             document.addEventListener("DOMContentLoaded", function () {
 
@@ -330,12 +391,16 @@ try{
                 const featureList = document.getElementById("featureList");
                 const addFeatureBtn = document.getElementById("addFeature");
 
-                function createFeatureInput(value = "") {
+                function createFeatureInput(value = "", icon = "check") {
                     const div = document.createElement("div");
                     div.className = "input-group mb-2";
 
                     div.innerHTML = `
-                        <input type="text" name="features[]" class="form-control" value="${value}" required>
+                        <select name="icon_type[]" class="form-select" style="max-width: 110px;">
+                            <option value="check" ${icon === 'check' ? 'selected' : ''}>✔ Check</option>
+                            <option value="cross" ${icon === 'cross' ? 'selected' : ''}>✖ Cross</option>
+                        </select>
+                        <input type="text" name="features[]" placeholder="Enter plan feature" class="form-control" value="${value}" required>
                         <button type="button" class="btn btn-danger remove-feature"><i class="bi bi-trash"></i></button>
                     `;
 
@@ -349,10 +414,10 @@ try{
                 editButtons.forEach(button => {
                     button.addEventListener("click", function () {
 
-                        const plan = this.getAttribute("data-plan");
-                        const name = this.getAttribute("data-name");
-                        const price = this.getAttribute("data-price");
-                        const features = this.getAttribute("data-features");
+                        const plan = this.dataset.plan;
+                        const name = this.dataset.name;
+                        const price = this.dataset.price;
+                        const features = this.dataset.features;
 
                         document.getElementById("planType").value = plan;
                         document.getElementById("planName").value = name;
@@ -364,7 +429,8 @@ try{
                         // Load features
                         if (features) {
                             features.split("|").forEach(f => {
-                                featureList.appendChild(createFeatureInput(f));
+                                const [icon, text] = f.split("::");
+                                featureList.appendChild(createFeatureInput(text, icon));
                             });
                         }
                     });
@@ -390,6 +456,76 @@ try{
                 });
 
             });
+
+            document.getElementById("editPlanForm").addEventListener("submit", function(e) {
+                e.preventDefault();
+
+                const form = e.target;
+
+                const formData = new FormData(form);
+
+                // Disable submit button while saving
+                const submitBtn = form.querySelector("button[type='submit']");
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="bi bi-save me-1"></i> Saving...';
+
+                fetch("./../process/process_update_plan.php", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-save me-1"></i> Save Changes';
+
+                    // Configure SweetAlert2 toast
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                    });
+
+                    if (data.status === 'success') {
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById("editPlanModal"));
+                        modal.hide();
+
+                        // Show success toast
+                        Toast.fire({
+                            icon: 'success',
+                            title: 'Plan updated successfully'
+                        });
+
+                        location.reload();
+                    } else {
+                        Toast.fire({
+                            icon: 'error',
+                            title: data.message || 'Something went wrong'
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-save me-1"></i> Save Changes';
+
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                    });
+
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Failed to save. Try again.'
+                    });
+                });
+            });
+
         </script>
 
     </body>
