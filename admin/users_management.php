@@ -346,8 +346,8 @@ try{
                                 </div>
 
                                 <!-- Pagination -->
-                                <nav>
-                                    <ul class="pagination justify-content-center">
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination justify-content-end mt-3">
                                         <!-- Previous button -->
                                         <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
                                             <a class="page-link" href="?page=<?= $page - 1 ?>">Previous</a>

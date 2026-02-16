@@ -5,6 +5,11 @@ include_once "auth.php";
 //include route
 include_once "route.php";
 
+
+$limit = 10; // number of rows per page
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$offset = ($page - 1) * $limit;
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -154,28 +159,77 @@ include_once "route.php";
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>#DH-10024</td>
-                                        <td>Alex Johnson</td>
-                                        <td>Premium (Talent)</td>
-                                        <td>$149.00</td>
-                                        <td>Stripe</td>
-                                        <td>2024-05-20</td>
-                                        <td><button class="btn btn-sm btn-outline-warning" title="Issue Refund"><i class="bi bi-arrow-return-left"></i> Refund</button></td>
-                                    </tr>
-                                    <tr>
-                                        <td>#DH-10023</td>
-                                        <td>Tech Global Corp</td>
-                                        <td>Standard (Employer)</td>
-                                        <td>$79.00</td>
-                                        <td>PayPal</td>
-                                        <td>2024-05-19</td>
-                                        <td><span class="text-success small">Completed</span></td>
-                                    </tr>
-                                    <!-- More Transactions... -->
+                                    <?php
+                                        try{
+                                            $totalStmt = $conn->prepare("SELECT COUNT(*) as total FROM transaction_history WHERE deleted_at IS NULL");
+                                            $totalStmt->execute();
+                                            $totalResult = $totalStmt->get_result()->fetch_assoc();
+                                            $totalRows = $totalResult['total'];
+                                            $totalPages = ceil($totalRows / $limit);
+                                            $totalStmt->close();
+                                            
+                                            $stmt = $conn->prepare("SELECT * FROM transaction_history WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT ? OFFSET ?");
+                                            if ($stmt === false) {
+                                                throw new Exception("Failed to prepare statement: " . $conn->error);
+                                            }
+                                            $stmt->bind_param("ii", $limit, $offset);
+                                            $stmt->execute();
+                                            $result = $stmt->get_result();
+                                            if ($result->num_rows < 1) {
+                                                echo "<tr><td colspan='7' class='text-center text-danger'>No transactions found.</td></tr>";
+                                            }
+                                            while ($row = $result->fetch_assoc()) {
+                                    ?>
+                                                <tr>
+                                                    <td><?php echo $row['transaction_id']; ?></td>
+                                                    <td><?php echo $row['user_company']; ?></td>
+                                                    <td><?php echo $row['plan']; ?></td>
+                                                    <td><?php echo $row['amount']; ?></td>
+                                                    <td><?php echo $row['method']; ?></td>
+                                                    <td>
+                                                        <?php 
+                                                            $date = new DateTime($row['created_at']);
+                                                            echo $date->format('l, Y-m-d H:i');
+                                                        ?>
+                                                    </td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-warning" onclick="issueRefund('<?php echo $row['id']; ?>')" title="Issue Refund">
+                                                            <i class="bi bi-arrow-return-left"></i> Refund
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction('<?php echo $row['id']; ?>')" title="Delete Transaction">
+                                                            <i class="bi bi-trash"></i> Delete
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                    
+                                    <?php
+                                            }
+                                        } catch (Exception $e) {
+                                            echo "<tr><td colspan='7' class='text-center text-danger'>" . $e->getMessage() . "</td></tr>";
+                                        }
+                                    ?>
                                 </tbody>
                             </table>
                         </div>
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-end mt-3">
+                                <!-- Previous Button -->
+                                <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                                    <a class="page-link" href="<?= ($page <= 1) ? '#' : '?page=' . ($page - 1) ?>">Previous</a>
+                                </li>
+
+                                <?php for($i = 1; $i <= $totalPages; $i++): ?>
+                                    <li class="page-item <?= $i == $page ? 'active' : '' ?>">
+                                        <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                                    </li>
+                                <?php endfor; ?>
+
+                                <!-- Next Button -->
+                                <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
+                                    <a class="page-link" href="<?= ($page >= $totalPages) ? '#' : '?page=' . ($page + 1) ?>">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
                 <!-- End Payments & Transactions -->
@@ -192,7 +246,122 @@ include_once "route.php";
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
+            function issueRefund(transactionId) {
+                Swal.fire({
+                    title: 'Issue Refund',
+                    text: 'Are you sure you want to issue a refund for this transaction?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, issue refund'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Call your backend API to issue refund
+                        fetch('./../process/process_issue_refund.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ transactionId: transactionId })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'success',
+                                    title: 'Refund issued successfully!',
+                                    showConfirmButton: false,
+                                    timer: 3000,
+                                    timerProgressBar: true
+                                });
+                            } else {
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'error',
+                                    title: data.message,
+                                    showConfirmButton: false,
+                                    timer: 3000,
+                                    timerProgressBar: true
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: 'Failed to issue refund',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true
+                            });
+                        });
+                    }
+                });
+            }
 
+            function deleteTransaction(transactionId) {
+                Swal.fire({
+                    title: 'Delete Transaction',
+                    text: 'Are you sure you want to delete this transaction?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('./../process/process_delete_transaction.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ transactionId: transactionId })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status == 'success') {
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'success',
+                                    title: data.message,
+                                    showConfirmButton: false,
+                                    timer: 3000,
+                                    timerProgressBar: true
+                                });
+                            } else {
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'error',
+                                    title: data.message,
+                                    showConfirmButton: false,
+                                    timer: 3000,
+                                    timerProgressBar: true
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: 'Failed to delete transaction',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true
+                            });
+                        });
+                    }
+                });
+            }
             
         </script>
     </body>
