@@ -84,6 +84,20 @@
                     </a>
                 </li>
 
+                <li class="nav-item">
+                    <a class="sidebar-link <?= ($currentPath == 'transactions') ? 'active' : '' ?>" 
+                       href="<?php echo $url . 'transactions'?>">
+                        <i class="bi bi-credit-card-2-front-fill"></i> Transactions
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="sidebar-link <?= ($currentPath == 'reports') ? 'active' : '' ?>" 
+                       href="<?php echo $url . 'reports'?>">
+                        <i class="bi bi-flag-fill"></i> Reported Accounts
+                    </a>
+                </li>
+
                 <!-- USERS MANAGEMENT DROPDOWN -->
                 <li class="nav-item">
                     <a class="sidebar-link d-flex justify-content-between align-items-center 
@@ -118,20 +132,6 @@
 
                         </ul>
                     </div>
-                </li>
-
-                <li class="nav-item">
-                    <a class="sidebar-link <?= ($currentPath == 'transactions') ? 'active' : '' ?>" 
-                       href="<?php echo $url . 'transactions'?>">
-                        <i class="bi bi-credit-card-2-front-fill"></i> Transactions
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="sidebar-link <?= ($currentPath == 'reports') ? 'active' : '' ?>" 
-                       href="<?php echo $url . 'reports'?>">
-                        <i class="bi bi-flag-fill"></i> Reported Accounts
-                    </a>
                 </li>
 
                 <li class="nav-item">

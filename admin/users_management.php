@@ -73,6 +73,39 @@ try{
                 transition: all 0.3s ease;
             }
 
+            /* Sidebar Styling */
+            .sidebar {
+                width: 260px;
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                z-index: 1000;
+                padding-top: 56px; /* Space for fixed navbar */
+                background-color: var(--bs-devhire-navy);
+                color: #E9ECEF;
+                transition: all 0.3s;
+            }
+            .sidebar-link {
+                display: flex;
+                align-items: center;
+                padding: 10px 15px;
+                margin: 4px 0;
+                border-radius: 8px;
+                color: #E9ECEF;
+                text-decoration: none;
+                transition: all 0.2s;
+            }
+            .sidebar-link:hover, .sidebar-link.active {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: #FFFFFF;
+            }
+            .sidebar-link.active {
+                border-left: 4px solid var(--bs-devhire-blue);
+                padding-left: 11px;
+            }
+            .sidebar-link i { margin-right: 12px; }
+
             /* Main Content Adjustments */
             .main-content {
                 margin-left: 260px;
@@ -139,7 +172,7 @@ try{
             <div class="container-fluid p-4"> 
 
                 <div class="page-content" id="users-management">
-                    <h1 class="mb-4 fs-3">Users Management</h1>
+                    <h1 class="mb-4 fs-3">Talents Management</h1>
 
                     <ul class="nav nav-tabs mb-4" id="userTabs" role="tablist">
                         <li class="nav-item" role="presentation">
@@ -152,24 +185,6 @@ try{
                         <div class="tab-pane fade show active" id="talents-pane" role="tabpanel" aria-labelledby="talent-tab">
                             <div class="card p-4">
                                 <h5 class="card-title fw-bold mb-3">Talent Roster (<?= $totalUsers ?> Total)</h5>
-
-                                <!-- Filters & Search -->
-                                <!-- <div class="d-flex flex-wrap gap-2 mb-3">
-                                    <input type="search" class="form-control me-2" style="max-width: 200px;" placeholder="Search by name or skill...">
-                                    <select class="form-select me-2" style="max-width: 150px;">
-                                        <option selected>All Skills</option>
-                                        <option>Frontend</option>
-                                        <option>Backend</option>
-                                        <option>Design</option>
-                                    </select>
-                                    <select class="form-select me-2" style="max-width: 150px;">
-                                        <option selected>All Subs</option>
-                                        <option>Basic</option>
-                                        <option>Standard</option>
-                                        <option>Premium</option>
-                                    </select>
-                                    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> Apply Filters</button>
-                                </div> -->
 
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle small">

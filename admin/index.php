@@ -95,6 +95,39 @@ try{
             transition: all 0.3s ease;
         }
 
+        /* Sidebar Styling */
+        .sidebar {
+            width: 260px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1000;
+            padding-top: 56px; /* Space for fixed navbar */
+            background-color: var(--bs-devhire-navy);
+            color: #E9ECEF;
+            transition: all 0.3s;
+        }
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            margin: 4px 0;
+            border-radius: 8px;
+            color: #E9ECEF;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .sidebar-link:hover, .sidebar-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #FFFFFF;
+        }
+        .sidebar-link.active {
+            border-left: 4px solid var(--bs-devhire-blue);
+            padding-left: 11px;
+        }
+        .sidebar-link i { margin-right: 12px; }
+
         /* Main Content Adjustments */
         .main-content {
             margin-left: 260px;
