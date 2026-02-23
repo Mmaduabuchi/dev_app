@@ -47,7 +47,7 @@ include_once "route.php";
                 left: 0;
                 z-index: 1000;
                 padding-top: 56px; /* Space for fixed navbar */
-                background-color: var(--bs-devhire-navy);
+                background-color: #111827;
                 color: #E9ECEF;
                 transition: all 0.3s;
             }
@@ -135,24 +135,33 @@ include_once "route.php";
 
             <!-- Page Content Container -->
             <div class="container-fluid p-4">
-                <section>
-                    <div class="alert alert-info alert-dismissible fade show d-flex align-items-center" role="alert">
-                        <i class="bi bi-bell-fill me-3 fs-4"></i>
-                        <div>
-                            <h5 class="alert-heading mb-1">Welcome to Notifications!</h5>
-                            This is where you'll find all important updates, alerts, and messages from DevHire. Stay informed and don't miss a thing!
-                        </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
 
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Notifications</h5>
-                            <p class="card-text">This is where you'll find all important updates, alerts, and messages from DevHire. Stay informed and don't miss a thing!</p>
+                <div class="page-content" id="messages-requests">
+                    <h1 class="mb-4 fs-3">Notifications</h1>
+                    <div class="card p-4">
+                        <h5 class="card-title fw-bold mb-3">Contact Form Submissions</h5>
+                        <div class="list-group">
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1 fw-bold text-primary">HR Manager, Acme Corp</h6>
+                                    <small class="text-muted">3 days ago</small>
+                                </div>
+                                <p class="mb-1 small">Request for contact details of 'Alex Johnson' - Premium talent.</p>
+                                <small class="text-success"><i class="bi bi-envelope-open-fill me-1"></i> Open</small>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1 fw-bold">Platform Issue Report (Admin)</h6>
+                                    <small class="text-danger">Yesterday</small>
+                                </div>
+                                <p class="mb-1 small">Issue: Job post filter not working correctly on mobile view.</p>
+                                <small class="text-muted"><i class="bi bi-tools me-1"></i> Assigned to Dev Team</small>
+                            </a>
+                            <!-- More Messages... -->
                         </div>
                     </div>
-                </section>
-            
+                </div>
+                
             </div>
         </div>
 

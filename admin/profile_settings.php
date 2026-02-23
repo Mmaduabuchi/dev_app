@@ -24,6 +24,11 @@ include_once "route.php";
                 --bs-devhire-navy: #152238;
                 --bs-devhire-light: #F8F9FA;
                 --bs-font-inter: 'Inter', sans-serif;
+                --dh-blue-primary: #0d6efd;
+                --dh-blue-dark: #0a58ca;
+                --dh-bg-gray: #f8f9fa;
+                --dh-border-color: #dee2e6;
+                --dh-text-muted: #6c757d;
             }
 
             /* Load Inter Font (Google Fonts) */
@@ -116,6 +121,92 @@ include_once "route.php";
                 background-color: #2D3748 !important;
                 border-color: #4A5568;
             }
+
+            /* Card & UI Elements */
+            .settings-card {
+                border: none;
+                border-radius: 12px;
+                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+                margin-bottom: 1.5rem;
+            }
+
+            .card-header {
+                background-color: #fff;
+                border-bottom: 1px solid var(--dh-border-color);
+                padding: 1.25rem;
+                border-radius: 12px 12px 0 0 !important;
+            }
+
+            .card-header h5 {
+                margin-bottom: 0;
+                font-weight: 600;
+                font-size: 1.1rem;
+                display: flex;
+                align-items: center;
+            }
+
+            .card-header h5 i {
+                margin-right: 12px;
+                color: var(--dh-blue-primary);
+            }
+
+            .form-label {
+                font-weight: 500;
+                font-size: 0.9rem;
+                color: var(--dh-text-muted);
+            }
+
+            .form-control:focus {
+                border-color: var(--dh-blue-primary);
+                box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+            }
+
+            .role-badge {
+                background-color: #e7f1ff;
+                color: var(--dh-blue-primary);
+                padding: 0.35rem 0.75rem;
+                border-radius: 50px;
+                font-size: 0.85rem;
+                font-weight: 600;
+                display: inline-block;
+            }
+
+            /* Custom Toggle Switch Styles */
+            .form-check-input:checked {
+                background-color: var(--dh-blue-primary);
+                border-color: var(--dh-blue-primary);
+            }
+
+            .setting-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 0;
+            }
+
+            .setting-item:not(:last-child) {
+                border-bottom: 1px solid var(--dh-border-color);
+            }
+
+            .setting-info p {
+                margin-bottom: 0;
+                font-size: 0.95rem;
+                font-weight: 500;
+            }
+
+            .setting-info small {
+                color: var(--dh-text-muted);
+            }
+
+            .btn-save {
+                padding: 0.6rem 2rem;
+                font-weight: 600;
+                border-radius: 8px;
+            }
+            
+            .toast-container {
+                z-index: 1050;
+            }
         </style>
     </head>
     <body class="d-flex">
@@ -136,7 +227,147 @@ include_once "route.php";
             <!-- Page Content Container -->
             <div class="container-fluid p-4">
 
-            
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+                    <h1 class="h2">Profile Settings</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-primary btn-save shadow-sm" onclick="showSaveToast()">
+                            <i class="bi bi-check2-circle me-1"></i> Save All Changes
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        
+                        <!-- Account Information -->
+                        <div class="card settings-card">
+                            <div class="card-header">
+                                <h5><i class="bi bi-person-circle"></i> Account Information</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Full Name</label>
+                                        <input type="text" class="form-control" value="Alexander Wright">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email Address</label>
+                                        <input type="email" class="form-control" value="a.wright@devhire.io">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label d-block">Admin Role</label>
+                                        <span class="role-badge">Super Administrator</span>
+                                        <div class="mt-2">
+                                            <small class="text-muted">Role permissions managed by the Organization Owner.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Settings -->
+                        <div class="card settings-card">
+                            <div class="card-header">
+                                <h5><i class="bi bi-shield-lock"></i> Security & Access</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="alert alert-info border-0 shadow-sm mb-4">
+                                    <small><i class="bi bi-info-circle-fill me-2"></i> Only Admin, Sub-Admin, and Moderator roles can enable Multi-Factor Authentication.</small>
+                                </div>
+                                
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <p>Login OTP (Two-Factor Authentication)</p>
+                                        <small>Requires a code sent to your email to sign in.</small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="otpToggle" checked style="width: 3em; height: 1.5em;">
+                                    </div>
+                                </div>
+
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <p>IP Whitelisting</p>
+                                        <small>Only allow dashboard access from verified company IPs.</small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="ipToggle" style="width: 3em; height: 1.5em;">
+                                    </div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <a href="admin_account" class="btn btn-outline-secondary btn-sm">Change Admin Password</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notification Preferences -->
+                        <div class="card settings-card">
+                            <div class="card-header">
+                                <h5><i class="bi bi-bell"></i> Notification Preferences</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <p>New Candidate Alerts</p>
+                                        <small>Receive email when a top-tier candidate applies.</small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" checked style="width: 3em; height: 1.5em;">
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <p>Security Audit Reports</p>
+                                        <small>Weekly summary of login attempts and role changes.</small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" checked style="width: 3em; height: 1.5em;">
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <p>System Maintenance</p>
+                                        <small>Get notified about scheduled downtime and updates.</small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" style="width: 3em; height: 1.5em;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mobile Save Button -->
+                        <div class="d-grid d-md-none mb-5">
+                            <button class="btn btn-primary py-3 fw-bold shadow-sm" onclick="showSaveToast()">Save All Changes</button>
+                        </div>
+
+                    </div>
+
+                    <!-- Sidebar Info / Help -->
+                    <div class="col-lg-4">
+                        <div class="card settings-card bg-primary text-white">
+                            <div class="card-body p-4 text-center">
+                                <div class="mb-3">
+                                    <i class="bi bi-patch-check-fill" style="font-size: 3rem; opacity: 0.9;"></i>
+                                </div>
+                                <h5 class="fw-bold">Security Verified</h5>
+                                <p class="small mb-0 opacity-75">Your account is currently protected by enterprise-grade encryption and 2FA.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="card settings-card">
+                            <div class="card-body p-4">
+                                <h6 class="fw-bold mb-3">Help & Documentation</h6>
+                                <ul class="list-unstyled small mb-0">
+                                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted"><i class="bi bi-book me-2"></i> Role Permission Guide</a></li>
+                                    <li class="mb-2"><a href="#" class="text-decoration-none text-muted"><i class="bi bi-shield-check me-2"></i> Security Best Practices</a></li>
+                                    <li><a href="#" class="text-decoration-none text-muted"><i class="bi bi-envelope me-2"></i> Contact Tech Support</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -153,3 +384,6 @@ include_once "route.php";
         </script>
     </body>
 </html>
+
+
+<!--  -->

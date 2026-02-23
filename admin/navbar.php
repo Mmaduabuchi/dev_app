@@ -143,9 +143,9 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="sidebar-link <?= ($currentPath == 'messages') ? 'active' : '' ?>" 
-                       href="<?php echo $url . 'messages'?>">
-                        <i class="bi bi-chat-left-dots-fill"></i> Messages
+                    <a class="sidebar-link <?= ($currentPath == 'notifications') ? 'active' : '' ?>" 
+                       href="<?php echo $url . 'notifications'?>">
+                        <i class="bi bi-bell-fill"></i> Notifications
                     </a>
                 </li>
 
