@@ -139,11 +139,14 @@ try{
             <div class="container-fluid p-4"> 
 
                 <div class="page-content" id="users-management">
-                    <h1 class="mb-4 fs-3">Users Management</h1>
+                    <h1 class="mb-4 fs-3">Employers Management</h1>
 
                     <ul class="nav nav-tabs mb-4" id="userTabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="talent-tab" data-bs-toggle="tab" data-bs-target="#talents-pane" type="button" role="tab" aria-controls="talents-pane" aria-selected="true">Talents</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="employer-tab" data-bs-toggle="tab" data-bs-target="#employers-pane" type="button" role="tab" aria-controls="employers-pane" aria-selected="false">Employers / CEOs</button>
                         </li>
                     </ul>
 
@@ -152,24 +155,6 @@ try{
                         <div class="tab-pane fade show active" id="talents-pane" role="tabpanel" aria-labelledby="talent-tab">
                             <div class="card p-4">
                                 <h5 class="card-title fw-bold mb-3">Talent Roster (<?= $totalUsers ?> Total)</h5>
-
-                                <!-- Filters & Search -->
-                                <!-- <div class="d-flex flex-wrap gap-2 mb-3">
-                                    <input type="search" class="form-control me-2" style="max-width: 200px;" placeholder="Search by name or skill...">
-                                    <select class="form-select me-2" style="max-width: 150px;">
-                                        <option selected>All Skills</option>
-                                        <option>Frontend</option>
-                                        <option>Backend</option>
-                                        <option>Design</option>
-                                    </select>
-                                    <select class="form-select me-2" style="max-width: 150px;">
-                                        <option selected>All Subs</option>
-                                        <option>Basic</option>
-                                        <option>Standard</option>
-                                        <option>Premium</option>
-                                    </select>
-                                    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> Apply Filters</button>
-                                </div> -->
 
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle small">
@@ -331,6 +316,52 @@ try{
                                     </ul>
                                 </nav>
 
+                            </div>
+                        </div>
+
+                        <!-- 2B. Employers / CEOs Page -->
+                        <div class="tab-pane fade" id="employers-pane" role="tabpanel" aria-labelledby="employer-tab">
+                            <div class="card p-4">
+                                <h5 class="card-title fw-bold mb-3">Employer Roster (<?= $totalEmployers ?> Total)</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle small">
+                                        <thead>
+                                            <tr>
+                                                <th>Company Name</th>
+                                                <th>Subscription</th>
+                                                <th>Active Jobs</th>
+                                                <th>Verification</th>
+                                                <th>Registered Date</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Tech Global Corp</td>
+                                                <td><span class="badge bg-success">Standard</span></td>
+                                                <td>5</td>
+                                                <td><span class="badge bg-success">Verified</span></td>
+                                                <td>2021-08-15</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-info me-1" title="View Company"><i class="bi bi-building"></i></button>
+                                                    <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Startup XYZ</td>
+                                                <td><span class="badge bg-secondary">Basic</span></td>
+                                                <td>1</td>
+                                                <td><span class="badge bg-warning">Pending</span></td>
+                                                <td>2023-11-01</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-info me-1"><i class="bi bi-building"></i></button>
+                                                    <button class="btn btn-sm btn-success" title="Verify"><i class="bi bi-check"></i></button>
+                                                </td>
+                                            </tr>
+                                            <!-- More Employer Rows... -->
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
