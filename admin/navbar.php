@@ -70,12 +70,20 @@
                     </a>
                 </li>
 
-                <li class="nav-item">
+                <!-- <li class="nav-item">
                     <a class="sidebar-link <?= ($currentPath == 'job_post') ? 'active' : '' ?>" 
-                       href="<?php echo $url . 'job_post'?>">
+                       href="<?php //echo $url . 'job_post'?>">
                         <i class="bi bi-briefcase-fill"></i> Job Posts
                     </a>
+                </li> -->
+
+                <li class="nav-item">
+                    <a class="sidebar-link <?= ($currentPath == 'open_tickets') ? 'active' : '' ?>" 
+                       href="<?php echo $url . 'open_tickets'?>">
+                        <i class="bi bi-ticket-fill"></i> Open Tickets
+                    </a>
                 </li>
+
 
                 <li class="nav-item">
                     <a class="sidebar-link <?= ($currentPath == 'subscriptions') ? 'active' : '' ?>" 
@@ -138,6 +146,13 @@
                     <a class="sidebar-link <?= ($currentPath == 'messages') ? 'active' : '' ?>" 
                        href="<?php echo $url . 'messages'?>">
                         <i class="bi bi-chat-left-dots-fill"></i> Messages
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="sidebar-link <?= ($currentPath == 'custom_mail') ? 'active' : '' ?>" 
+                       href="<?php echo $url . 'custom_mail'?>">
+                        <i class="bi bi-envelope"></i> Custom mail
                     </a>
                 </li>
 
