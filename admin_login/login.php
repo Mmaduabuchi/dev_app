@@ -261,7 +261,7 @@
                         btnCheck.classList.remove('hidden');
 
                         //redirect here after a small delay
-                        setTimeout(() => { window.location.href = '/devhire/admin/dashboard/home'; }, 1000); // Redirect after success animation
+                        setTimeout(() => { window.location.href = data.redirect; }, 1500); // Redirect after success animation
                     } else {
                         showToast('error', data.message || 'Failed to login.');
                     }

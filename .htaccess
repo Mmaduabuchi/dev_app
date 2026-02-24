@@ -58,6 +58,7 @@ RewriteRule ^dashboard/setup/?$ app/setup_company.php [NC,L]
 #Admin authentication routes
 RewriteRule ^admin/log/login?$ admin_login/login.php [NC,L]
 RewriteRule ^admin/log/logout?$ admin_login/logout.php [NC,L]
+RewriteRule ^admin/log/otp?$ admin_login/otp.php [NC,L]
 
 #Admin management panel routes
 RewriteRule ^admin/dashboard/?$ admin/index.php [NC,L]
