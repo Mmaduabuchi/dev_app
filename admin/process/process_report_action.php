@@ -35,6 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     //get admin id
     $current_admin_id = $_SESSION['admin']['id'] ?? null;
 
+    if (!$current_admin_id || !is_numeric($current_admin_id)) {
+        response('error', 'Invalid session state.');
+    }
+
     try {
         // Start a transaction
         $conn->begin_transaction();

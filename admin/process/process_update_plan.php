@@ -19,6 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     //get admin id
     $current_admin_id = $_SESSION['admin']['id'] ?? null;
 
+    if (!$current_admin_id || !is_numeric($current_admin_id)) {
+        response('error', 'Invalid session state.');
+    }
+
     // Collect POST data
     $planId = $_POST['plan_type'] ?? null;
     $planName = trim($_POST['plan_name'] ?? '');

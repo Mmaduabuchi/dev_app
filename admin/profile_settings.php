@@ -248,11 +248,11 @@ include_once "route.php";
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label">Full Name</label>
-                                        <input type="text" class="form-control" value="Alexander Wright">
+                                        <input type="text" disabled class="form-control" value="<?= $admin_name ?>">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Email Address</label>
-                                        <input type="email" class="form-control" value="a.wright@devhire.io">
+                                        <input type="email" disabled class="form-control" value="<?= $admin_email ?>">
                                     </div>
                                     <div class="col-md-12">
                                         <label class="form-label d-block">Admin Role</label>
@@ -272,7 +272,7 @@ include_once "route.php";
                             </div>
                             <div class="card-body p-4">
                                 <div class="alert alert-info border-0 shadow-sm mb-4">
-                                    <small><i class="bi bi-info-circle-fill me-2"></i> Only Admin, Sub-Admin, and Moderator roles can enable Multi-Factor Authentication.</small>
+                                    <small><i class="bi bi-info-circle-fill me-2"></i> Only Admin and Sub-Admin roles can enable Multi-Factor Authentication.</small>
                                 </div>
                                 
                                 <div class="setting-item">
@@ -378,12 +378,32 @@ include_once "route.php";
 
         <!-- Load Bootstrap JS Bundle (includes Popper for dropdowns/modals) -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
-
+            document.getElementById("otpToggle").addEventListener("change", function() {
+                fetch("./../process/process_update_otp_setting.php", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        otp_enabled: this.checked ? 1 : 0
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        showSaveToast();
+                    } else {
+                        showErrorToast(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    showErrorToast("An error occurred while updating the OTP setting.");
+                });
+            });
             
         </script>
     </body>
 </html>
-
-
-<!--  -->
