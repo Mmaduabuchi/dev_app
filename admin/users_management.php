@@ -151,6 +151,9 @@ try{
                 background-color: #2D3748 !important;
                 border-color: #4A5568;
             }
+            a {
+                text-decoration: none;
+            }
         </style>
     </head>
     <body class="d-flex">
@@ -215,7 +218,7 @@ try{
                                                     $totalUsers = $totalUsersResult['total'];
                                                     $totalPages = ceil($totalUsers / $limit);
 
-                                                    $stmt = $conn->prepare("SELECT u.id, u.fullname, u.email, u.user_type, u.is_profile_complete, u.suspended_at, dp.*
+                                                    $stmt = $conn->prepare("SELECT u.id AS user_id, u.fullname, u.email, u.user_type, u.is_profile_complete, u.suspended_at, dp.*
                                                     FROM users u LEFT JOIN developers_profiles dp ON u.id = dp.user_id WHERE u.user_type = 'talent' AND u.deleted_at IS NULL  ORDER BY u.created_at DESC LIMIT ? OFFSET ?");
                                                     if($stmt === false){
                                                         throw new Exception("Failed to prepare statement.");
@@ -236,23 +239,14 @@ try{
                                                                 <td><span class="badge bg-<?= ($user["is_profile_complete"] == 1) ? "success" : "secondary" ?>"><?= $status ?></span></td>
                                                                 <td>Just now</td>
                                                                 <td>
-                                                                    <button class="btn btn-sm btn-outline-info me-1 view-profile-btn" 
-                                                                        data-fullname="<?= htmlspecialchars($user['fullname']) ?>" 
-                                                                        data-legalname="<?= htmlspecialchars($user['legal_name']) ?>" 
-                                                                        data-citizenship="<?= htmlspecialchars($user['citizenship']) ?>" 
-                                                                        data-location="<?= htmlspecialchars($user['location']) ?>" 
-                                                                        data-status="<?= htmlspecialchars($status) ?>" 
-                                                                        data-phonenumber="<?= htmlspecialchars($user["phone_number"]) ?>" 
-                                                                        data-yearsofexperience="<?= htmlspecialchars($user["years_of_experience"]) ?>" 
-                                                                        data-educationlevel="<?= htmlspecialchars($user["education_level"]) ?>" 
-                                                                        data-industryexperience="<?= htmlspecialchars($user["industry_experience"]) ?>" 
-                                                                        data-jobcommitment="<?= htmlspecialchars($user["job_commitment"]) ?>" 
-                                                                        data-preferredhourlyrate="<?= htmlspecialchars($user["preferred_hourly_rate"]) ?>" 
-                                                                        data-englishproficiency="<?= htmlspecialchars($user["english_proficiency"]) ?>" 
-                                                                        data-bio="<?= htmlspecialchars($user["bio"]) ?>"
-                                                                    title="View Profile">
+                                                                    <?php
+                                                                        $token_ref = bin2hex(random_bytes(36));
+                                                                    ?>
+                                                                    <a href="user_review?token_ref=<?= $token_ref ?>&user_id=<?= htmlspecialchars($user['user_id']) ?>">
+                                                                        <button class="btn btn-sm btn-outline-info me-1 view-profile-btn" title="View Profile">
                                                                             <i class="bi bi-eye"></i>
-                                                                    </button>
+                                                                        </button>
+                                                                    </a>
                                                                     <?php
                                                                         if($user["suspended_at"] !== null):
                                                                     ?>
@@ -279,48 +273,6 @@ try{
                                             ?>
                                         </tbody>
                                     </table>
-
-                                    <!-- Single modal -->
-                                    <div class="modal fade" id="viewUserModal" tabindex="-1">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content text-dark">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">User Profile Details</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <section class="overflow-auto" style="height: 200px;">
-                                                        <p><strong>Full Name:</strong> <span id="modalFullName"></span></p>
-                                                        <p><strong>Legal Name:</strong> <span id="modalLegalName"></span></p>
-                                                        <p><strong>Citizenship:</strong> <span id="modalCitizenship"></span></p>
-                                                        <p><strong>Location:</strong> <span id="modalLocation"></span></p>
-                                                        <p><strong>Status:</strong> <span class="badge bg-success" id="modalStatus"></span></p>
-                                                        <p><strong>Gender:</strong> <span id="modalGender"></span></p>
-                                                        <p><strong>Phone Number:</strong> <span id="modalPhoneNumber"></span></p>
-                                                        <p><strong>Email:</strong> <span id="modalEmail"></span></p>
-                                                        <p><strong>Education Level:</strong> <span id="modalEducationLevel"></span></p>
-                                                        <p><strong>Industry Experience:</strong> <span id="modalIndustryExperience"></span></p>
-                                                        <p><strong>Job Commitment:</strong> <span id="modalJobCommitment"></span></p>
-                                                        <p><strong>Preferred Hourly Rate:</strong> <span id="modalPreferredHourlyRate"></span></p>
-                                                        <p><strong>English Proficiency:</strong> <span id="modalEnglishProficiency"></span></p>
-                                                    </section>
-                                                    <div class="mt-3">
-                                                        <label for="modalBio" class="form-label"><strong>Bio:</strong></label>
-                                                        <textarea id="modalBio" class="form-control" rows="6" readonly></textarea>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-danger" id="btnDeleteUser">
-                                                        <i class="bi bi-trash"></i> Delete
-                                                    </button>
-                                                    <button type="button" class="btn btn-warning" id="btnSuspendUser">
-                                                        <i class="bi bi-person-dash"></i> Suspend
-                                                    </button>
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
 
                                 </div>
 
@@ -364,42 +316,6 @@ try{
         <!-- Load Bootstrap JS Bundle (includes Popper for dropdowns/modals) -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-            document.querySelectorAll('.view-profile-btn').forEach(button => {
-                button.addEventListener('click', () => {
-                    const fullname = button.dataset.fullname;
-                    const legalname = button.dataset.legalname;
-                    const citizenship = button.dataset.citizenship;
-                    const location = button.dataset.location;
-                    const status = button.dataset.status;
-                    const Bio = button.dataset.bio;
-                    const gender = button.dataset.gender;
-                    const phonenumber = button.dataset.phonenumber;
-                    const email = button.dataset.email;
-                    const educationlevel = button.dataset.educationlevel;
-                    const industryexperience = button.dataset.industryexperience;
-                    const jobcommitment = button.dataset.jobcommitment;
-                    const preferredhourlyrate = button.dataset.preferredhourlyrate;
-                    const englishproficiency = button.dataset.englishproficiency;
-
-                    document.getElementById('modalFullName').textContent = fullname;
-                    document.getElementById('modalLegalName').textContent = legalname;
-                    document.getElementById('modalCitizenship').textContent = citizenship;
-                    document.getElementById('modalLocation').textContent = location;
-                    document.getElementById('modalStatus').textContent = status;
-                    document.getElementById('modalBio').textContent = Bio;
-                    document.getElementById('modalGender').textContent = gender;
-                    document.getElementById('modalPhoneNumber').textContent = phonenumber;
-                    document.getElementById('modalEmail').textContent = email;
-                    document.getElementById('modalEducationLevel').textContent = educationlevel;
-                    document.getElementById('modalIndustryExperience').textContent = industryexperience;
-                    document.getElementById('modalJobCommitment').textContent = jobcommitment;
-                    document.getElementById('modalPreferredHourlyRate').textContent = preferredhourlyrate;
-                    document.getElementById('modalEnglishProficiency').textContent = englishproficiency;
-
-                    const modal = new bootstrap.Modal(document.getElementById('viewUserModal'));
-                    modal.show();
-                });
-            });
             
         </script>
     </body>

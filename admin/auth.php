@@ -29,6 +29,7 @@ try{
         throw new Exception('Admin not found');
     }
     $admin = $result->fetch_assoc();
+    $stmt->close();
 
     $admin_name = $admin['fullname'];
     $admin_email = $admin['email'];

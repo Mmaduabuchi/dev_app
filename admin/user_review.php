@@ -1,0 +1,711 @@
+<?php
+//include auth file
+include_once "auth.php";
+
+//include route
+include_once "route.php";
+
+if(!isset($_GET["token_ref"]) || !isset($_GET["user_id"]) || empty($_GET["token_ref"]) || empty($_GET["user_id"])){
+    header("Location: users_management");
+    exit();
+}
+
+if(strlen($_GET["token_ref"]) !== 72 || !ctype_xdigit($_GET["token_ref"]) || !is_numeric($_GET["user_id"]) || $_GET["user_id"] < 1){
+    header("Location: users_management");
+    exit();
+}
+
+//user id
+$user_id_num = $_GET["user_id"];
+
+try{
+
+    //get user details
+    $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
+    if($stmt === false){
+        throw new Exception("Failed to prepare user statement");
+    }
+    $stmt->bind_param("i", $user_id_num);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if($result->num_rows === 0){
+        throw new Exception("User not found");
+    }
+
+    $user = $result->fetch_assoc();
+    
+    $user_joined_at = date("F j, Y", strtotime($user["created_at"]));
+
+    $stmt->close();
+
+    //get user developers profile details
+    $stmt = $conn->prepare("SELECT * FROM developers_profiles WHERE user_id = ?");
+    if($stmt === false){
+        throw new Exception("Failed to prepare developer profile statement");
+    }
+    $stmt->bind_param("i", $user["id"]);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $developers_profiles = ($result->num_rows > 0) ? $result->fetch_assoc() : null;
+
+    $stmt->close();
+
+    $user_phone_number = $developers_profiles["phone_number"] ?? "N/A";
+    $user_bio = $developers_profiles["bio"] ?? "N/A";
+    $user_stack = $developers_profiles["stack"] ?? "N/A";
+    $user_legal_name = $developers_profiles["legal_name"] ?? "N/A";
+    $user_location = $developers_profiles["location"] ?? "N/A";
+    $user_citizenship = $developers_profiles["citizenship"] ?? "N/A";
+    $user_english_proficiency = $developers_profiles["english_proficiency"] ?? "N/A";
+    $user_years_of_experience = $developers_profiles["years_of_experience"] ?? "N/A";
+    $user_education_level = $developers_profiles["education_level"] ?? "N/A";
+    $user_contact_email = $developers_profiles["contact_email"] ?? "N/A";
+    $user_certificate = $developers_profiles["certificate"] ?? "N/A";
+    $user_primary_job_interest = $developers_profiles["primary_job_interest"] ?? "N/A";
+    $user_industry_experience = $developers_profiles["industry_experience"] ?? "N/A";
+    $user_profile_picture = $developers_profiles["profile_picture"] ?? "N/A";
+    $user_job_commitment = $developers_profiles["job_commitment"] ?? "N/A";
+    $user_preferred_hourly_rate = $developers_profiles["preferred_hourly_rate"] ?? "N/A";
+    $user_resume = $developers_profiles["resume"] ?? "N/A";
+    $user_website = $developers_profiles["website"] ?? "N/A";
+    $user_github = $developers_profiles["github"] ?? "N/A";
+    $user_linkedin = $developers_profiles["linkedin"] ?? "N/A";
+    $user_action = $developers_profiles["action"] ?? "N/A";
+
+
+
+    // Query to fetch skills
+    $stmt = $conn->prepare("SELECT s.skill_name FROM user_skills us INNER JOIN skills s ON us.skill_id = s.id WHERE us.user_id = ?");
+    if($stmt === false){
+        throw new Exception("Failed to prepare statement");
+    }
+    $stmt->bind_param("i", $user["id"]);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $skills = [];
+
+    while ($row = $result->fetch_assoc()) {
+        $skills[] = $row['skill_name'];
+    }
+
+    $stmt->close();
+
+} catch (Exception $e){
+    $_SESSION['error'] = $e->getMessage();
+    header('Location: /devhire/admin/dashboard/errorpage/error');
+    exit();
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevHire Admin | User Details</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --dh-primary: #2563eb;
+            --dh-bg: #f8fafc;
+            --dh-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --dh-border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dh-bg);
+            color: #1e293b;
+            padding-bottom: 3rem;
+        }
+
+        /* Layout & Utilities */
+        .container-fluid {
+            max-width: 1200px;
+        }
+
+        .card {
+            border: none;
+            border-radius: var(--dh-border-radius);
+            box-shadow: var(--dh-card-shadow);
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s;
+        }
+
+        /* Summary Header */
+        .profile-header-img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        .badge-soft-success { background: #dcfce7; color: #166534; }
+        .badge-soft-primary { background: #dbeafe; color: #1e40af; }
+        .badge-soft-warning { background: #fef9c3; color: #854d0e; }
+
+        /* Tabs Styling */
+        .nav-tabs {
+            border-bottom: 1px solid #e2e8f0;
+            gap: 1.5rem;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            color: #64748b;
+            padding: 1rem 0;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--dh-primary);
+            background: transparent;
+        }
+
+        .nav-tabs .nav-link.active::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--dh-primary);
+        }
+
+        /* Stats Card */
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        /* Table Styling */
+        .table thead th {
+            background-color: #f8fafc;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.025em;
+            color: #64748b;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem;
+        }
+
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        /* Portfolio Grid */
+        .portfolio-item {
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .portfolio-item:hover {
+            transform: translateY(-4px);
+        }
+        .portfolio-img {
+            height: 160px;
+            background: #e2e8f0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Section Titles */
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Main Wrapper -->
+<div class="container-fluid mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="users_management" class="text-decoration-none text-muted">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted">Talent</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><?= htmlspecialchars(ucfirst($user["fullname"])) ?></li>
+        </ol>
+    </nav>
+
+    <!-- Header Summary Card -->
+    <div class="card p-4 border-0">
+        <div class="row align-items-center">
+            <div class="col-md-auto text-center text-md-start mb-3 mb-md-0">
+                <img src="../assets/gggt.avif" alt="Profile" class="profile-header-img">
+            </div>
+            <div class="col-md">
+                <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                    <h3 class="mb-0 fw-bold"><?= htmlspecialchars(ucfirst($user["fullname"])) ?></h3>
+                    <span class="badge badge-soft-primary rounded-pill"><?= htmlspecialchars(ucfirst($user["user_type"])) ?></span>
+                    <span class="badge badge-soft-success rounded-pill">Active</span>
+                </div>
+                <p class="text-muted mb-0">
+                    <i class="bi bi-calendar3 me-1"></i> Joined <?= $user_joined_at ?>
+                    <span class="mx-2">•</span> 
+                    <i class="bi bi-geo-alt me-1"></i> <?= htmlspecialchars(ucfirst($user_location . ", " . $user_citizenship)) ?>
+                </p>
+            </div>
+            <div class="col-md-auto mt-3 mt-md-0 d-flex gap-2 flex-wrap">
+                <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-envelope me-1"></i> Send Message</button>
+                <button class="btn btn-outline-primary btn-sm"><i class="bi bi-shield-check me-1"></i> Verify</button>
+                <div class="dropdown">
+                    <button class="btn btn-light btn-sm border" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item text-warning" href="#"><i class="bi bi-slash-circle me-2"></i> Suspend User</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i> Delete User</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" id="userTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button">Activity</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="cv-tab" data-bs-toggle="tab" data-bs-target="#cv" type="button">CV & Portfolio</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button">Payments</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security" type="button">Security Logs</button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="userTabsContent">
+        
+        <!-- Overview Tab -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel">
+            <div class="row">
+                <!-- Left: Profile Info -->
+                <div class="col-lg-8">
+                    <div class="card p-4">
+                        <h5 class="section-title"><i class="bi bi-person text-primary"></i> Personal Details</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small mb-1">Email Address</label>
+                                <p class="mb-0 fw-medium"><?= htmlspecialchars($user["email"]) ?></p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-muted small mb-1">Phone Number</label>
+                                <p class="mb-0 fw-medium"><?= htmlspecialchars($user_phone_number) ?></p>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="text-muted small mb-1">Professional Bio</label>
+                                <p class="text-muted small"><?= htmlspecialchars($user_bio) ?></p>
+                            </div>
+                        </div>
+
+                        <h5 class="section-title mt-2"><i class="bi bi-stars text-primary"></i> Skills & Expertise</h5>
+                        <div class="mb-4">
+                            <?php if (!empty($skills)): ?>
+                                <?php foreach ($skills as $skill): ?>
+                                    <span class="badge bg-light text-dark border p-2 px-3 me-2 mb-2">
+                                        <?= htmlspecialchars($skill) ?>
+                                    </span>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <span class="text-muted">No skills added</span>
+                            <?php endif; ?>
+                        </div>
+
+
+                        <h5 class="section-title mt-2 mb-4"><i class="bi bi-briefcase text-primary"></i> Education</h5>
+                        <div class="border-start ps-4 ms-2 py-2">
+                            <div class="mb-4 position-relative">
+                                <div class="position-absolute translate-middle-x" style="left: -25px; top: 5px; width: 10px; height: 10px; background: var(--dh-primary); border-radius: 50%;"></div>
+                                <h6 class="mb-1">Senior Software Engineer</h6>
+                                <p class="small text-muted mb-1">Stripe • 2020 — Present</p>
+                                <p class="small text-muted">Led the checkout experience team, improving conversion rates by 12%.</p>
+                            </div>
+                            <div class="mb-0 position-relative">
+                                <div class="position-absolute translate-middle-x" style="left: -25px; top: 5px; width: 10px; height: 10px; background: #cbd5e1; border-radius: 50%;"></div>
+                                <h6 class="mb-1">Full Stack Developer</h6>
+                                <p class="small text-muted mb-1">Freelance • 2017 — 2020</p>
+                                <p class="small text-muted">Delivered 20+ projects for various tech startups globally.</p>
+                            </div>
+                        </div>
+
+                        <h5 class="section-title mt-5"><i class="bi bi-briefcase text-primary"></i> Work Experience</h5>
+                        <div class="border-start ps-4 ms-2 py-2">
+                            <div class="mb-4 position-relative">
+                                <div class="position-absolute translate-middle-x" style="left: -25px; top: 5px; width: 10px; height: 10px; background: var(--dh-primary); border-radius: 50%;"></div>
+                                <h6 class="mb-1">Senior Software Engineer</h6>
+                                <p class="small text-muted mb-1">Stripe • 2020 — Present</p>
+                                <p class="small text-muted">Led the checkout experience team, improving conversion rates by 12%.</p>
+                            </div>
+                            <div class="mb-0 position-relative">
+                                <div class="position-absolute translate-middle-x" style="left: -25px; top: 5px; width: 10px; height: 10px; background: #cbd5e1; border-radius: 50%;"></div>
+                                <h6 class="mb-1">Full Stack Developer</h6>
+                                <p class="small text-muted mb-1">Freelance • 2017 — 2020</p>
+                                <p class="small text-muted">Delivered 20+ projects for various tech startups globally.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right: Stats -->
+                <div class="col-lg-4">
+                    <div class="card p-4">
+                        <h5 class="section-title"><i class="bi bi-folder2-open text-primary"></i> Portfolio</h5>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="p-3 border rounded d-flex align-items-center">
+                                    <i class="bi bi-globe fs-3 text-primary me-3"></i>
+                                    <div>
+                                        <div class="stat-label">Website</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 border rounded d-flex align-items-center">
+                                    <i class="bi bi-github fs-3 me-3"></i>
+                                    <div>
+                                        <div class="stat-label">GitHub</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 border rounded d-flex align-items-center">
+                                    <i class="bi bi-linkedin fs-3 text-primary me-3"></i>
+                                    <div>
+                                        <div class="stat-label">LinkedIn</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-3 bg-light rounded text-center">
+                            <p class="small text-muted mb-0">Identity Verified on Jan 05, 2024</p>
+                        </div>
+                    </div>
+
+
+                    <div class="card p-4">
+                        <h5 class="section-title">
+                            <!-- <i class="bi bi-folder2-open text-primary"></i>  -->
+                            More details
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col">
+                                <ul>
+                                    <li>
+                                        <b>Legal Name: </b> <?= ucfirst($user_legal_name) ?>
+                                    </li>
+                                    <br>
+                                    <li>
+                                        <b>primary job interest: </b> <?= ucfirst($user_primary_job_interest) ?>
+                                    </li>
+                                    <br>
+                                    <li>
+                                        <b>English Proficiency: </b> <?= ucfirst($user_english_proficiency) ?>
+                                    </li>
+                                    <br>
+                                    <li>
+                                        <b>Job Commitment: </b> <?= ucfirst($user_job_commitment) ?>
+                                    </li>
+                                    <br>
+                                    <li>
+                                        <b>Preferred hourly rate in USD: </b> <?= $user_preferred_hourly_rate ?>
+                                    </li>
+                                    <br>
+                                    <li>
+                                        <b>Contact Email: </b> <?= $user_contact_email ?>
+                                    </li>
+                                    <br>
+                                    <li>
+                                        <b>Education Level: </b> <?= ucfirst($user_education_level) ?>
+                                    </li>
+                                    <br>
+                                    <li>
+                                        <b>Years of Experience: </b> <?= $user_years_of_experience . " years" ?>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <!-- <div class="mt-4 p-3 bg-light rounded text-center">
+                            <p class="small text-muted mb-0">Identity Verified on Jan 05, 2024</p>
+                        </div> -->
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Tab -->
+        <div class="tab-pane fade" id="activity" role="tabpanel">
+            <div class="card overflow-hidden">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Activity</h5>
+                    <button class="btn btn-light btn-sm border">Download Log</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Activity Type</th>
+                                <th>Project / Task</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="fw-medium">Job Application</span></td>
+                                <td>Frontend Architect at FinTech Inc.</td>
+                                <td>Oct 24, 2023</td>
+                                <td><span class="badge badge-soft-primary">Under Review</span></td>
+                                <td><button class="btn btn-light btn-sm px-2 py-1"><i class="bi bi-eye"></i></button></td>
+                            </tr>
+                            <tr>
+                                <td><span class="fw-medium">Milestone Paid</span></td>
+                                <td>E-commerce API Integration</td>
+                                <td>Oct 20, 2023</td>
+                                <td><span class="badge badge-soft-success">Completed</span></td>
+                                <td><button class="btn btn-light btn-sm px-2 py-1"><i class="bi bi-receipt"></i></button></td>
+                            </tr>
+                            <tr>
+                                <td><span class="fw-medium">Contract Signed</span></td>
+                                <td>Internal Dashboard Tooling</td>
+                                <td>Oct 15, 2023</td>
+                                <td><span class="badge badge-soft-success">Active</span></td>
+                                <td><button class="btn btn-light btn-sm px-2 py-1"><i class="bi bi-file-text"></i></button></td>
+                            </tr>
+                            <tr>
+                                <td><span class="fw-medium">Withdrawal</span></td>
+                                <td>Payout to Bank Account (...1234)</td>
+                                <td>Oct 10, 2023</td>
+                                <td><span class="badge badge-soft-warning">Pending</span></td>
+                                <td><button class="btn btn-light btn-sm px-2 py-1"><i class="bi bi-clock-history"></i></button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- CV & Portfolio Tab -->
+        <div class="tab-pane fade" id="cv" role="tabpanel">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="card p-4 h-100">
+                        <h5 class="section-title">Curriculum Vitae</h5>
+                        <div class="bg-light rounded p-5 text-center mb-3 d-flex flex-column align-items-center justify-content-center border border-dashed border-2">
+                            <i class="bi bi-file-earmark-pdf fs-1 text-danger mb-2"></i>
+                            <p class="small fw-medium mb-0">alex_rivera_cv_2024.pdf</p>
+                            <span class="text-muted smaller">1.2 MB</span>
+                        </div>
+                        <button class="btn btn-primary w-100 mb-2"><i class="bi bi-download me-2"></i> Download CV</button>
+                        <button class="btn btn-outline-secondary w-100">View Fullscreen</button>
+                    </div>
+                </div>
+                <div class="col-lg-8 mb-4">
+                    <div class="card p-4">
+                        <h5 class="section-title">Portfolio Projects</h5>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="portfolio-item card border">
+                                    <div class="portfolio-img">
+                                        <i class="bi bi-code-square fs-2 text-muted"></i>
+                                    </div>
+                                    <div class="p-3">
+                                        <h6 class="mb-1">Stripe Checkout Redesign</h6>
+                                        <p class="text-muted smaller mb-0">UI/UX & Frontend Development</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="portfolio-item card border">
+                                    <div class="portfolio-img">
+                                        <i class="bi bi-phone fs-2 text-muted"></i>
+                                    </div>
+                                    <div class="p-3">
+                                        <h6 class="mb-1">Crypto Tracking Mobile App</h6>
+                                        <p class="text-muted smaller mb-0">React Native / Node.js</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="portfolio-item card border">
+                                    <div class="portfolio-img">
+                                        <i class="bi bi-cloud-check fs-2 text-muted"></i>
+                                    </div>
+                                    <div class="p-3">
+                                        <h6 class="mb-1">SaaS Infrastructure Tool</h6>
+                                        <p class="text-muted smaller mb-0">DevOps & Cloud Orchestration</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="portfolio-item card border d-flex align-items-center justify-content-center bg-light border-dashed" style="min-height: 245px;">
+                                    <div class="text-center">
+                                        <i class="bi bi-plus-circle fs-3 text-muted"></i>
+                                        <p class="text-muted small mt-2">Add New Case Study</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payments Tab -->
+        <div class="tab-pane fade" id="payments" role="tabpanel">
+            <div class="card overflow-hidden">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Transaction History</h5>
+                    <div class="d-flex gap-2">
+                        <input type="text" class="form-control form-control-sm" placeholder="Search transactions...">
+                        <button class="btn btn-light btn-sm border"><i class="bi bi-funnel"></i></button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Description</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Invoice</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-muted small">#DH-9921</td>
+                                <td><span class="fw-medium">Milestone Payment - E-commerce UI</span></td>
+                                <td>Oct 12, 2023</td>
+                                <td class="fw-bold text-success">+$2,400.00</td>
+                                <td><span class="badge badge-soft-success">Paid</span></td>
+                                <td><a href="#" class="text-primary"><i class="bi bi-download"></i> PDF</a></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted small">#DH-9844</td>
+                                <td><span class="fw-medium">Platform Service Fee</span></td>
+                                <td>Oct 12, 2023</td>
+                                <td class="fw-bold text-danger">-$120.00</td>
+                                <td><span class="badge badge-soft-success">Paid</span></td>
+                                <td><a href="#" class="text-primary"><i class="bi bi-download"></i> PDF</a></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted small">#DH-9520</td>
+                                <td><span class="fw-medium">Contract Withdrawal</span></td>
+                                <td>Sep 28, 2023</td>
+                                <td class="fw-bold">-$4,000.00</td>
+                                <td><span class="badge badge-soft-warning">Pending</span></td>
+                                <td><a href="#" class="text-primary"><i class="bi bi-download"></i> PDF</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Logs Tab -->
+        <div class="tab-pane fade" id="security" role="tabpanel">
+            <div class="card overflow-hidden">
+                <div class="p-4 border-bottom">
+                    <h5 class="mb-0">Login & Security Logs</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Status</th>
+                                <th>IP Address</th>
+                                <th>Location</th>
+                                <th>Device / Browser</th>
+                                <th>Date & Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="fw-medium">Account Login</span></td>
+                                <td><span class="text-success fw-medium"><i class="bi bi-check-circle-fill me-1"></i> Success</span></td>
+                                <td>192.168.1.45</td>
+                                <td>San Francisco, US</td>
+                                <td class="small text-muted">Chrome / macOS 14.1</td>
+                                <td class="small text-muted">Today, 10:24 AM</td>
+                            </tr>
+                            <tr>
+                                <td><span class="fw-medium">Password Reset Request</span></td>
+                                <td><span class="text-warning fw-medium"><i class="bi bi-exclamation-triangle-fill me-1"></i> Triggered</span></td>
+                                <td>192.168.1.45</td>
+                                <td>San Francisco, US</td>
+                                <td class="small text-muted">Safari / iPhone 15</td>
+                                <td class="small text-muted">Yesterday, 08:12 PM</td>
+                            </tr>
+                            <tr>
+                                <td><span class="fw-medium">Failed Login Attempt</span></td>
+                                <td><span class="text-danger fw-medium"><i class="bi bi-x-circle-fill me-1"></i> Blocked</span></td>
+                                <td>45.12.99.102</td>
+                                <td>London, UK</td>
+                                <td class="small text-muted">Unknown / Android 13</td>
+                                <td class="small text-muted">Oct 20, 2023, 02:44 AM</td>
+                            </tr>
+                            <tr>
+                                <td><span class="fw-medium">2FA Enabled</span></td>
+                                <td><span class="text-success fw-medium"><i class="bi bi-check-circle-fill me-1"></i> Success</span></td>
+                                <td>192.168.1.45</td>
+                                <td>San Francisco, US</td>
+                                <td class="small text-muted">Chrome / macOS 14.1</td>
+                                <td class="small text-muted">Sep 12, 2023, 04:30 PM</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Bootstrap 5 Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
