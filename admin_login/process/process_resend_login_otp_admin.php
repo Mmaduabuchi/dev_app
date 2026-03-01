@@ -115,7 +115,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         //commit transaction
         $conn->commit();
 
-        sendResponse('success', 'OTP sent successfully.', date('Y-m-d H:i:s', strtotime('+5 minutes')));
+        $expiresIn = 5 * 60;
+
+        sendResponse('success', 'OTP sent successfully.', $expiresIn);
 
     } catch (Exception $e) {
         //rollback transaction
