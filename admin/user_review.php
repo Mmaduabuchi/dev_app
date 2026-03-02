@@ -18,6 +18,12 @@ if(strlen($_GET["token_ref"]) !== 72 || !ctype_xdigit($_GET["token_ref"]) || !is
 //user id
 $user_id_num = $_GET["user_id"];
 
+
+// Determine current page
+$limit = 10;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
+
 try{
 
     //get user details
@@ -312,13 +318,13 @@ try{
                 <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button>
             </li>
             <li class="nav-item">
-                <button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button">Activity</button>
+                <button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button">Payments</button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" id="cv-tab" data-bs-toggle="tab" data-bs-target="#cv" type="button">CV & Portfolio</button>
             </li>
             <li class="nav-item">
-                <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button">Payments</button>
+                <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button">Subscriptions</button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security" type="button">Security Logs</button>
@@ -563,9 +569,6 @@ try{
                                     </ul>
                                 </div>
                             </div>
-                            <!-- <div class="mt-4 p-3 bg-light rounded text-center">
-                                <p class="small text-muted mb-0">Identity Verified on Jan 05, 2024</p>
-                            </div> -->
                         </div>
 
 
@@ -573,55 +576,127 @@ try{
                 </div>
             </div>
 
-            <!-- Activity Tab -->
+            <!-- Transaction Tab -->
             <div class="tab-pane fade" id="activity" role="tabpanel">
                 <div class="card overflow-hidden">
                     <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Recent Activity</h5>
-                        <button class="btn btn-light btn-sm border">Download Log</button>
+                        <h5 class="mb-0">Transaction History</h5>
+                         <a href="./../process/process_download_transactions.php?user_id=<?= urlencode($_GET['user_id']) ?>&token_ref=<?= urlencode($_GET['token_ref']) ?>" 
+                            class="btn btn-light btn-sm border">
+                            Download Log
+                        </a>
                     </div>
                     <div class="table-responsive">
                         <table class="table mb-0">
                             <thead>
                                 <tr>
-                                    <th>Activity Type</th>
-                                    <th>Project / Task</th>
+                                    <th>Transaction ID</th>
+                                    <th>Plan</th>
+                                    <th>Method</th>
+                                    <th>Amount</th>
                                     <th>Date</th>
                                     <th>Status</th>
-                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td><span class="fw-medium">Job Application</span></td>
-                                    <td>Frontend Architect at FinTech Inc.</td>
-                                    <td>Oct 24, 2023</td>
-                                    <td><span class="badge badge-soft-primary">Under Review</span></td>
-                                    <td><button class="btn btn-light btn-sm px-2 py-1"><i class="bi bi-eye"></i></button></td>
-                                </tr>
-                                <tr>
-                                    <td><span class="fw-medium">Milestone Paid</span></td>
-                                    <td>E-commerce API Integration</td>
-                                    <td>Oct 20, 2023</td>
-                                    <td><span class="badge badge-soft-success">Completed</span></td>
-                                    <td><button class="btn btn-light btn-sm px-2 py-1"><i class="bi bi-receipt"></i></button></td>
-                                </tr>
-                                <tr>
-                                    <td><span class="fw-medium">Contract Signed</span></td>
-                                    <td>Internal Dashboard Tooling</td>
-                                    <td>Oct 15, 2023</td>
-                                    <td><span class="badge badge-soft-success">Active</span></td>
-                                    <td><button class="btn btn-light btn-sm px-2 py-1"><i class="bi bi-file-text"></i></button></td>
-                                </tr>
-                                <tr>
-                                    <td><span class="fw-medium">Withdrawal</span></td>
-                                    <td>Payout to Bank Account (...1234)</td>
-                                    <td>Oct 10, 2023</td>
-                                    <td><span class="badge badge-soft-warning">Pending</span></td>
-                                    <td><button class="btn btn-light btn-sm px-2 py-1"><i class="bi bi-clock-history"></i></button></td>
-                                </tr>
+                                <?php
+
+                                    // Fetch paginated transaction_history
+                                    try {
+                                        $stmt = $conn->prepare("SELECT * FROM transaction_history WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?");
+                                        if (!$stmt) throw new Exception('Prepare failed: ' . $conn->error);
+                                        $stmt->bind_param("iii", $user_id_num, $limit, $offset);
+                                        $stmt->execute();
+                                        $result = $stmt->get_result();
+
+                                        // Fetch total count for pagination
+                                        $totalStmt = $conn->prepare("SELECT COUNT(*) as total FROM transaction_history WHERE user_id = ?");
+                                        $totalStmt->bind_param("i", $user_id_num);
+                                        $totalStmt->execute();
+                                        $totalRecords = $totalStmt->get_result()->fetch_assoc()['total'];
+                                        $totalPages = ceil($totalRecords / $limit);
+                                    } catch (Exception $e) {
+                                        $conn->close();
+                                        error_log($e->getMessage());
+                                        echo '<tr><td colspan="6" class="text-center text-muted">Something went wrong. Please try again later.</td></tr>';
+                                    }
+
+                                    //render
+                                    if ($result->num_rows < 1) {
+                                        echo '<tr><td colspan="6" class="text-center text-muted">No transaction record found.</td></tr>';
+                                    } else {
+                                        while ($data = $result->fetch_assoc()) {
+                                            $date = date("M d, Y", strtotime($data['created_at']));
+                                            $planName = $data['plan'];
+                                            $amount = number_format($data['amount'], 2);
+                                            $method = ucfirst($data['method']);
+                                            $status = ucfirst($data['status']);
+                                            $transactionId = $data['transaction_id'];
+
+                                            // Optional: badge color based on status
+                                            switch (strtolower($data['status'])) {
+                                                case 'active':
+                                                    $badgeClass = 'bg-success-subtle text-success';
+                                                    break;
+                                                case 'expired':
+                                                    $badgeClass = 'bg-danger-subtle text-danger';
+                                                    break;
+                                                case 'cancelled':
+                                                    $badgeClass = 'bg-secondary-subtle text-secondary';
+                                                    break;
+                                                default:
+                                                    $badgeClass = 'bg-primary-subtle text-primary';
+                                            }
+
+                                            echo "<tr>
+                                                <td class='text-muted small'>{$transactionId}</td>
+                                                <td><span class='fw-medium'>{$planName}</span></td>
+                                                <td>{$method}</td>
+                                                <td><span class='fw-bold text-success'>\${$amount}</span></td>
+                                                <td>{$date}</td>
+                                                <td><span class='badge {$badgeClass}'>{$status}</span></td>
+                                            </tr>";
+                                        }
+                                    }
+                                ?>
                             </tbody>
                         </table>
+
+                        <!-- Pagination -->
+                        <?php if ($totalPages > 1): ?>
+                            <nav>
+                                <ul class="pagination justify-content-center mt-3">
+
+                                    <?php if ($page > 1): ?>
+                                        <li class="page-item">
+                                            <a class="page-link"
+                                            href="?token_ref=<?= urlencode($_GET['token_ref']) ?>&user_id=<?= urlencode($_GET['user_id']) ?>&page=<?= $page - 1 ?>">
+                                            Previous
+                                            </a>
+                                        </li>
+                                    <?php endif; ?>
+
+                                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                                        <li class="page-item <?= $i == $page ? 'active' : '' ?>">
+                                            <a class="page-link"
+                                            href="?token_ref=<?= urlencode($_GET['token_ref']) ?>&user_id=<?= urlencode($_GET['user_id']) ?>&page=<?= $i ?>">
+                                            <?= $i ?>
+                                            </a>
+                                        </li>
+                                    <?php endfor; ?>
+
+                                    <?php if ($page < $totalPages): ?>
+                                        <li class="page-item">
+                                            <a class="page-link"
+                                            href="?token_ref=<?= urlencode($_GET['token_ref']) ?>&user_id=<?= urlencode($_GET['user_id']) ?>&page=<?= $page + 1 ?>">
+                                            Next
+                                            </a>
+                                        </li>
+                                    <?php endif; ?>
+
+                                </ul>
+                            </nav>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -696,9 +771,9 @@ try{
             <div class="tab-pane fade" id="payments" role="tabpanel">
                 <div class="card overflow-hidden">
                     <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Transaction History</h5>
+                        <h5 class="mb-0">Subscription History</h5>
                         <div class="d-flex gap-2">
-                            <input type="text" class="form-control form-control-sm" placeholder="Search transactions...">
+                            <input type="text" class="form-control form-control-sm" placeholder="Search subscriptions...">
                             <button class="btn btn-light btn-sm border"><i class="bi bi-funnel"></i></button>
                         </div>
                     </div>
@@ -707,7 +782,7 @@ try{
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Description</th>
+                                    <th>Plan Name</th>
                                     <th>Date</th>
                                     <th>Amount</th>
                                     <th>Status</th>
@@ -715,32 +790,114 @@ try{
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td class="text-muted small">#DH-9921</td>
-                                    <td><span class="fw-medium">Milestone Payment - E-commerce UI</span></td>
-                                    <td>Oct 12, 2023</td>
-                                    <td class="fw-bold text-success">+$2,400.00</td>
-                                    <td><span class="badge badge-soft-success">Paid</span></td>
-                                    <td><a href="#" class="text-primary"><i class="bi bi-download"></i> PDF</a></td>
-                                </tr>
-                                <tr>
-                                    <td class="text-muted small">#DH-9844</td>
-                                    <td><span class="fw-medium">Platform Service Fee</span></td>
-                                    <td>Oct 12, 2023</td>
-                                    <td class="fw-bold text-danger">-$120.00</td>
-                                    <td><span class="badge badge-soft-success">Paid</span></td>
-                                    <td><a href="#" class="text-primary"><i class="bi bi-download"></i> PDF</a></td>
-                                </tr>
-                                <tr>
-                                    <td class="text-muted small">#DH-9520</td>
-                                    <td><span class="fw-medium">Contract Withdrawal</span></td>
-                                    <td>Sep 28, 2023</td>
-                                    <td class="fw-bold">-$4,000.00</td>
-                                    <td><span class="badge badge-soft-warning">Pending</span></td>
-                                    <td><a href="#" class="text-primary"><i class="bi bi-download"></i> PDF</a></td>
-                                </tr>
+                                <?php
+
+                                    // Fetch paginated subscriptions
+                                    try {
+                                        $stmt = $conn->prepare("
+                                            SELECT us.*, sp.name AS plan_name, sp.price AS plan_price
+                                            FROM subscriptions us
+                                            INNER JOIN subscription_plans sp ON us.plan_id = sp.id
+                                            WHERE us.user_id = ?
+                                            ORDER BY us.created_at DESC
+                                            LIMIT ? OFFSET ?
+                                        ");
+                                        if (!$stmt) throw new Exception('Prepare failed: ' . $conn->error);
+                                        $stmt->bind_param("iii", $user_id_num, $limit, $offset);
+                                        $stmt->execute();
+                                        $result = $stmt->get_result();
+
+                                        // Fetch total count for pagination
+                                        $totalStmt = $conn->prepare("SELECT COUNT(*) as total FROM subscriptions WHERE user_id = ?");
+                                        $totalStmt->bind_param("i", $user_id_num);
+                                        $totalStmt->execute();
+                                        $totalRecords = $totalStmt->get_result()->fetch_assoc()['total'];
+                                        $totalPages = ceil($totalRecords / $limit);
+                                    } catch (Exception $e) {
+                                        $conn->close();
+                                        error_log($e->getMessage());
+                                        echo '<tr><td colspan="6" class="text-center text-muted">Something went wrong. Please try again later.</td></tr>';
+                                    }
+
+                                    //render
+                                    if ($result->num_rows < 1) {
+                                        echo '<tr><td colspan="6" class="text-center text-muted">No subscriptions record found.</td></tr>';
+                                    } else {
+                                        while ($data = $result->fetch_assoc()) {
+                                            $date = date("M d, Y", strtotime($data['created_at']));
+                                            $planName = $data['plan_name'];
+                                            $amount = number_format($data['plan_price'], 2);
+                                            $status = ucfirst($data['status']);
+                                            $transactionId = $data['transaction_id'];
+
+                                            // Optional: badge color based on status
+                                            switch (strtolower($data['status'])) {
+                                                case 'active':
+                                                    $badgeClass = 'bg-success-subtle text-success';
+                                                    break;
+                                                case 'expired':
+                                                    $badgeClass = 'bg-danger-subtle text-danger';
+                                                    break;
+                                                case 'cancelled':
+                                                    $badgeClass = 'bg-secondary-subtle text-secondary';
+                                                    break;
+                                                default:
+                                                    $badgeClass = 'bg-primary-subtle text-primary';
+                                            }
+
+                                            echo "<tr>
+                                                <td class='text-muted small'>{$transactionId}</td>
+                                                <td><span class='fw-medium'>{$planName}</span></td>
+                                                <td>{$date}</td>
+                                                <td><span class='fw-bold text-success'>\${$amount}</span></td>
+                                                <td><span class='badge {$badgeClass}'>{$status}</span></td>
+                                                <td>
+                                                    <a href='./../process/process_user_subscription_invoice.php?txn={$transactionId}&token_ref=" . urlencode($_GET['token_ref']) . "&user_id={$user_id_num}' class='text-primary'>
+                                                        <i class='bi bi-download'></i> PDF
+                                                    </a>
+                                                </td>
+                                            </tr>";
+                                        }
+                                    }
+                                ?>
                             </tbody>
                         </table>
+
+                        <!-- Pagination -->
+                        <?php if ($totalPages > 1): ?>
+                            <nav>
+                                <ul class="pagination justify-content-center mt-3">
+
+                                    <?php if ($page > 1): ?>
+                                        <li class="page-item">
+                                            <a class="page-link"
+                                            href="?token_ref=<?= urlencode($_GET['token_ref']) ?>&user_id=<?= urlencode($_GET['user_id']) ?>&page=<?= $page - 1 ?>">
+                                            Previous
+                                            </a>
+                                        </li>
+                                    <?php endif; ?>
+
+                                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                                        <li class="page-item <?= $i == $page ? 'active' : '' ?>">
+                                            <a class="page-link"
+                                            href="?token_ref=<?= urlencode($_GET['token_ref']) ?>&user_id=<?= urlencode($_GET['user_id']) ?>&page=<?= $i ?>">
+                                            <?= $i ?>
+                                            </a>
+                                        </li>
+                                    <?php endfor; ?>
+
+                                    <?php if ($page < $totalPages): ?>
+                                        <li class="page-item">
+                                            <a class="page-link"
+                                            href="?token_ref=<?= urlencode($_GET['token_ref']) ?>&user_id=<?= urlencode($_GET['user_id']) ?>&page=<?= $page + 1 ?>">
+                                            Next
+                                            </a>
+                                        </li>
+                                    <?php endif; ?>
+
+                                </ul>
+                            </nav>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
