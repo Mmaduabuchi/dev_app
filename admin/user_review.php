@@ -98,6 +98,31 @@ try{
 
     $stmt->close();
 
+
+    $resumePath = "./../" . $user_resume; // e.g. library/documents/profile_68f6531e7d9ae4.46434995.jpg
+
+    if ($resumePath && file_exists($resumePath)) {
+        // Get file name
+        $fileName = basename($resumePath);
+
+        // Get file size in bytes
+        $fileSize = filesize($resumePath);
+
+        // Convert to readable format
+        if ($fileSize >= 1048576) {
+            $size = number_format($fileSize / 1048576, 2) . ' MB';
+        } elseif ($fileSize >= 1024) {
+            $size = number_format($fileSize / 1024, 2) . ' KB';
+        } else {
+            $size = $fileSize . ' bytes';
+        }
+
+    } else {
+        $fileName = "No resume uploaded";
+        $size = "";
+    }
+
+
 } catch (Exception $e){
     $_SESSION['error'] = $e->getMessage();
     header('Location: /devhire/admin/dashboard/errorpage/error');
@@ -709,11 +734,32 @@ try{
                             <h5 class="section-title">Curriculum Vitae</h5>
                             <div class="bg-light rounded p-5 text-center mb-3 d-flex flex-column align-items-center justify-content-center border border-dashed border-2">
                                 <i class="bi bi-file-earmark-pdf fs-1 text-danger mb-2"></i>
-                                <p class="small fw-medium mb-0">alex_rivera_cv_2024.pdf</p>
-                                <span class="text-muted smaller">1.2 MB</span>
+                                <p class="small fw-medium mb-0">
+                                    <?= htmlspecialchars($fileName); ?>
+                                </p>
+                                <?php if ($size): ?>
+                                    <span class="text-muted smaller">
+                                        <?= $size; ?>
+                                    </span>
+                                <?php endif; ?>
                             </div>
-                            <button class="btn btn-primary w-100 mb-2"><i class="bi bi-download me-2"></i> Download CV</button>
-                            <button class="btn btn-outline-secondary w-100">View Fullscreen</button>
+                            <a href="./../process/process_resume_download.php?file=<?= urlencode($user_resume); ?>" class="btn btn-primary w-100 mb-2">
+                                <i class="bi bi-download me-2"></i> Download CV
+                            </a>
+
+                            <button class="btn btn-outline-secondary w-100" data-bs-toggle="modal" data-bs-target="#cvModal">
+                                View Fullscreen
+                            </button>
+
+                            <div class="modal fade" id="cvModal" tabindex="-1">
+                                <div class="modal-dialog modal-xl">
+                                    <div class="modal-content">
+                                        <div class="modal-body p-0">
+                                            <iframe src="../../<?= htmlspecialchars($user_resume); ?>" width="100%" height="600px"></iframe>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-lg-8 mb-4">
