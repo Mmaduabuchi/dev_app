@@ -139,21 +139,24 @@ include_once "route.php";
                 <div class="page-content" id="admin-accounts">
                     <h1 class="mb-4 fs-3">Admin Accounts & Roles</h1>
                     <div class="card p-4">
-                        <h5 class="card-title fw-bold mb-3">Admin Roster</h5>
-                        <button class="btn btn-primary mb-3 w-auto" data-bs-toggle="modal" data-bs-target="#addAdminModal">
-                            <i class="bi bi-plus-circle"></i> Add New Administrator
-                        </button>
+                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
+                            <h5 class="card-title fw-bold mb-0">Admin Roster</h5>
+                            <button class="btn btn-primary px-4 py-2 rounded-pill shadow-sm d-flex align-items-center gap-2 fw-semibold w-auto" data-bs-toggle="modal" data-bs-target="#addAdminModal" style="transition: all 0.2s ease-in-out;" onmouseover="this.classList.add('shadow')" onmouseout="this.classList.remove('shadow')">
+                                <i class="bi bi-plus-circle fs-5"></i>
+                                <span>Add New Administrator</span>
+                            </button>
+                        </div>
 
                         
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle small">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Email</th>
-                                        <th>Role</th>
-                                        <th>Last Login</th>
-                                        <th>Actions</th>
+                        <div class="table-responsive overflow-hidden" style="border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);">
+                            <table class="table table-hover align-middle mb-0 bg-white">
+                                <thead class="bg-light">
+                                    <tr class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 0.5px;">
+                                        <th class="ps-4 py-3 border-bottom-0">Name</th>
+                                        <th class="py-3 border-bottom-0">Email</th>
+                                        <th class="py-3 border-bottom-0">Role</th>
+                                        <th class="py-3 border-bottom-0">Last Login</th>
+                                        <th class="pe-4 py-3 border-bottom-0 text-end">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -168,29 +171,53 @@ include_once "route.php";
                                             $stmt->execute();
                                             $result = $stmt->get_result();
                                             if($result->num_rows < 1){
-                                                echo "<tr><td colspan='5'>No record found.</td></tr>";
+                                                echo '<tr><td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-1 d-block mb-2 text-opacity-50"></i>No administrators found.</td></tr>';
                                             }else{                                                
                                                 while($row = $result->fetch_assoc()){
+                                                    $initial = strtoupper(substr(trim($row["fullname"]), 0, 1));
+                                                    $isSuperAdmin = ($row["auth"] == "admin");
                                     ?>
-                                                    <tr>
-                                                        <td><?php echo htmlspecialchars($row["fullname"]); ?></td>
-                                                        <td><?php echo htmlspecialchars($row["email"]); ?></td>
-                                                        <td><span class="badge bg-<?= ($row["auth"] == "admin") ? 'danger' : 'secondary' ?>"><?= ($row["auth"] == "admin") ? 'Super Admin' : ucfirst($row["user_type"]) ?></span></td>
-                                                        <td><?php echo $row["last_login"] ?? "N/A"; ?></td>
-                                                        <td>
-                                                            <button class="btn btn-sm btn-outline-info me-1" value="<?= $row["id"] ?>" onclick="editAdmin(this.value, '<?= addslashes($row['email']) ?>')" title="Edit Permissions">
-                                                                <i class="bi bi-pencil-square"></i>
-                                                            </button>
-                                                            <button class="btn btn-sm btn-outline-danger" value="<?= $row["id"] ?>" onclick="removeAdmin(this.value)" title="Remove">
-                                                                <i class="bi bi-trash"></i>
-                                                            </button>
+                                                    <tr style="transition: all 0.2s ease; border-bottom: 1px solid rgba(0,0,0,0.03);">
+                                                        <td class="ps-4 py-3 border-0">
+                                                            <div class="d-flex align-items-center gap-3">
+                                                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" style="width: 42px; height: 42px; background: linear-gradient(135deg, var(--bs-devhire-blue), var(--bs-devhire-navy)); font-size: 1.1rem;">
+                                                                    <?= $initial ?>
+                                                                </div>
+                                                                <div>
+                                                                    <h6 class="mb-0 fw-bold text-dark fs-6"><?php echo htmlspecialchars($row["fullname"]); ?></h6>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td class="py-3 text-secondary border-0 text-truncate" style="max-width: 200px; font-weight: 500; text-transform: lowercase;"><?php echo htmlspecialchars($row["email"]); ?></td>
+                                                        <td class="py-3 border-0">
+                                                            <?php if ($isSuperAdmin): ?>
+                                                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3 py-2 fw-bold" style="letter-spacing: 0.3px;">Super Admin</span>
+                                                            <?php else: ?>
+                                                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2 fw-bold" style="letter-spacing: 0.3px;"><?= ucfirst($row["user_type"]) ?></span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td class="py-3 text-secondary border-0">
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <i class="bi bi-clock-history text-muted text-opacity-50 fs-6"></i>
+                                                                <span class="small fw-medium"><?php echo !empty($row["last_login"]) ? date('M d, Y • h:i A', strtotime($row["last_login"])) : "<span class='fst-italic text-muted'>Never logged in</span>"; ?></span>
+                                                            </div>
+                                                        </td>
+                                                        <td class="pe-4 py-3 text-end border-0">
+                                                            <div class="d-flex justify-content-end gap-2">
+                                                                <button class="btn btn-sm btn-light text-primary bg-white shadow-sm rounded-circle p-0" style="width: 36px; height: 36px; transition: background-color 0.2s, color 0.2s; border: 1px solid rgba(0,0,0,0.05) !important;" value="<?= $row["id"] ?>" onclick="editAdmin(this.value, '<?= addslashes($row['email']) ?>')" title="Edit Permissions" onmouseover="this.classList.replace('bg-white', 'bg-primary'); this.classList.replace('text-primary', 'text-white');" onmouseout="this.classList.replace('bg-primary', 'bg-white'); this.classList.replace('text-white', 'text-primary');">
+                                                                    <i class="bi bi-pencil-fill" style="font-size: 0.85rem;"></i>
+                                                                </button>
+                                                                <button class="btn btn-sm btn-light text-danger bg-white shadow-sm rounded-circle p-0" style="width: 36px; height: 36px; transition: background-color 0.2s, color 0.2s; border: 1px solid rgba(0,0,0,0.05) !important;" value="<?= $row["id"] ?>" onclick="removeAdmin(this.value)" title="Remove" onmouseover="this.classList.replace('bg-white', 'bg-danger'); this.classList.replace('text-danger', 'text-white');" onmouseout="this.classList.replace('bg-danger', 'bg-white'); this.classList.replace('text-white', 'text-danger');">
+                                                                    <i class="bi bi-trash3-fill" style="font-size: 0.85rem;"></i>
+                                                                </button>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                     <?php
                                                 }
                                             }
                                         } catch (Exception $e) {
-                                            echo "ERROR: " . $e->getMessage();
+                                            echo '<tr><td colspan="5" class="text-danger ps-4 py-4 text-center border-0 fw-semibold bg-danger bg-opacity-10"><i class="bi bi-exclamation-triangle-fill me-2"></i> ERROR: ' . htmlspecialchars($e->getMessage()) . '</td></tr>';
                                         }
                                     ?>
                                 </tbody>

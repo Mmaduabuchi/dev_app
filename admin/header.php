@@ -6,11 +6,12 @@
         </button>
 
         <!-- Search Bar -->
-        <form class="d-none d-md-flex me-auto" role="search">
+        <form action="search" method="GET" class="d-none d-md-flex me-auto" role="search">
             <div class="input-group">
                 <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                <input class="form-control border-start-0" type="search" placeholder="Search talents, employers, or transactions..." aria-label="Search" style="min-width: 250px;">
+                <input name="query" class="form-control border-start-0" type="search" placeholder="Search talents, employers, or transactions..." aria-label="Search" style="min-width: 250px;" required value="<?= isset($_GET['query']) ? htmlspecialchars($_GET['query']) : '' ?>">
             </div>
+            <button type="submit" class="d-none"></button>
         </form>
 
         <!-- Right Side Icons -->
