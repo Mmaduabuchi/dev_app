@@ -321,7 +321,25 @@ try{
                             <i class="bi bi-three-dots"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item text-warning" href="#" onclick="action_fun('suspend', <?= $user['id'] ?> )"><i class="bi bi-slash-circle me-2"></i> Suspend User</a></li>
+                            <?php
+                                if($user_suspended_at === null) {
+                            ?>
+                                <li>
+                                    <a class="dropdown-item text-warning" href="#" onclick="action_fun('suspend', <?= $user['id'] ?> )">
+                                        <i class="bi bi-slash-circle me-2"></i> Suspend User
+                                    </a>
+                                </li>
+                            <?php
+                                } else {
+                            ?>
+                                <li>
+                                    <a class="dropdown-item text-success" href="#" onclick="action_fun('unsuspend', <?= $user['id'] ?> )">
+                                        <i class="bi bi-check-circle me-2"></i> Unsuspend User
+                                    </a>
+                                </li>
+                            <?php
+                                }
+                            ?>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="#" onclick="action_fun('delete', <?= $user['id'] ?> )"><i class="bi bi-trash me-2"></i> Delete User</a></li>
                         </ul>

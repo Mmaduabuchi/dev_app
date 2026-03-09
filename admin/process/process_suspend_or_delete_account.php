@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = isset($data['action']) ? trim($data['action']) : '';
     $user_id = filter_var($data['user_id'] ?? null, FILTER_VALIDATE_INT);
 
-    $action_arr_data = ["suspend", "delete"];
+    $action_arr_data = ["suspend", "unsuspend", "delete"];
 
     if (!in_array($action, $action_arr_data)) {
         response('error', 'Invalid action.');
@@ -116,6 +116,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($action === "suspend") {
             $stmt = $conn->prepare("UPDATE users SET suspended_at = NOW() WHERE id = ?");
+        } elseif ($action === "unsuspend") {
+            $stmt = $conn->prepare("UPDATE users SET suspended_at = NULL WHERE id = ?");
         } else {
             $stmt = $conn->prepare("UPDATE users SET deleted_at = NOW() WHERE id = ?");
         }
@@ -133,8 +135,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conn->commit();
 
         //send email
-        $subject = $action === "suspend" ? "Your account has been suspended." : "Your account has been deleted.";
-        $message = $action === "suspend" ? "Your account has been suspended from Our system." : "Your account has been deleted from Our system.";
+        // $subject = $action === "suspend" ? "Your account has been suspended." : "Your account has been deleted.";
+        $subject = $action === "suspend"
+            ? "Your account has been suspended."
+            : ($action === "unsuspend"
+                ? "Your account has been restored."
+                : "Your account has been deleted.");
+        $message = $action === "suspend"
+            ? "Your account has been suspended from Our system."
+            : ($action === "unsuspend"
+                ? "Your account has been restored and you can now access the platform again."
+                : "Your account has been permanently deleted from Our system.");
         
         // Load HTML template
         $body = file_get_contents(__DIR__ . '/mail_template.html');
@@ -179,7 +190,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $response_message = $action === "suspend"
             ? "User suspended successfully."
-            : "User deleted successfully.";
+            : ($action === "unsuspend"
+                ? "User unsuspended successfully."
+                : "User deleted successfully.");
 
         response('success', $response_message);
 

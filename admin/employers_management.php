@@ -190,7 +190,6 @@ try{
                                         <thead>
                                             <tr>
                                                 <th>Company Name</th>
-                                                <th>Subscription</th>
                                                 <th>Industry</th>
                                                 <th>Website</th>
                                                 <th>Verification</th>
@@ -227,7 +226,6 @@ try{
                                             ?>
                                                             <tr>
                                                                 <td><?= htmlspecialchars($user['company_name']) ?></td>
-                                                                <td><?= htmlspecialchars(ucfirst($user["citizenship"])) ?></td>
                                                                 <td><?= htmlspecialchars(ucfirst($user["industry"])) ?></td>
                                                                 <td><?= (htmlspecialchars($user["website"]) == "") ? "N/A" : htmlspecialchars($user["website"]) ?></td>
                                                                 <td><span class="badge bg-<?= ($user["action"] === "completed") ? "success" : "secondary" ?>"><?= $status ?></span></td>
@@ -237,18 +235,19 @@ try{
                                                                         echo $date->format('l, Y-m-d H:i');
                                                                     ?>
                                                                 </td>
-                                                                <td>
-                                                                    <button class="btn btn-sm btn-outline-info me-1 view-profile-btn" title="View Profile" data-bs-toggle="modal" data-bs-target="#viewUserModal">
-                                                                        <i class="bi bi-eye"></i>
-                                                                    </button>
+                                                                <td class="text-center">
+                                                                    <?php
+                                                                        $token_ref = bin2hex(random_bytes(36));
+                                                                    ?>
+                                                                    <a href="employer_review?token_ref=<?= $token_ref ?>&employer_id=<?= htmlspecialchars($user['user_id']) ?>">
+                                                                        <button class="btn btn-sm btn-outline-info me-1 view-profile-btn" title="View Profile">
+                                                                            <i class="bi bi-eye"></i>
+                                                                        </button>
+                                                                    </a>
                                                                     <?php
                                                                         if($user["suspended_at"] !== null):
                                                                     ?>
-                                                                        <button class="btn btn-sm btn-outline-danger" title="Suspend"><i class="bi bi-slash-circle"></i></button>
-                                                                    <?php
-                                                                        else:
-                                                                    ?>
-                                                                        <button class="btn btn-sm btn-success" title="Verify"><i class="bi bi-check"></i></button>
+                                                                        <button class="btn btn-sm btn-outline-danger" title="Suspended"><i class="bi bi-slash-circle"></i></button>
                                                                     <?php
                                                                         endif;
                                                                     ?>

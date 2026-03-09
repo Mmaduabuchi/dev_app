@@ -200,7 +200,7 @@ try{
                                                 <th>Subscription</th>
                                                 <th>Status</th>
                                                 <th>Last Seen</th>
-                                                <th>Actions</th>
+                                                <th class="text-center">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -238,7 +238,7 @@ try{
                                                                 <td><span class="badge bg-warning">Premium</span></td>
                                                                 <td><span class="badge bg-<?= ($user["is_profile_complete"] == 1) ? "success" : "secondary" ?>"><?= $status ?></span></td>
                                                                 <td>Just now</td>
-                                                                <td>
+                                                                <td class="text-center">
                                                                     <?php
                                                                         $token_ref = bin2hex(random_bytes(36));
                                                                     ?>
@@ -251,10 +251,6 @@ try{
                                                                         if($user["suspended_at"] !== null):
                                                                     ?>
                                                                         <button class="btn btn-sm btn-outline-danger" title="Suspend"><i class="bi bi-slash-circle"></i></button>
-                                                                    <?php
-                                                                        else:
-                                                                    ?>
-                                                                        <button class="btn btn-sm btn-success" title="Verify"><i class="bi bi-check"></i></button>
                                                                     <?php
                                                                         endif;
                                                                     ?>
