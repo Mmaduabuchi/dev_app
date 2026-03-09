@@ -5,6 +5,25 @@ include_once "auth.php";
 //include route
 include_once "route.php";
 
+try{
+    $stmt = $conn->prepare("SELECT * FROM system_settings WHERE id = 1 AND setting_key = 'login_otp_enabled'");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows === 0) {
+        throw new Exception('System settings not found.');
+    }
+    $admin = $result->fetch_assoc();
+    $setting_value = (int)$admin['setting_value'];
+    $stmt->close();
+
+} catch (Exception $e) {
+    error_log($e->getMessage());
+    echo "Something went wrong. Please try again later.";
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -281,7 +300,17 @@ include_once "route.php";
                                         <small>Requires a code sent to your email to sign in.</small>
                                     </div>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="otpToggle" checked style="width: 3em; height: 1.5em;">
+                                        <?php
+                                            if($setting_value === 1):
+                                        ?>
+                                            <input class="form-check-input" type="checkbox" id="otpToggle" checked style="width: 3em; height: 1.5em;">
+                                        <?php
+                                            else:
+                                        ?>
+                                            <input class="form-check-input" type="checkbox" id="otpToggle" style="width: 3em; height: 1.5em;">
+                                        <?php
+                                            endif;
+                                        ?>
                                     </div>
                                 </div>
 
@@ -316,7 +345,7 @@ include_once "route.php";
                                         <input class="form-check-input" type="checkbox" checked style="width: 3em; height: 1.5em;">
                                     </div>
                                 </div>
-                                <div class="setting-item">
+                                <!-- <div class="setting-item">
                                     <div class="setting-info">
                                         <p>Security Audit Reports</p>
                                         <small>Weekly summary of login attempts and role changes.</small>
@@ -324,7 +353,7 @@ include_once "route.php";
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" checked style="width: 3em; height: 1.5em;">
                                     </div>
-                                </div>
+                                </div> -->
                                 <div class="setting-item">
                                     <div class="setting-info">
                                         <p>System Maintenance</p>

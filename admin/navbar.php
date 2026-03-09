@@ -99,13 +99,6 @@
                     </a>
                 </li>
 
-                <li class="nav-item">
-                    <a class="sidebar-link <?= ($currentPath == 'reports') ? 'active' : '' ?>" 
-                       href="<?php echo $url . 'reports'?>">
-                        <i class="bi bi-flag-fill"></i> Reported Accounts
-                    </a>
-                </li>
-
                 <!-- USERS MANAGEMENT DROPDOWN -->
                 <li class="nav-item">
                     <a class="sidebar-link d-flex justify-content-between align-items-center 
@@ -140,6 +133,13 @@
 
                         </ul>
                     </div>
+                </li>
+
+                <li class="nav-item">
+                    <a class="sidebar-link <?= ($currentPath == 'reports') ? 'active' : '' ?>" 
+                       href="<?php echo $url . 'reports'?>">
+                        <i class="bi bi-flag-fill"></i> Reported Accounts
+                    </a>
                 </li>
 
                 <li class="nav-item">
