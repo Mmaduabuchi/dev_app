@@ -158,11 +158,26 @@ try {
                                             if ($user_resume) {
                                             ?>
                                                 <!-- File Item -->
-                                                <div class="d-flex justify-content-between align-items-center p-3 mb-2 bg-light rounded">
-                                                    <span><?= $user_resume; ?></span>
-                                                    <button type="button" class="btn btn-sm btn-link text-danger p-0" value="<?php echo $usertoken; ?>" onclick="deleteResume(this.value)" title="Delete Resume" aria-label="Delete Resume">
-                                                        <i class="mdi mdi-close fs-5 align-middle"></i>
-                                                    </button>
+                                                <div class="d-flex justify-content-between align-items-center p-3 mb-3 bg-light border border-light-subtle rounded shadow-sm">
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <div class="avatar-sm flex-shrink-0">
+                                                            <span class="avatar-title bg-primary-subtle text-primary rounded fs-4">
+                                                                <i class="mdi mdi-file-document-outline"></i>
+                                                            </span>
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="mb-0 text-dark"><?= htmlspecialchars($user_resume); ?></h6>
+                                                            <small class="text-muted">Uploaded Resume</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex gap-2">
+                                                        <button type="button" class="btn btn-sm btn-primary d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#viewResumeModal" title="View Resume">
+                                                            <i class="mdi mdi-eye-outline fs-5"></i> View
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" value="<?php echo $usertoken; ?>" onclick="deleteResume(this.value)" title="Delete Resume">
+                                                            <i class="mdi mdi-trash-can-outline fs-5"></i> Delete
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             <?php
                                             } else {
@@ -352,6 +367,39 @@ try {
                 </div> <!-- container-fluid -->
 
             </div> <!-- content -->
+
+            <!-- View Resume Modal -->
+            <?php if ($user_resume): ?>
+            <div class="modal fade" id="viewResumeModal" tabindex="-1" aria-labelledby="viewResumeModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="viewResumeModalLabel">Resume View - <?= htmlspecialchars($user_resume); ?></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-0" style="height: 80vh;">
+                            <?php
+                            $resume_ext = strtolower(pathinfo($user_resume, PATHINFO_EXTENSION));
+                            $resume_url = $base_url . '../library/documents/' . $user_resume;
+                            if (in_array($resume_ext, ['pdf'])): ?>
+                                <iframe src="<?= $resume_url; ?>" width="100%" height="100%" style="border: none;"></iframe>
+                            <?php elseif (in_array($resume_ext, ['doc', 'docx'])): ?>
+                                <iframe src="https://view.officeapps.live.com/op/embed.aspx?src=<?= urlencode($resume_url); ?>" width="100%" height="100%" style="border: none;"></iframe>
+                            <?php else: ?>
+                                <div class="d-flex justify-content-center align-items-center h-100">
+                                    <div class="text-center">
+                                        <i class="mdi mdi-file-document-outline border border-2 border-secondary rounded-circle p-2 text-secondary" style="font-size: 4rem;"></i>
+                                        <h4 class="mt-3">Preview not available</h4>
+                                        <p class="text-muted">This file type cannot be previewed in the browser.</p>
+                                        <a href="<?= $resume_url; ?>" class="btn btn-primary mt-2" download>Download File</a>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <!-- Footer Start -->
             <?php include_once "footer.php"; ?>

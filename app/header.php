@@ -72,113 +72,71 @@
                         <!-- item-->
                         <div class="dropdown-item noti-title">
                             <h5 class="m-0">
-                                <span class="float-end"><a href="#" class="text-dark"><small>Clear All</small></a></span>Notification
+                                <span class="float-end">
+                                    <!-- <a href="#" class="text-dark">
+                                        <small>Clear All</small>
+                                    </a> -->
+                                </span>
+                                Notification
                             </h5>
                         </div>
 
                         <div class="noti-scroll" data-simplebar>
-                            <!-- item-->
-                            <a href="javascript:void(0);"
-                                class="dropdown-item notify-item text-muted link-primary active">
-                                <div class="notify-icon">
-                                    <img src="<?php echo $base_url; ?>assets/images/users/user-12.jpg" class="img-fluid rounded-circle" alt="" />
-                                </div>
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <p class="notify-details">Carl Steadham</p>
-                                    <small class="text-muted">5 min ago</small>
-                                </div>
-                                <p class="mb-0 user-msg">
-                                    <small class="fs-14">Completed <span class="text-reset">Improve workflow in Figma</span></small>
-                                </p>
-                            </a>
-
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item notify-item text-muted link-primary">
-                                <div class="notify-icon">
-                                    <img src="<?php echo $base_url; ?>assets/images/users/user-2.jpg" class="img-fluid rounded-circle" alt="" />
-                                </div>
-                                <div class="notify-content">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <p class="notify-details">Olivia McGuire</p>
-                                        <small class="text-muted">1 min ago</small>
-                                    </div>
-
-                                    <div class="d-flex mt-2 align-items-center">
-                                        <div class="notify-sub-icon">
-                                            <i class="mdi mdi-download-box text-dark"></i>
+                            <?php
+                            if ($user_id !== null) {
+                                $nav_userId = $user_id;
+                                $nav_limit = 3;
+                                $stmt_nav = $conn->prepare("SELECT id, title, created_at, message FROM notifications WHERE user_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT ?");
+                                $stmt_nav->bind_param("ii", $nav_userId, $nav_limit);
+                                $stmt_nav->execute();
+                                $result_nav = $stmt_nav->get_result();
+                                
+                                if ($result_nav && $result_nav->num_rows > 0) {
+                                    while ($notify_nav = $result_nav->fetch_assoc()):
+                                        $title_nav = htmlspecialchars($notify_nav['title'] ?? 'No title', ENT_QUOTES, 'UTF-8');
+                                        $message_nav = htmlspecialchars($notify_nav['message'] ?? '', ENT_QUOTES, 'UTF-8');
+                                        
+                                        // Calculate time ago
+                                        $time_ago = '';
+                                        if (isset($notify_nav['created_at'])) {
+                                            $diff = time() - strtotime($notify_nav['created_at']);
+                                            if ($diff < 60) $time_ago = 'Just now';
+                                            elseif ($diff < 3600) $time_ago = floor($diff/60) . ' min ago';
+                                            elseif ($diff < 86400) $time_ago = floor($diff/3600) . ' hr ago';
+                                            else $time_ago = floor($diff/86400) . ' days ago';
+                                        }
+                            ?>
+                                        <!-- item-->
+                                        <a href="/devhire/dashboard/myrequest" class="dropdown-item notify-item text-muted link-primary">
+                                            <div class="notify-icon">
+                                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                                                    <i class="mdi mdi-bell-outline fs-4"></i>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <p class="notify-details"><?= $title_nav ?></p>
+                                                <small class="text-muted"><?= $time_ago ?></small>
+                                            </div>
+                                            <p class="mb-0 user-msg">
+                                                <small class="fs-14"><?= mb_strimwidth($message_nav, 0, 37, '...') ?></small>
+                                            </p>
+                                        </a>
+                            <?php
+                                    endwhile;
+                                } else {
+                            ?>
+                                        <div class="p-3 text-center text-muted">
+                                            <p class="mb-0">No new request</p>
                                         </div>
-
-                                        <div>
-                                            <p class="notify-details mb-0">dark-themes.zip</p>
-                                            <small class="text-muted">2.4 MB</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item notify-item text-muted link-primary">
-                                <div class="notify-icon">
-                                    <img src="<?php echo $base_url; ?>assets/images/users/user-3.jpg" class="img-fluid rounded-circle" alt="" />
-                                </div>
-                                <div class="notify-content">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <p class="notify-details">Travis Williams</p>
-                                        <small class="text-muted">7 min ago</small>
-                                    </div>
-                                    <p class="noti-mentioned p-2 rounded-2 mb-0 mt-2">
-                                        <span class="text-primary">@Patryk</span> Please make sure that you're....
-                                    </p>
-                                </div>
-                            </a>
-
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item notify-item text-muted link-primary">
-                                <div class="notify-icon">
-                                    <img src="<?php echo $base_url; ?>assets/images/users/user-8.jpg" class="img-fluid rounded-circle" alt="" />
-                                </div>
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <p class="notify-details">Violette Lasky</p>
-                                    <small class="text-muted">5 min ago</small>
-                                </div>
-                                <p class="mb-0 user-msg">
-                                    <small class="fs-14">Completed <span class="text-reset">Create new components</span></small>
-                                </p>
-                            </a>
-
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item notify-item text-muted link-primary">
-                                <div class="notify-icon">
-                                    <img src="<?php echo $base_url; ?>assets/images/users/user-5.jpg" class="img-fluid rounded-circle" alt="" />
-                                </div>
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <p class="notify-details">Ralph Edwards</p>
-                                    <small class="text-muted">5 min ago</small>
-                                </div>
-                                <p class="mb-0 user-msg">
-                                    <small class="fs-14">Completed<span class="text-reset">Improve workflow in React</span></small>
-                                </p>
-                            </a>
-
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item notify-item text-muted link-primary">
-                                <div class="notify-icon">
-                                    <img src="<?php echo $base_url; ?>assets/images/users/user-6.jpg" class="img-fluid rounded-circle" alt="" />
-                                </div>
-                                <div class="notify-content">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <p class="notify-details">Jocab jones</p>
-                                        <small class="text-muted">7 min ago</small>
-                                    </div>
-                                    <p class="noti-mentioned p-2 rounded-2 mb-0 mt-2">
-                                        <span class="text-reset">@Patryk</span> Please make sure that you're....
-                                    </p>
-                                </div>
-                            </a>
+                            <?php
+                                }
+                                if (isset($stmt_nav)) $stmt_nav->close();
+                            }
+                            ?>
                         </div>
 
                         <!-- All-->
-                        <a href="javascript:void(0);" class="dropdown-item text-center text-primary notify-item notify-all">View all
+                        <a href="/devhire/dashboard/myrequest" class="dropdown-item text-center text-primary notify-item notify-all">View all
                             <i class="fe-arrow-right"></i>
                         </a>
                     </div>
@@ -187,7 +145,16 @@
                 <!-- User Dropdown -->
                 <li class="dropdown notification-list topbar-dropdown">
                     <a class="nav-link dropdown-toggle nav-user me-0" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
-                        <img src="<?php echo $base_url; ?>assets/images/users/user-13.jpg" alt="user-image" class="rounded-circle" />
+                        <?php
+                            if (!empty($user_profile_picture['uploaded_picture'])) {
+                                $profile_picture = "../" . $user_profile_picture['uploaded_picture'];
+                            } elseif (!empty($user_profile_picture['google_picture'])) {
+                                $profile_picture = $user_profile_picture['google_picture'];
+                            } else {
+                                $profile_picture = $base_url . "assets/images/users/avatar-1.jpg";
+                            }
+                        ?>
+                        <img src="<?php echo $profile_picture; ?>" alt="user-image" class="rounded-circle" />
                         <span class="pro-user-name ms-1">Candidate Profile <i class="mdi mdi-chevron-down"></i></span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end profile-dropdown">

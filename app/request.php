@@ -66,6 +66,16 @@ try {
     <script src="<?php echo $base_url; ?>assets/js/head.js"></script>
 
     <style>
+        .request-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid #eef2f7;
+        }
+        .request-card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+            border-color: transparent;
+        }
         /* .education-card {
             border-radius: 12px;
             border: 1px solid #e5e5e5;
@@ -168,7 +178,7 @@ try {
                                         $totalPages = ceil($total / $limit);
 
                                         // Fetch paginated notifications
-                                        $stmt = $conn->prepare("SELECT id, title, created_at  FROM notifications WHERE user_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT ?, ?");
+                                        $stmt = $conn->prepare("SELECT id, title, created_at, message FROM notifications WHERE user_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT ?, ?");
                                         $stmt->bind_param("iii", $user_id, $offset, $limit);
                                         $stmt->execute();
                                         $result = $stmt->get_result();
@@ -176,17 +186,23 @@ try {
                                         if ($result && $result->num_rows > 0) {
                                             while ($notify = $result->fetch_assoc()):
                                                 $title = htmlspecialchars($notify['title'] ?? 'No title', ENT_QUOTES, 'UTF-8');
+                                                $message = htmlspecialchars($notify['message'] ?? 'No content available.', ENT_QUOTES, 'UTF-8');
                                                 $nid = (int)$notify['id'];
                                                 $time = isset($notify['created_at']) ? date('M j, Y H:i', strtotime($notify['created_at'])) : '';
                                         ?>
-                                                <div class="d-flex justify-content-between align-items-center p-3 mb-2 bg-light rounded">
-                                                    <div>
-                                                        <div class="fw-semibold"><?= $title ?></div>
-                                                        <?php if ($time): ?><small class="text-muted"><?= $time ?></small><?php endif; ?>
+                                                <div class="d-flex justify-content-between align-items-center p-3 mb-3 bg-white rounded request-card" data-bs-toggle="modal" data-bs-target="#notificationModal" data-title="<?= $title ?>" data-message="<?= $message ?>" data-time="<?= $time ?>">
+                                                    <div class="d-flex align-items-start pe-3">
+                                                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width: 40px; height: 40px;">
+                                                            <i class="mdi mdi-bell-outline fs-4"></i>
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-semibold text-dark fs-15"><?= $title ?></div>
+                                                            <?php if ($time): ?><small class="text-muted"><i class="mdi mdi-clock-outline me-1"></i><?= $time ?></small><?php endif; ?>
+                                                        </div>
                                                     </div>
                                                     <div>
-                                                        <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" onclick="deleteNotification(<?= $nid ?>)"  title="Delete Notification" aria-label="Delete Notification">
-                                                            <i class="mdi mdi-close fs-5 align-middle"></i>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger px-3 py-1 rounded-pill shadow-none" onclick="event.stopPropagation(); deleteNotification(<?= $nid ?>)" title="Delete Notification" aria-label="Delete Notification">
+                                                            Delete
                                                         </button>
                                                     </div>
                                                 </div>
@@ -226,6 +242,26 @@ try {
                         </div>
                     </div>
 
+                    <!-- Notification Modal -->
+                    <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header border-bottom-0 pb-0">
+                                    <h5 class="modal-title fs-18" id="notificationModalLabel">Message Details</h5>
+                                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body pt-2">
+                                    <p id="modal-time" class="text-muted small mb-3"></p>
+                                    <div class="p-3 bg-light rounded">
+                                        <p id="modal-message-content" class="mb-0" style="white-space: pre-wrap; font-size: 15px; color: #444;"></p>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-top-0 pt-0">
+                                    <button type="button" class="btn btn-secondary shadow-none px-4" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                 </div> <!-- container-fluid -->
 
@@ -256,6 +292,32 @@ try {
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var notificationModal = document.getElementById('notificationModal');
+            if (notificationModal) {
+                notificationModal.addEventListener('show.bs.modal', function (event) {
+                    var button = event.relatedTarget;
+                    var title = button.getAttribute('data-title');
+                    var message = button.getAttribute('data-message');
+                    var time = button.getAttribute('data-time');
+
+                    var modalTitle = notificationModal.querySelector('.modal-title');
+                    var modalBody = notificationModal.querySelector('#modal-message-content');
+                    var modalTime = notificationModal.querySelector('#modal-time');
+
+                    modalTitle.textContent = title;
+                    modalBody.textContent = message;
+                    
+                    if (time) {
+                        modalTime.innerHTML = '<i class="mdi mdi-clock-outline me-1"></i> ' + time;
+                        modalTime.classList.remove('d-none');
+                    } else {
+                        modalTime.classList.add('d-none');
+                    }
+                });
+            }
+        });
+
         //delete resume file
         function deleteNotification(data) {
             // Show confirmation dialog

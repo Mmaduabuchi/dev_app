@@ -86,6 +86,22 @@ try {
         header("Location: /devhire/screening3");
         exit;
     }
+
+    //user profile picture
+    $stmt = $conn->prepare("
+        SELECT u.picture AS google_picture, d.profile_picture AS uploaded_picture
+        FROM users u
+        LEFT JOIN developers_profiles d ON u.id = d.user_id
+        WHERE u.id = ?
+    ");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user_profile_picture = $result->fetch_assoc();
+    $stmt->close();
 } catch (Exception $e) {
     $conn->close();
     error_log($e->getMessage());

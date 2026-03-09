@@ -139,8 +139,8 @@ try {
                     <div class="row">
                         <div class="col">
                             <div class="card">
-                                <div class="card-header">
-                                    <div class="container">
+                                <div class="card-header border-0 pb-0">
+                                    <div class="container p-0">
                                         <div class="search-bar bg-light">
                                             <input type="text" class="search-input bg-light" id="searchBarDevhire" placeholder="Search Devhire...">
 
@@ -154,8 +154,25 @@ try {
                                 </div>
 
                                 <div class="card-body">
+                                    <!-- Search Results Area -->
                                     <div class="mb-3">
-                                        <!-- content goes in here  -->
+                                        
+                                        <!-- Loading Spinner -->
+                                        <div id="searchLoader" class="text-center my-5" style="display: none;">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="text-muted mt-2">Searching...</p>
+                                        </div>
+
+                                        <!-- Results Container -->
+                                        <div id="searchResults" class="row g-3">
+                                            <div class="col-12 text-center text-muted my-5">
+                                                <i class="mdi mdi-magnify mdi-48px"></i>
+                                                <p>Type above to start searching for developers.</p>
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
                             </div>
@@ -254,13 +271,60 @@ try {
         });
 
         // Trigger actual search
-        function initiateSearch(query) {
+        async function initiateSearch(query) {
             if (!query) return;
             suggestionBox.style.display = 'none';
             console.log(`Searching for "${query}" in category "${activeCategory}"`);
             
-            //redirect or search request:
-            // window.location.href = `search_results.php?type=${activeCategory}&q=${encodeURIComponent(query)}`;
+            const resultsContainer = document.getElementById('searchResults');
+            const loader = document.getElementById('searchLoader');
+            
+            // Show loader, clear previous results
+            resultsContainer.innerHTML = '';
+            loader.style.display = 'block';
+
+            try {
+                const response = await fetch(`<?php echo $base_url; ?>process/process_search.php?type=${activeCategory}&q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                loader.style.display = 'none';
+
+                if (data.status === 'success' && data.data.length > 0) {
+                    data.data.forEach(user => {
+                        const avatar = user.picture_url || '<?php echo $base_url; ?>assets/images/users/avatar-1.jpg';
+                        const role = user.role || 'Member';
+                        const cardHtml = `
+                            <div class="col-xl-3 col-lg-4 col-md-6">
+                                <div class="card shadow-none border mb-0 text-center h-100">
+                                    <div class="card-body">
+                                        <img src="${avatar}" class="rounded-circle avatar-lg img-thumbnail mb-3" alt="profile-image" style="object-fit:cover;">
+                                        <h4 class="mb-1 text-truncate">${user.fullname}</h4>
+                                        <p class="text-muted text-capitalize mb-2">${role}</p>
+                                        <a href="<?php echo $base_url; ?>candidate.php?ref=${user.usertoken}&token=search" class="btn btn-sm btn-primary rounded-pill mt-2">View Profile</a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        resultsContainer.insertAdjacentHTML('beforeend', cardHtml);
+                    });
+                } else {
+                    resultsContainer.innerHTML = `
+                        <div class="col-12 text-center text-muted my-5">
+                            <i class="mdi mdi-account-search mdi-48px"></i>
+                            <p>No results found for "<strong>${query}</strong>" in ${activeCategory}.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error(error);
+                loader.style.display = 'none';
+                resultsContainer.innerHTML = `
+                    <div class="col-12 text-center text-danger my-5">
+                        <i class="mdi mdi-alert-circle mdi-48px"></i>
+                        <p>An error occurred while searching. Please try again.</p>
+                    </div>
+                `;
+            }
         }
 
         // Hide suggestion box when clicking outside
