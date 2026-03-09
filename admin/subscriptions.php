@@ -103,6 +103,47 @@ try{
                 transition: all 0.3s ease;
             }
 
+            /* Pricing Card Styling */
+            .pricing-card {
+                border-radius: 16px;
+                overflow: visible;
+                transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+            }
+            .pricing-card:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1) !important;
+            }
+            .pricing-card-popular {
+                border: 2px solid var(--bs-devhire-blue);
+                transform: scale(1.05);
+                z-index: 1;
+            }
+            .pricing-card-popular:hover {
+                transform: scale(1.05) translateY(-8px);
+            }
+            @media (max-width: 991.98px) {
+                .pricing-card-popular {
+                    transform: none;
+                }
+                .pricing-card-popular:hover {
+                    transform: translateY(-8px);
+                }
+            }
+            .pricing-card-premium {
+                background: linear-gradient(135deg, var(--bs-devhire-navy) 0%, #1a365d 100%);
+                color: #ffffff;
+            }
+            .pricing-icon {
+                width: 32px;
+                height: 32px;
+                min-width: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                font-size: 1.25rem;
+            }
+
             /* Sidebar Styling */
             .sidebar {
                 width: 260px;
@@ -210,87 +251,134 @@ try{
                     <div class="row g-4 mb-4">
                         <!-- Pricing Configuration -->
                         <div class="col-lg-12">
-                            <div class="card p-4">
-                                <h5 class="card-title fw-bold mb-3">Platform Subscription Plans</h5>
-                                <div class="row g-4">
+                            <div class="card border-0 shadow-sm p-4">
+                                <div class="text-center mb-5 mt-2">
+                                    <h2 class="fw-bold fs-3">Platform Subscription Plans</h2>
+                                    <p class="text-muted">Manage the subscription tiers available to users on the platform.</p>
+                                </div>
+                                <div class="row g-4 justify-content-center align-items-center px-lg-4 mb-4">
                                     <!-- Plan 1: Basic -->
-                                    <div class="col-md-4">
-                                        <div class="card border-secondary h-100 text-center p-3">
-                                            <h6 class="text-secondary fw-bold"><?= ucfirst($sub_one_data_name) ?></h6>
-                                            <h2 class="display-6 fw-bold mb-3">$<?= $sub_one_data_price ?><span class="fs-6 fw-normal text-muted">/mo</span></h2>
-                                            <p class="small text-muted mb-4">Limited visibility & features</p>
-                                            <ul class="list-unstyled text-start small mb-4">
+                                    <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+                                        <div class="card pricing-card border shadow-sm h-100 p-4">
+                                            <div class="text-center mb-4">
+                                                <h6 class="text-uppercase fw-bold text-muted tracking-wider mb-2"><?= ucfirst($sub_one_data_name) ?></h6>
+                                                <div class="d-flex justify-content-center align-items-baseline mb-2">
+                                                    <span class="fs-4 fw-semibold text-muted">$</span>
+                                                    <span class="display-5 fw-bold text-dark"><?= $sub_one_data_price ?></span>
+                                                    <span class="text-muted ms-1">/mo</span>
+                                                </div>
+                                                <p class="small text-muted mb-0">Limited visibility & features</p>
+                                            </div>
+                                            <hr class="text-muted opacity-25 mb-4">
+                                            <ul class="list-unstyled text-start small mb-4 flex-grow-1">
                                                 <?php if (!empty($planFeatures[$sub_one_data_id])): ?>
                                                     <?php foreach ($planFeatures[$sub_one_data_id] as $feature): ?>
-                                                        <li>
+                                                        <li class="mb-3 d-flex align-items-center">
                                                             <?php if ($feature['icon_type'] === 'check'): ?>
-                                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                                <div class="pricing-icon bg-success bg-opacity-10 text-success me-3">
+                                                                    <i class="bi bi-check" style="font-size: 1.3rem;"></i>
+                                                                </div>
+                                                                <span class="text-dark fw-medium"><?= htmlspecialchars($feature['feature_text']) ?></span>
                                                             <?php else: ?>
-                                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                                <div class="pricing-icon bg-danger bg-opacity-10 text-danger me-3">
+                                                                    <i class="bi bi-x" style="font-size: 1.3rem;"></i>
+                                                                </div>
+                                                                <span class="text-muted text-decoration-line-through"><?= htmlspecialchars($feature['feature_text']) ?></span>
                                                             <?php endif; ?>
-                                                            <?= htmlspecialchars($feature['feature_text']) ?>
                                                         </li>
                                                     <?php endforeach; ?>
                                                 <?php endif; ?>
                                             </ul>
-                                            <button data-bs-toggle="modal" data-bs-target="#editPlanModal" class="btn btn-outline-primary btn-sm mt-auto edit-plan-btn"
-                                                data-name="<?= ucfirst($sub_one_data_name) ?>" 
-                                                data-plan="<?= $sub_one_data_id ?>" 
-                                                data-price="<?= $sub_one_data_price ?>"
-                                                data-features="<?= implode('|', array_map(fn($f) => $f['icon_type'] . '::' . $f['feature_text'], $planFeatures[$sub_one_data_id] ?? [])) ?>">
-                                                <i class="bi bi-pencil"></i> Edit Plan
-                                            </button>
+                                            <div class="mt-auto pt-4">
+                                                <button data-bs-toggle="modal" data-bs-target="#editPlanModal" class="btn btn-outline-dark w-100 rounded-pill py-2 fw-medium edit-plan-btn"
+                                                    data-name="<?= ucfirst($sub_one_data_name) ?>" 
+                                                    data-plan="<?= $sub_one_data_id ?>" 
+                                                    data-price="<?= $sub_one_data_price ?>"
+                                                    data-features="<?= implode('|', array_map(fn($f) => $f['icon_type'] . '::' . $f['feature_text'], $planFeatures[$sub_one_data_id] ?? [])) ?>">
+                                                    <i class="bi bi-pencil me-2"></i> Edit Plan
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                     <!-- Plan 2: Standard -->
-                                    <div class="col-md-4">
-                                        <div class="card border-primary border-3 h-100 text-center p-3">
-                                            <h6 class="text-primary fw-bold"><?= ucfirst($sub_two_data_name) ?></h6>
-                                            <h2 class="display-6 fw-bold mb-3">$<?= $sub_two_data_price ?><span class="fs-6 fw-normal text-muted">/mo</span></h2>
-                                            <p class="small text-muted mb-4">Balanced feature set</p>
-                                            <ul class="list-unstyled text-start small mb-4">
+                                    <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+                                        <div class="card pricing-card pricing-card-popular shadow h-100 p-4 position-relative">
+                                            <div class="position-absolute top-0 start-50 translate-middle text-center w-100 mt-0">
+                                                <span class="badge bg-primary rounded-pill py-2 px-3 text-uppercase tracking-wider fw-bold shadow-sm" style="font-size: 0.75rem; letter-spacing: 1px;">Recommended</span>
+                                            </div>
+                                            <div class="text-center mb-4 mt-3">
+                                                <h6 class="text-uppercase fw-bold text-primary tracking-wider mb-2"><?= ucfirst($sub_two_data_name) ?></h6>
+                                                <div class="d-flex justify-content-center align-items-baseline mb-2">
+                                                    <span class="fs-4 fw-semibold text-primary">$</span>
+                                                    <span class="display-5 fw-bold text-primary"><?= $sub_two_data_price ?></span>
+                                                    <span class="text-muted ms-1">/mo</span>
+                                                </div>
+                                                <p class="small text-muted mb-0">Balanced feature set</p>
+                                            </div>
+                                            <hr class="text-muted opacity-25 mb-4">
+                                            <ul class="list-unstyled text-start small mb-4 flex-grow-1">
                                                 <?php if (!empty($planFeatures[$sub_two_data_id])): ?>
                                                     <?php foreach ($planFeatures[$sub_two_data_id] as $feature): ?>
-                                                        <li>
+                                                        <li class="mb-3 d-flex align-items-center">
                                                             <?php if ($feature['icon_type'] === 'check'): ?>
-                                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                                <div class="pricing-icon bg-primary bg-opacity-10 text-primary me-3">
+                                                                    <i class="bi bi-check" style="font-size: 1.3rem;"></i>
+                                                                </div>
+                                                                <span class="text-dark fw-medium"><?= htmlspecialchars($feature['feature_text']) ?></span>
                                                             <?php else: ?>
-                                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                                <div class="pricing-icon bg-danger bg-opacity-10 text-danger me-3">
+                                                                    <i class="bi bi-x" style="font-size: 1.3rem;"></i>
+                                                                </div>
+                                                                <span class="text-muted text-decoration-line-through"><?= htmlspecialchars($feature['feature_text']) ?></span>
                                                             <?php endif; ?>
-                                                            <?= htmlspecialchars($feature['feature_text']) ?>
                                                         </li>
                                                     <?php endforeach; ?>
                                                 <?php endif; ?>
                                             </ul>
-
-                                            <button data-bs-toggle="modal" data-bs-target="#editPlanModal" data-name="<?= ucfirst($sub_two_data_name) ?>" data-plan="<?= $sub_two_data_id ?>" data-price="<?= $sub_two_data_price ?>" data-features="<?= implode('|', array_map(fn($f) => $f['icon_type'] . '::' . $f['feature_text'], $planFeatures[$sub_two_data_id] ?? [])) ?>" class="btn btn-primary btn-sm mt-auto edit-plan-btn">
-                                                <i class="bi bi-pencil"></i> Edit Plan
-                                            </button>
+                                            <div class="mt-auto pt-4">
+                                                <button data-bs-toggle="modal" data-bs-target="#editPlanModal" data-name="<?= ucfirst($sub_two_data_name) ?>" data-plan="<?= $sub_two_data_id ?>" data-price="<?= $sub_two_data_price ?>" data-features="<?= implode('|', array_map(fn($f) => $f['icon_type'] . '::' . $f['feature_text'], $planFeatures[$sub_two_data_id] ?? [])) ?>" class="btn btn-primary w-100 rounded-pill py-2 fw-medium edit-plan-btn shadow-sm">
+                                                    <i class="bi bi-pencil me-2"></i> Edit Plan
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                     <!-- Plan 3: Premium -->
-                                    <div class="col-md-4">
-                                        <div class="card border-warning h-100 text-center p-3">
-                                            <h6 class="text-warning fw-bold"><?= ucfirst($sub_three_data_name) ?></h6>
-                                            <h2 class="display-6 fw-bold mb-3">$<?= $sub_three_data_price ?><span class="fs-6 fw-normal text-muted">/mo</span></h2>
-                                            <p class="small text-muted mb-4">Maximum visibility and tools</p>
-                                            <ul class="list-unstyled text-start small mb-4">
+                                    <div class="col-lg-4 col-md-6">
+                                        <div class="card pricing-card pricing-card-premium shadow-lg h-100 p-4">
+                                            <div class="text-center mb-4">
+                                                <h6 class="text-uppercase fw-bold text-warning tracking-wider mb-2"><?= ucfirst($sub_three_data_name) ?></h6>
+                                                <div class="d-flex justify-content-center align-items-baseline mb-2">
+                                                    <span class="fs-4 fw-semibold text-white-50">$</span>
+                                                    <span class="display-5 fw-bold text-white"><?= $sub_three_data_price ?></span>
+                                                    <span class="text-white-50 ms-1">/mo</span>
+                                                </div>
+                                                <p class="small text-white-50 mb-0">Maximum visibility and tools</p>
+                                            </div>
+                                            <hr class="bg-light opacity-25 mb-4">
+                                            <ul class="list-unstyled text-start small mb-4 flex-grow-1">
                                                 <?php if (!empty($planFeatures[$sub_three_data_id])): ?>
                                                     <?php foreach ($planFeatures[$sub_three_data_id] as $feature): ?>
-                                                        <li>
+                                                        <li class="mb-3 d-flex align-items-center">
                                                             <?php if ($feature['icon_type'] === 'check'): ?>
-                                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                                <div class="pricing-icon bg-warning text-dark me-3">
+                                                                    <i class="bi bi-check" style="font-size: 1.3rem;"></i>
+                                                                </div>
+                                                                <span class="text-white fw-medium"><?= htmlspecialchars($feature['feature_text']) ?></span>
                                                             <?php else: ?>
-                                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                                <div class="pricing-icon bg-danger bg-opacity-25 text-white me-3">
+                                                                    <i class="bi bi-x" style="font-size: 1.3rem;"></i>
+                                                                </div>
+                                                                <span class="text-white-50 text-decoration-line-through"><?= htmlspecialchars($feature['feature_text']) ?></span>
                                                             <?php endif; ?>
-                                                            <?= htmlspecialchars($feature['feature_text']) ?>
                                                         </li>
                                                     <?php endforeach; ?>
                                                 <?php endif; ?>
                                             </ul>
-                                            <button data-bs-toggle="modal" data-bs-target="#editPlanModal" data-name="<?= ucfirst($sub_three_data_name) ?>" data-plan="<?= $sub_three_data_id ?>" data-price="<?= $sub_three_data_price ?>" data-features="<?= implode('|', array_map(fn($f) => $f['icon_type'] . '::' . $f['feature_text'], $planFeatures[$sub_three_data_id] ?? [])) ?>" class="btn btn-outline-primary btn-sm mt-auto edit-plan-btn">
-                                                <i class="bi bi-pencil"></i> Edit Plan
-                                            </button>
+                                            <div class="mt-auto pt-4">
+                                                <button data-bs-toggle="modal" data-bs-target="#editPlanModal" data-name="<?= ucfirst($sub_three_data_name) ?>" data-plan="<?= $sub_three_data_id ?>" data-price="<?= $sub_three_data_price ?>" data-features="<?= implode('|', array_map(fn($f) => $f['icon_type'] . '::' . $f['feature_text'], $planFeatures[$sub_three_data_id] ?? [])) ?>" class="btn btn-warning w-100 rounded-pill py-2 fw-bold edit-plan-btn shadow-sm text-dark">
+                                                    <i class="bi bi-pencil me-2"></i> Edit Plan
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -302,10 +390,7 @@ try{
                     <div class="card p-4">
                         <h5 class="card-title fw-bold mb-3">Subscription Distribution</h5>
                         <div class="row">
-                            <div class="col-md-6">
-                                <canvas id="subscriptionPieChart" height="200"></canvas>
-                            </div>
-                            <div class="col-md-6 d-flex align-items-center">
+                            <div class="col d-flex align-items-center">
                                 <ul class="list-group list-group-flush w-100">
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         <?= ucfirst($sub_three_data_name) ?> <span class="badge bg-warning rounded-pill">1,024</span>
