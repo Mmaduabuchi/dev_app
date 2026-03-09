@@ -27,7 +27,7 @@ $user_global_variable = false;
 try {
 
     //check if user is an employer or not
-    $stmt = $conn->prepare("SELECT user_type, role FROM `users` WHERE id = ?");
+    $stmt = $conn->prepare("SELECT user_type, role FROM `users` WHERE id = ? AND deleted_at IS NULL LIMIT 1");
     if (!$stmt) {
         throw new Exception('Database error: ' . $conn->error);
     }
@@ -56,52 +56,67 @@ try {
     if ($user_type === "employer" && $role === "CEO") {
         // Employer can proceed to dashboard
         $user_global_variable = true;
-        return;
     }
 
-    //fetch user data from developers_profiles database
-    $stmt = $conn->prepare("SELECT action FROM `developers_profiles` WHERE user_id = ?");
-    if (!$stmt) {
-        throw new Exception('Database error: ' . $conn->error);
-    }
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $user = $result->fetch_assoc();
-    $stmt->close();
+    if($user_global_variable === false) {
 
-    // If no profile found, redirect to profile screening page
-    if (!$user) {
-        header("Location: /devhire/screening");
-        exit;
-    }
+        //fetch user data from developers_profiles database
+        $stmt = $conn->prepare("SELECT action FROM `developers_profiles` WHERE user_id = ? LIMIT 1");
+        if (!$stmt) {
+            throw new Exception('Database error: ' . $conn->error);
+        }
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $user = $result->fetch_assoc();
+        $stmt->close();
 
-    //check if user has completed profile
-    if ($user['action'] === 'step1') {
-        //if not redirect to profile completion page
-        header("Location: /devhire/screening2");
-        exit;
-    } else if ($user['action'] === 'step2') {
-        //if not redirect to profile completion page
-        header("Location: /devhire/screening3");
-        exit;
-    }
+        // If no profile found, redirect to profile screening page
+        if (!$user) {
+            header("Location: /devhire/screening");
+            exit;
+        }
 
-    //user profile picture
-    $stmt = $conn->prepare("
-        SELECT u.picture AS google_picture, d.profile_picture AS uploaded_picture
-        FROM users u
-        LEFT JOIN developers_profiles d ON u.id = d.user_id
-        WHERE u.id = ?
-    ");
-    if (!$stmt) {
-        throw new Exception('Database error: ' . $conn->error);
+        //check if user has completed profile
+        if ($user['action'] === 'step1') {
+            //if not redirect to profile completion page
+            header("Location: /devhire/screening2");
+            exit;
+        } else if ($user['action'] === 'step2') {
+            //if not redirect to profile completion page
+            header("Location: /devhire/screening3");
+            exit;
+        }
+    
+
+        //user profile picture
+        $stmt = $conn->prepare("
+            SELECT u.picture AS google_picture, d.profile_picture AS uploaded_picture
+            FROM users u
+            LEFT JOIN developers_profiles d ON u.id = d.user_id
+            WHERE u.id = ?
+        ");
+        if (!$stmt) {
+            throw new Exception('Database error: ' . $conn->error);
+        }
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $user_profile_picture = $result->fetch_assoc();
+        $stmt->close();
+
+    } else {
+        //company profile picture
+        $stmt = $conn->prepare("SELECT company_logo FROM employer_profiles WHERE user_id = ?");
+        if (!$stmt) {
+            throw new Exception('Database error: ' . $conn->error);
+        }
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $company_profile_picture = $result->fetch_assoc();
+        $stmt->close();
     }
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $user_profile_picture = $result->fetch_assoc();
-    $stmt->close();
 } catch (Exception $e) {
     $conn->close();
     error_log($e->getMessage());

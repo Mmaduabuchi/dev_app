@@ -65,12 +65,7 @@ try{
     <script src="<?php echo $base_url; ?>assets/js/head.js"></script>
 
     <style>
-        #img_candidate {
-            width: 80px;
-            height: 80px;
-            border-radius: 20%;
-            object-fit: cover;
-        }
+        /* #img_candidate inline styles are used instead */
     </style>
 
 
@@ -94,6 +89,41 @@ try{
                     <div class="py-3 d-flex align-items-sm-center flex-sm-row flex-column">
                         <div class="flex-grow-1">
                             <h4 class="fs-18 fw-semibold m-0">Company</h4>
+                        </div>
+                    </div>
+
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Update Company Logo</h5>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center flex-column flex-sm-row gap-4">
+                                        <!-- Profile Picture Preview -->
+                                        <div class="position-relative">
+                                            <img id="img_candidate" class="rounded-circle shadow bg-light" style="width: 120px; height: 120px; object-fit: cover; border: 4px solid #fff;" src="<?php echo $profile_pic; ?>" alt="Company logo Image">
+                                            <label for="profile_picture" class="position-absolute bottom-0 end-0 bg-primary d-flex align-items-center justify-content-center text-white rounded-circle shadow-sm" style="width: 36px; height: 36px; cursor: pointer; border: 3px solid #fff; margin-bottom: 0;" title="Change Photo">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                                  <path d="M15 12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1.172a3 3 0 0 0 2.12-.879l.83-.828A1 1 0 0 1 6.827 3h2.344a1 1 0 0 1 .707.293l.828.828A3 3 0 0 0 12.828 5H14a1 1 0 0 1 1 1v6zM2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2z"/>
+                                                  <path d="M8 11a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm0 1a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+                                                </svg>
+                                            </label>
+                                        </div>
+                                        
+                                        <!-- Actions -->
+                                        <div class="text-center text-sm-start mt-3 mt-sm-0">
+                                            <h5 class="mb-1 fw-bold">Company Logo</h5>
+                                            <p class="text-muted mb-3 fs-14">Allowed formats: JPG, PNG, WebP.</p>
+                                            <input type="file" id="profile_picture" class="d-none" accept=".jpg,.jpeg,.png,.webp">
+                                            <button class="btn btn-primary rounded-pill px-4 shadow-sm" id="btn_profile_picture">Update Logo</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -170,30 +200,7 @@ try{
 
                     </div>
 
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">Update Company Logo</h5>
-                                </div><!-- end card header -->
-
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-12 col-md-6 col-lg-6">
-                                            <label for="profile_picture">Upload company logo picture (JPG, PNG, WebP allowed)</label>
-                                            <input type="file" id="profile_picture" class="form-control">
-                                            <br>
-                                            <button class="btn btn-primary w-25" id="btn_profile_picture">Update</button>
-                                        </div>
-                                        <div class="col-12 col-md-6 col-lg-6 text-md-center text-start mt-3 mt-md-0">
-                                            <img id="img_candidate" class="img-fluid shadow-sm" src="<?php echo $profile_pic; ?>" alt="Company logo Image">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    
 
                 </div> <!-- container-fluid -->
 

@@ -146,13 +146,21 @@
                 <li class="dropdown notification-list topbar-dropdown">
                     <a class="nav-link dropdown-toggle nav-user me-0" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
                         <?php
+                        if($user_global_variable === false){
                             if (!empty($user_profile_picture['uploaded_picture'])) {
-                                $profile_picture = "../" . $user_profile_picture['uploaded_picture'];
+                                $profile_picture = "/devhire/" . $user_profile_picture['uploaded_picture'];
                             } elseif (!empty($user_profile_picture['google_picture'])) {
                                 $profile_picture = $user_profile_picture['google_picture'];
                             } else {
-                                $profile_picture = $base_url . "assets/images/users/avatar-1.jpg";
+                                $profile_picture = $base_url . "assets/images/users/user-12.jpg";
                             }
+                        }else{
+                            if (!empty($company_profile_picture['company_logo'])) {
+                                $profile_picture = "/devhire/" . $company_profile_picture['company_logo'];
+                            } else {
+                                $profile_picture = $base_url . "assets/images/users/user-12.jpg";
+                            }
+                        }
                         ?>
                         <img src="<?php echo $profile_picture; ?>" alt="user-image" class="rounded-circle" />
                         <span class="pro-user-name ms-1">Candidate Profile <i class="mdi mdi-chevron-down"></i></span>
