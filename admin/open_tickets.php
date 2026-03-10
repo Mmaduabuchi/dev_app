@@ -149,6 +149,35 @@ try{
                 background-color: #2D3748 !important;
                 border-color: #4A5568;
             }
+
+            /* Screen Loader */
+            .screen-loader{
+                position: fixed;
+                top:0;
+                left:0;
+                width:100%;
+                height:100%;
+                background: rgba(255,255,255,0.8);
+                backdrop-filter: blur(2px);
+                z-index: 9999;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+            }
+
+            .loader-spinner{
+                width:50px;
+                height:50px;
+                border:5px solid #e5e5e5;
+                border-top:5px solid #0A66C2;
+                border-radius:50%;
+                animation: spin 0.8s linear infinite;
+            }
+
+            @keyframes spin{
+                from{ transform: rotate(0deg); }
+                to{ transform: rotate(360deg); }
+            }
         </style>
     </head>
     <body class="d-flex">
@@ -248,14 +277,22 @@ try{
                                                         } else if ($priority == "Medium") {
                                                             $priority_status = "info";
                                                         } else {
-                                                            $priority_status = "success";
+                                                        $priority_status = "success";
+                                                        }
+                                                        
+                                                        $status = $row['status'] ?? 'pending';
+                                                        $status_badge = "bg-warning text-dark";
+                                                        if ($status == "Resolved") {
+                                                            $status_badge = "bg-success";
+                                                        } else if ($status == "Closed") {
+                                                            $status_badge = "bg-secondary";
                                                         }
 
                                         ?>
                                                         <tr>
                                                             <td><?= htmlspecialchars($row['ticket_reference']) ?></td>
                                                             <td><?= htmlspecialchars($row['category']) ?></td>
-                                                            <td><span class="badge bg-warning text-dark">Open</span></td>
+                                                            <td><span class="badge <?= $status_badge ?>"><?= ucfirst(htmlspecialchars($status)) ?></span></td>
                                                             <td><span class="badge bg-<?= $priority_status ?>"><?= ucfirst($priority) ?></span></td>
                                                             <td>
                                                                 <?php 
@@ -264,7 +301,13 @@ try{
                                                                 ?>
                                                             </td>
                                                             <td>
-                                                                <a href="#" class="btn btn-sm btn-primary"><i class="bi bi-eye"></i> View</a>
+                                                                <button class="btn btn-sm btn-primary view-ticket" 
+                                                                    data-ticket-id="<?= $row['id'] ?>"
+                                                                    data-ticket-ref="<?= htmlspecialchars($row['ticket_reference']) ?>"
+                                                                    data-message="<?= htmlspecialchars($row['message']) ?>"
+                                                                    data-status="<?= htmlspecialchars($status) ?>">
+                                                                    <i class="bi bi-eye"></i> View
+                                                                </button>
                                                             </td>
                                                         </tr>                                       
                                         
@@ -310,14 +353,148 @@ try{
 
         
 
-        <?php include_once "footer.php"; ?>
+        <!-- Ticket Details Modal -->
+        <div class="modal fade" id="ticketModal" tabindex="-1" aria-labelledby="ticketModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="ticketModalLabel">Ticket Details: <span id="modalTicketRef" class="fw-bold"></span></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="fw-bold">Message:</p>
+                        <div id="modalTicketMessage" class="p-3 bg-light rounded" style="white-space: pre-wrap;"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-danger me-auto" id="deleteTicketBtn">Delete</button>
+                        <button type="button" class="btn btn-success" id="resolveTicketBtn">Resolve</button>
+                        <button type="button" class="btn btn-primary" id="openTicketBtn">Open</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+
+        <!-- Full Screen Loader -->
+        <div id="screenLoader" class="screen-loader d-none">
+            <div class="loader-spinner"></div>
+        </div>
+
+        <?php include_once "footer.php"; ?>
 
         <!-- Load Bootstrap JS Bundle (includes Popper for dropdowns/modals) -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
 
-            
+            function showLoader(){
+                document.getElementById("screenLoader").classList.remove("d-none");
+            }
+
+            function hideLoader(){
+                document.getElementById("screenLoader").classList.add("d-none");
+            }
+
+
+            let activeTicketId = null;
+
+            // SweetAlert Toast Config
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+
+            document.addEventListener("click", function(e) {
+                if (e.target.closest(".view-ticket")) {
+                    const btn = e.target.closest(".view-ticket");
+                    activeTicketId = btn.dataset.ticketId;
+                    const ticketRef = btn.dataset.ticketRef;
+                    const message = btn.dataset.message;
+                    const status = btn.dataset.status;
+
+                    document.getElementById("modalTicketRef").innerText = ticketRef;
+                    document.getElementById("modalTicketMessage").innerText = message;
+
+                    // Enable/disable resolve button based on status
+                    const resolveBtn = document.getElementById("resolveTicketBtn");
+                    if (status === 'Resolved') {
+                        resolveBtn.disabled = true;
+                        resolveBtn.innerText = 'Resolved';
+                    } else {
+                        resolveBtn.disabled = false;
+                        resolveBtn.innerText = 'Resolve';
+                    }
+
+                    new bootstrap.Modal(document.getElementById('ticketModal')).show();
+                }
+            });
+
+            function performTicketAction(action) {
+                if (!activeTicketId) return;
+
+                let confirmText = `Are you sure you want to ${action} this ticket?`;
+                if (action === 'delete') confirmText = "This action is irreversible. Are you sure you want to delete this ticket?";
+
+                Swal.fire({
+                    title: 'Confirm Action',
+                    text: confirmText,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: action === 'delete' ? '#d33' : '#3085d6',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, proceed!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+
+                        showLoader(); // SHOW LOADER
+
+                        fetch("./../process/process_ticket_action.php", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                            body: `action=${action}&ticket_id=${activeTicketId}`
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+
+                            hideLoader(); // HIDE LOADER
+
+                            if (data.status === 'success') {
+                                Toast.fire({
+                                    icon: 'success',
+                                    title: data.message
+                                });
+                                // Close modal and reload page after a short delay
+                                bootstrap.Modal.getInstance(document.getElementById('ticketModal')).hide();
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                Toast.fire({
+                                    icon: 'error',
+                                    title: data.message || 'Action failed'
+                                });
+                            }
+                        })
+                        .catch(err => {
+
+                            hideLoader(); // HIDE LOADER
+                            
+                            console.error(err);
+                            Toast.fire({
+                                icon: 'error',
+                                title: 'An error occurred during processing'
+                            });
+                        });
+                    }
+                });
+            }
+
+            document.getElementById("resolveTicketBtn").addEventListener("click", () => performTicketAction('resolve'));
+            document.getElementById("deleteTicketBtn").addEventListener("click", () => performTicketAction('delete'));
+            document.getElementById("openTicketBtn").addEventListener("click", () => performTicketAction('open'));
+
         </script>
     </body>
 </html>
