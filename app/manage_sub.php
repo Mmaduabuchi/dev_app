@@ -107,6 +107,17 @@ try{
                         </div>
                     </div>
 
+                    <div class="row">
+                        <?php if (!$sub_status): ?>
+                            <div class="col-12">
+                                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                    <strong>Hello <?= htmlspecialchars($fullname, ENT_QUOTES, 'UTF-8'); ?>!</strong> Your do not have any active subscription.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
                     <!-- Start Row -->
                     <div class="row">
 
@@ -296,7 +307,7 @@ try{
                                                         }
 
                                                         echo "<tr>
-                                                            <td class='text-center'><p class='mb-0 fs-14'>{$date}</p></td>
+                                                            <td><p class='mb-0 fs-14'>{$date}</p></td>
                                                             <td><p class='mb-0 fw-semibold'>{$planName}</p></td>
                                                             <td><p class='mb-0 fw-medium'>\${$amount}</p></td>
                                                             <td><span class='badge {$badgeClass} fw-semibold'>{$status}</span></td>

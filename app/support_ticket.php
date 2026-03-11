@@ -105,6 +105,17 @@ try {
                     </div>
 
                     <div class="row">
+                        <?php if (!$sub_status): ?>
+                            <div class="col-12">
+                                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                    <strong>Hello <?= htmlspecialchars($fullname, ENT_QUOTES, 'UTF-8'); ?>!</strong> Your do not have any active subscription.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="row">
                         <div class="col-md-12">
                             <div class="card overflow-hidden">
                                 <div class="card-header">

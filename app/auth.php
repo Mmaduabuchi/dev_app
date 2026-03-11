@@ -23,6 +23,7 @@ if ($user_id === null) {
 }
 
 $user_global_variable = false;
+$sub_status = true;
 
 try {
 
@@ -116,6 +117,26 @@ try {
         $result = $stmt->get_result();
         $company_profile_picture = $result->fetch_assoc();
         $stmt->close();
+    }
+
+
+    //check if user has active subscription
+    $stmt = $conn->prepare("SELECT id FROM `subscriptions` WHERE user_id = ? AND cancelled_at IS NULL ORDER BY created_at DESC LIMIT 1");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows < 1) {
+        $sub_status = false;
+    } else {
+        $subscription = $result->fetch_assoc();
+    }
+    $stmt->close();
+
+    if (!isset($subscription['status']) || $subscription['status'] !== 'active') {
+        $sub_status = false;
     }
 } catch (Exception $e) {
     $conn->close();

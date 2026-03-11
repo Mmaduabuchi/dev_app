@@ -65,63 +65,80 @@ require_once __DIR__ . '/fetch_notification_count.php';
                             </div>
                         </div>
 
+                        <?php if (!$sub_status): ?>
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <strong>Hello <?= htmlspecialchars($fullname, ENT_QUOTES, 'UTF-8'); ?>!</strong> Your do not have any active subscription.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        <?php endif; ?>
+
                         <!-- Start Row -->
                         <div class="row">
 
                             <?php 
                             // Fetch developer profiles from the database
-                            $stmt = $conn->prepare("SELECT dp.*, u.picture, u.usertoken, u.fullname, u.email, u.role FROM developers_profiles dp JOIN users u ON dp.user_id = u.id WHERE dp.action = 'completed'");
+                            $stmt = $conn->prepare("
+                                SELECT dp.*, u.picture, u.usertoken, u.fullname, u.email, u.role 
+                                FROM developers_profiles dp 
+                                JOIN users u ON dp.user_id = u.id 
+                                WHERE dp.action = 'completed' 
+                                AND u.suspended_at IS NULL 
+                                AND u.deleted_at IS NULL
+                                LIMIT 100
+                            ");
                             $stmt->execute();
                             $result = $stmt->get_result();
+                            if ($result->num_rows < 1) {
+                                echo "<p class='text-center text-muted'>No developers found.</p>";
+                            } else {
+                                while ($developer = $result->fetch_assoc()) {
+                                    // Display each developer profile in a card
+                                ?>
+                                    <div class="col-md-6 col-xl-3">
+                                        <div class="card overflow-hidden">
+                                            <div class="card-body">
+                                                <div class="widget-first">
 
-                            while ($developer = $result->fetch_assoc()) {
-                                // Display each developer profile in a card
-                            ?>
-                                <div class="col-md-6 col-xl-3">
-                                    <div class="card overflow-hidden">
-                                        <div class="card-body">
-                                            <div class="widget-first">
+                                                    <div class="d-flex align-items-center mb-3">
+                                                        <div class="rounded-2 bg-white p-1 me-3 shadow-sm border">
+                                                            <?php
+                                                                $profile_pic = $developer['profile_picture'] ? '/devhire/' . $developer['profile_picture'] :  $developer['picture'];                                                        ?>
+                                                            <img src="<?php echo $profile_pic; ?>" alt="Profile Picture" width="40" height="40" class="rounded-circle">
+                                                        </div>
 
-                                                <div class="d-flex align-items-center mb-3">
-                                                    <div class="rounded-2 bg-white p-1 me-3 shadow-sm border">
-                                                        <?php
-                                                            // $profile_pic = $developer['picture'] ? $developer['picture'] : '/devhire/' . $developer['profile_picture'];
-                                                            $profile_pic = $developer['profile_picture'] ? '/devhire/' . $developer['profile_picture'] :  $developer['picture'];                                                        ?>
-                                                        <img src="<?php echo $profile_pic; ?>" alt="Profile Picture" width="40" height="40" class="rounded-circle">
+                                                        <div>
+                                                            <p class="mb-0 text-dark fs-16"><?php echo htmlspecialchars($developer['fullname']); ?></p>
+                                                        </div>
                                                     </div>
 
-                                                    <div>
-                                                        <p class="mb-0 text-dark fs-16"><?php echo htmlspecialchars($developer['fullname']); ?></p>
+                                                    <div class="d-flex align-items-center mb-2">
+                                                        <h3 class="mb-0 fs-6 text-dark me-2 me-3"><?php echo htmlspecialchars($developer['role']); ?></h3>
                                                     </div>
-                                                </div>
-
-                                                <div class="d-flex align-items-center mb-2">
-                                                    <h3 class="mb-0 fs-6 text-dark me-2 me-3"><?php echo htmlspecialchars($developer['role']); ?></h3>
-                                                </div>
-                                                <div class="d-flex align-items-center mb-2">
-                                                    <h3 class="fs-6"><?php echo $developer['years_of_experience'] . ' years  of experience.'; ?></h3>
-                                                </div>
-                                                <p class="text-muted fs-14 mb-2">
-                                                    <?php 
-                                                        $bio = htmlspecialchars($developer['bio']); 
-                                                        echo strlen($bio) > 50 ? substr($bio, 0, 50) . '...' : $bio;
-                                                    ?>
-                                                </p>
-                                                <div class="row align-items-center">
-                                                    <div class="col">
-                                                        <a href="/devhire/dashboard/candidate-profile?token=<?php echo uniqid();?>&ref=<?php echo $developer['usertoken']; ?>">
-                                                            <span class="badge text-success badge-custom-second bg-success-subtle fw-medium rounded-4 fs-14 me-2 contact-badge">
-                                                                + Contact me
-                                                            </span>
-                                                        </a>
+                                                    <div class="d-flex align-items-center mb-2">
+                                                        <h3 class="fs-6"><?php echo $developer['years_of_experience'] . ' years  of experience.'; ?></h3>
                                                     </div>
-                                                </div>
+                                                    <p class="text-muted fs-14 mb-2">
+                                                        <?php 
+                                                            $bio = htmlspecialchars($developer['bio']); 
+                                                            echo strlen($bio) > 50 ? substr($bio, 0, 50) . '...' : $bio;
+                                                        ?>
+                                                    </p>
+                                                    <div class="row align-items-center">
+                                                        <div class="col">
+                                                            <a href="/devhire/dashboard/candidate-profile?token=<?php echo uniqid();?>&ref=<?php echo $developer['usertoken']; ?>">
+                                                                <span class="badge text-success badge-custom-second bg-success-subtle fw-medium rounded-4 fs-14 me-2 contact-badge">
+                                                                    + Contact me
+                                                                </span>
+                                                            </a>
+                                                        </div>
+                                                    </div>
 
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
                             <?php
+                                }
                             }
                             ?>    
                             
