@@ -216,6 +216,36 @@ try{
             align-items: center;
             gap: 0.5rem;
         }
+
+
+        /* Screen Loader */
+        .screen-loader{
+            position: fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(2px);
+            z-index: 9999;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+
+        .loader-spinner{
+            width:50px;
+            height:50px;
+            border:5px solid #e5e5e5;
+            border-top:5px solid #0A66C2;
+            border-radius:50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin{
+            from{ transform: rotate(0deg); }
+            to{ transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -637,10 +667,25 @@ try{
         </div>
     </div>
 
+
+    <!-- Full Screen Loader -->
+    <div id="screenLoader" class="screen-loader d-none">
+        <div class="loader-spinner"></div>
+    </div>
+
     <!-- Bootstrap 5 Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+
+        function showLoader(){
+            document.getElementById("screenLoader").classList.remove("d-none");
+        }
+
+        function hideLoader(){
+            document.getElementById("screenLoader").classList.add("d-none");
+        }
+
         function action_fun(action, user_id) {
             Swal.fire({
                 title: 'Are you sure?',
@@ -652,6 +697,9 @@ try{
                 confirmButtonText: 'Yes, ' + action + ' it'
             }).then((result) => {
                 if (result.isConfirmed) {
+
+                    showLoader(); // SHOW LOADER
+
                     // Call your backend API
                     fetch('./../process/process_suspend_or_delete_account.php', {
                         method: 'POST',
@@ -665,6 +713,9 @@ try{
                     })
                     .then(response => response.json())
                     .then(data => {
+
+                        hideLoader(); // HIDE LOADER
+
                         if (data.status === "success") {
                             Swal.fire({
                                 toast: true,
@@ -691,6 +742,9 @@ try{
                         }
                     })
                     .catch(error => {
+
+                        hideLoader(); // HIDE LOADER
+                            
                         Swal.fire({
                             toast: true,
                             position: 'top-end',

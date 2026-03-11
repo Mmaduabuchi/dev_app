@@ -121,6 +121,36 @@ $offset = ($page - 1) * $limit;
                 background-color: #2D3748 !important;
                 border-color: #4A5568;
             }
+
+
+            /* Screen Loader */
+            .screen-loader{
+                position: fixed;
+                top:0;
+                left:0;
+                width:100%;
+                height:100%;
+                background: rgba(255,255,255,0.8);
+                backdrop-filter: blur(2px);
+                z-index: 9999;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+            }
+
+            .loader-spinner{
+                width:50px;
+                height:50px;
+                border:5px solid #e5e5e5;
+                border-top:5px solid #0A66C2;
+                border-radius:50%;
+                animation: spin 0.8s linear infinite;
+            }
+
+            @keyframes spin{
+                from{ transform: rotate(0deg); }
+                to{ transform: rotate(360deg); }
+            }
         </style>
     </head>
     <body class="d-flex">
@@ -239,6 +269,11 @@ $offset = ($page - 1) * $limit;
 
         
 
+        <!-- Full Screen Loader -->
+        <div id="screenLoader" class="screen-loader d-none">
+            <div class="loader-spinner"></div>
+        </div>
+
         <?php include_once "footer.php"; ?>
 
 
@@ -246,6 +281,15 @@ $offset = ($page - 1) * $limit;
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
+
+            function showLoader(){
+                document.getElementById("screenLoader").classList.remove("d-none");
+            }
+
+            function hideLoader(){
+                document.getElementById("screenLoader").classList.add("d-none");
+            }
+
             function issueRefund(transactionId) {
                 Swal.fire({
                     title: 'Issue Refund',
@@ -316,6 +360,9 @@ $offset = ($page - 1) * $limit;
                     confirmButtonText: 'Yes, delete it'
                 }).then((result) => {
                     if (result.isConfirmed) {
+
+                        showLoader(); // SHOW LOADER
+
                         fetch('./../process/process_delete_transaction.php', {
                             method: 'POST',
                             headers: {
@@ -325,6 +372,9 @@ $offset = ($page - 1) * $limit;
                         })
                         .then(response => response.json())
                         .then(data => {
+
+                            hideLoader(); // HIDE LOADER
+
                             if (data.status == 'success') {
                                 Swal.fire({
                                     toast: true,
@@ -335,6 +385,9 @@ $offset = ($page - 1) * $limit;
                                     timer: 3000,
                                     timerProgressBar: true
                                 });
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 2000);
                             } else {
                                 Swal.fire({
                                     toast: true,
@@ -348,6 +401,9 @@ $offset = ($page - 1) * $limit;
                             }
                         })
                         .catch(error => {
+
+                            hideLoader(); // HIDE LOADER
+
                             console.error('Error:', error);
                             Swal.fire({
                                 toast: true,

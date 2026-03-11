@@ -132,6 +132,36 @@ try{
                 background-color: #2D3748 !important;
                 border-color: #4A5568;
             }
+
+
+            /* Screen Loader */
+            .screen-loader{
+                position: fixed;
+                top:0;
+                left:0;
+                width:100%;
+                height:100%;
+                background: rgba(255,255,255,0.8);
+                backdrop-filter: blur(2px);
+                z-index: 9999;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+            }
+
+            .loader-spinner{
+                width:50px;
+                height:50px;
+                border:5px solid #e5e5e5;
+                border-top:5px solid #0A66C2;
+                border-radius:50%;
+                animation: spin 0.8s linear infinite;
+            }
+
+            @keyframes spin{
+                from{ transform: rotate(0deg); }
+                to{ transform: rotate(360deg); }
+            }
         </style>
     </head>
     <body class="d-flex">
@@ -338,7 +368,11 @@ try{
         </div>
 
 
-        
+        <!-- Full Screen Loader -->
+        <div id="screenLoader" class="screen-loader d-none">
+            <div class="loader-spinner"></div>
+        </div>
+
 
         <?php include_once "footer.php"; ?>
 
@@ -346,6 +380,14 @@ try{
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
+
+            function showLoader(){
+                document.getElementById("screenLoader").classList.remove("d-none");
+            }
+
+            function hideLoader(){
+                document.getElementById("screenLoader").classList.add("d-none");
+            }
 
             document.addEventListener("click", function(e) {
                 if (e.target.closest(".view-evidence")) {
@@ -442,6 +484,8 @@ try{
                 this.disabled = true;
                 this.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Processing`;
 
+                showLoader(); // SHOW LOADER
+
                 fetch("./../process/process_report_action.php", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -449,6 +493,9 @@ try{
                 })
                 .then(res => res.json())
                 .then(data => {
+
+                    hideLoader(); // HIDE LOADER
+
                     bootstrap.Modal.getInstance(
                         document.getElementById("actionConfirmModal")
                     ).hide();
@@ -468,12 +515,18 @@ try{
                     }
                 })
                 .catch(() => {
+
+                    hideLoader(); // HIDE LOADER
+                            
                     Toast.fire({
                         icon: "error",
                         title: "Server error occurred"
                     });
                 })
                 .finally(() => {
+
+                    hideLoader(); // HIDE LOADER
+                            
                     const btn = document.getElementById("confirmActionBtn");
                     btn.disabled = false;
                     btn.innerText = "Confirm";

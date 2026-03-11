@@ -35,6 +35,24 @@ try{
     $admin_email = $admin['email'];
     $admin_auth = $admin['auth'];
 
+    //get reports count
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM reports WHERE status IS NULL AND deleted_at IS NULL");
+    if ($stmt === false) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if (!$result) {
+        throw new Exception('Failed to retrieve result.');
+    }
+
+    $row = $result->fetch_assoc();
+    $report_count = (int) ($row['count'] ?? 0);
+
+    $stmt->close();
+
+    
 } catch (Exception $e) {
     $_SESSION['error'] = $e->getMessage();
     header('Location: /devhire/admin/dashboard/errorpage/error');

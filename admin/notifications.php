@@ -139,25 +139,63 @@ include_once "route.php";
                 <div class="page-content" id="messages-requests">
                     <h1 class="mb-4 fs-3">Notifications</h1>
                     <div class="card p-4">
-                        <h5 class="card-title fw-bold mb-3">Contact Form Submissions</h5>
+                        <h5 class="card-title fw-bold mb-3">User Reports Submissions</h5>
                         <div class="list-group">
-                            <a href="#" class="list-group-item list-group-item-action">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1 fw-bold text-primary">HR Manager, Acme Corp</h6>
-                                    <small class="text-muted">3 days ago</small>
-                                </div>
-                                <p class="mb-1 small">Request for contact details of 'Alex Johnson' - Premium talent.</p>
-                                <small class="text-success"><i class="bi bi-envelope-open-fill me-1"></i> Open</small>
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1 fw-bold">Platform Issue Report (Admin)</h6>
-                                    <small class="text-danger">Yesterday</small>
-                                </div>
-                                <p class="mb-1 small">Issue: Job post filter not working correctly on mobile view.</p>
-                                <small class="text-muted"><i class="bi bi-tools me-1"></i> Assigned to Dev Team</small>
-                            </a>
-                            <!-- More Messages... -->
+                            <?php
+                            try {
+                                $stmt = $conn->prepare("SELECT id, fullname, email, report_title, report_data, created_at FROM reports WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 20");
+                                if (!$stmt) {
+                                    throw new Exception("Database error: " . $conn->error);
+                                }
+                                $stmt->execute();
+                                $result = $stmt->get_result();
+                                if ($result->num_rows === 0) {
+                                    echo '<div class="alert alert-info">No reports found.</div>';
+                                } else {
+                                    while ($report = $result->fetch_assoc()) {
+                                        $report_id = $report['id'];
+                                        $fullname = htmlspecialchars($report['fullname']);
+                                        $email = htmlspecialchars($report['email']);
+                                        $title = htmlspecialchars($report['report_title']);
+                                        $data = htmlspecialchars($report['report_data']);
+                                        $created_at = new DateTime($report['created_at']);
+                                        $now = new DateTime();
+                                        $diff = $now->diff($created_at);
+                                        
+                                        if ($diff->d == 0) {
+                                            $time_ago = $diff->h > 0 ? $diff->h . " hours ago" : $diff->i . " mins ago";
+                                            if ($diff->h == 0 && $diff->i == 0) $time_ago = "Just now";
+                                        } elseif ($diff->d == 1) {
+                                            $time_ago = "Yesterday";
+                                        } else {
+                                            $time_ago = $diff->d . " days ago";
+                                        }
+                            ?>
+                                        <div class="list-group-item list-group-item-action border-start-0 border-end-0 border-top-0 mb-2 pb-3" id="report-item-<?= $report_id ?>">
+                                            <div class="d-flex w-100 justify-content-between align-items-center mb-2">
+                                                <h6 class="mb-0 fw-bold text-primary"><?= $title ?></h6>
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <small class="text-muted"><?= $time_ago ?></small>
+                                                    <button class="btn btn-sm btn-outline-danger delete-report-btn" 
+                                                            data-id="<?= $report_id ?>" 
+                                                            title="Delete Report">
+                                                        <i class="bi bi-trash3"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="mb-2">
+                                                <span class="badge bg-light text-dark fw-normal border"><?= $fullname ?> (<?= $email ?>)</span>
+                                            </div>
+                                            <p class="mb-1 small text-secondary"><?= $data ?></p>
+                                        </div>
+                            <?php
+                                    }
+                                }
+                                $stmt->close();
+                            } catch (Exception $e) {
+                                echo '<div class="alert alert-danger">Error: ' . $e->getMessage() . '</div>';
+                            }
+                            ?>
                         </div>
                     </div>
                 </div>
@@ -172,9 +210,67 @@ include_once "route.php";
 
         <!-- Load Bootstrap JS Bundle (includes Popper for dropdowns/modals) -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
+            document.querySelectorAll('.delete-report-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const reportId = this.getAttribute('data-id');
+                    const reportItem = document.getElementById(`report-item-${reportId}`);
 
-            
+
+
+                    // SweetAlert Toast Config
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "This report will be marked as deleted.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, delete it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch('./../process/process_delete_report.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ report_id: reportId })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    Toast.fire({
+                                        icon: 'success',
+                                        title: data.message
+                                    });
+                                    reportItem.remove();
+                                } else {
+                                    Toast.fire({
+                                        icon: 'error',
+                                        title: data.message
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                Toast.fire({
+                                    icon: 'error',
+                                    title: 'An unexpected error occurred.'
+                                });
+                            });
+                        }
+                    });
+                });
+            });
         </script>
     </body>
 </html>

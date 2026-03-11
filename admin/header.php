@@ -24,14 +24,35 @@
             <!-- Notifications Dropdown -->
             <div class="dropdown me-3">
                 <button class="btn btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-bell-fill"></i> <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">4</span>
+                    <i class="bi bi-bell-fill"></i> 
+                    <?php 
+                        if ($report_count > 0) {
+                            echo '<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">' . $report_count . '</span>';
+                        }
+                    ?>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" style="width: 280px;">
-                    <li class="dropdown-header">Notifications (4 New)</li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item small" href="#">New talent profile pending verification.</a></li>
-                    <li><a class="dropdown-item small" href="#">Payment failed for Employer Corp.</a></li>
-                    <li><a class="dropdown-item small" href="#">3 new reported accounts.</a></li>
+                    <li class="dropdown-header">Notifications (<?= $report_count ?> New)</li>
+                    <li><hr class="dropdown-divider"></li> 
+                    <?php 
+                        try {
+                            $stmt_reports = $conn->prepare("SELECT id, report_title FROM reports WHERE status IS NULL AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 3");
+                            if ($stmt_reports) {
+                                $stmt_reports->execute();
+                                $result_reports = $stmt_reports->get_result();
+                                if ($result_reports->num_rows > 0) {
+                                    while ($report = $result_reports->fetch_assoc()) {
+                                        echo '<li><a class="dropdown-item small" href="' . $url . 'notifications#report-item-' . $report['id'] . '">' . htmlspecialchars($report['report_title']) . '</a></li>';
+                                    }
+                                } else {
+                                    echo '<li><a class="dropdown-item small text-muted" href="#">No new notifications.</a></li>';
+                                }
+                                $stmt_reports->close();
+                            }
+                        } catch (Exception $e) {
+                            echo '<li><a class="dropdown-item small text-danger" href="#">Error loading notifications.</a></li>';
+                        }
+                    ?>
                 </ul>
             </div>
 
