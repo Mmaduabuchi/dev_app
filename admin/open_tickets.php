@@ -224,10 +224,10 @@ try{
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
                             <h5 class="mb-2 mb-md-0">All Open Tickets</h5>
-                            <div class="input-group w-auto">
-                                <input type="text" class="form-control" placeholder="Search tickets..." aria-label="Search tickets">
-                                <button class="btn btn-outline-secondary" type="button"><i class="bi bi-search"></i></button>
-                            </div>
+                            <form action="" method="GET" class="input-group w-auto">
+                                <input type="text" name="search" class="form-control" placeholder="Search tickets..." aria-label="Search tickets" value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
+                                <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                            </form>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -250,20 +250,45 @@ try{
                                                 $page = max($page, 1);
                                                 $offset = ($page - 1) * $limit;
 
-                                                /* Get total tickets */
-                                                $countStmt = $conn->prepare("SELECT COUNT(*) AS total FROM support_ticket WHERE deleted_at IS NULL");
+                                                /* Get total tickets with search */
+                                                $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+                                                $searchTerm = "%$search%";
+
+                                                if ($search !== '') {
+                                                    $countQuery = "SELECT COUNT(*) AS total FROM support_ticket WHERE deleted_at IS NULL AND (ticket_reference LIKE ? OR category LIKE ? OR message LIKE ?)";
+                                                    $countStmt = $conn->prepare($countQuery);
+                                                    $countStmt->bind_param("sss", $searchTerm, $searchTerm, $searchTerm);
+                                                } else {
+                                                    $countQuery = "SELECT COUNT(*) AS total FROM support_ticket WHERE deleted_at IS NULL";
+                                                    $countStmt = $conn->prepare($countQuery);
+                                                }
+                                                
+                                                if($countStmt === false){
+                                                    throw new Exception("Failed to prepare count statement.");
+                                                }
                                                 $countStmt->execute();
                                                 $totalResult = $countStmt->get_result()->fetch_assoc();
                                                 $totalTickets = $totalResult['total'];
 
                                                 $totalPages = ceil($totalTickets / $limit);
 
-                                                //get support_ticket
-                                                $stmt = $conn->prepare("SELECT * FROM support_ticket WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT ? OFFSET ?");
-                                                if($stmt === false){
-                                                    throw new Exception("Failed to prepare statement.");
+                                                //get support_ticket with search
+                                                if ($search !== '') {
+                                                    $query = "SELECT * FROM support_ticket WHERE deleted_at IS NULL AND (ticket_reference LIKE ? OR category LIKE ? OR message LIKE ?) ORDER BY created_at DESC LIMIT ? OFFSET ?";
+                                                    $stmt = $conn->prepare($query);
+                                                    if($stmt === false){
+                                                        throw new Exception("Failed to prepare statement.");
+                                                    }
+                                                    $stmt->bind_param("sssii", $searchTerm, $searchTerm, $searchTerm, $limit, $offset);
+                                                } else {
+                                                    $query = "SELECT * FROM support_ticket WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT ? OFFSET ?";
+                                                    $stmt = $conn->prepare($query);
+                                                    if($stmt === false){
+                                                        throw new Exception("Failed to prepare statement.");
+                                                    }
+                                                    $stmt->bind_param("ii", $limit, $offset);
                                                 }
-                                                $stmt->bind_param("ii", $limit, $offset);
+
                                                 $stmt->execute();
                                                 $result = $stmt->get_result();
                                                 if ($result->num_rows < 1) {
@@ -327,18 +352,18 @@ try{
                                 <ul class="pagination justify-content-end mt-3 flex-wrap">
                                     <!-- Previous -->
                                     <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
-                                        <a class="page-link" href="?page=<?= $page - 1 ?>">Previous</a>
+                                        <a class="page-link" href="?page=<?= $page - 1 ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>">Previous</a>
                                     </li>
 
                                     <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                                         <li class="page-item <?= $i === $page ? 'active' : '' ?>">
-                                            <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                                            <a class="page-link" href="?page=<?= $i ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>"><?= $i ?></a>
                                         </li>
                                     <?php endfor; ?>
 
                                     <!-- Next -->
                                     <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
-                                        <a class="page-link" href="?page=<?= $page + 1 ?>">Next</a>
+                                        <a class="page-link" href="?page=<?= $page + 1 ?><?= $search !== '' ? '&search=' . urlencode($search) : '' ?>">Next</a>
                                     </li>
                                 </ul>
                             </nav>

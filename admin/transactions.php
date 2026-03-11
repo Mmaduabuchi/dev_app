@@ -10,6 +10,12 @@ $limit = 10; // number of rows per page
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $offset = ($page - 1) * $limit;
 
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$searchQuery = "";
+if (!empty($search)) {
+    $searchQuery = " AND (transaction_id LIKE ? OR user_company LIKE ? OR plan LIKE ? OR method LIKE ?)";
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -173,90 +179,111 @@ $offset = ($page - 1) * $limit;
 
                 <div class="page-content" id="payments-transactions">
                     <h1 class="mb-4 fs-3">Payments & Transactions</h1>
-                    <div class="card p-4">
-                        <h5 class="card-title fw-bold mb-3">Transaction History</h5>
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle small">
-                                <thead>
-                                    <tr>
-                                        <th>Transaction ID</th>
-                                        <th>User/Company</th>
-                                        <th>Plan</th>
-                                        <th>Amount</th>
-                                        <th>Method</th>
-                                        <th>Date</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php
-                                        try{
-                                            $totalStmt = $conn->prepare("SELECT COUNT(*) as total FROM transaction_history WHERE deleted_at IS NULL");
-                                            $totalStmt->execute();
-                                            $totalResult = $totalStmt->get_result()->fetch_assoc();
-                                            $totalRows = $totalResult['total'];
-                                            $totalPages = ceil($totalRows / $limit);
-                                            $totalStmt->close();
-                                            
-                                            $stmt = $conn->prepare("SELECT * FROM transaction_history WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT ? OFFSET ?");
-                                            if ($stmt === false) {
-                                                throw new Exception("Failed to prepare statement: " . $conn->error);
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+                            <h5 class="card-title fw-bold mb-3">Transaction History</h5>
+                            <form action="" method="GET" class="input-group w-auto">
+                                <input type="text" name="search" class="form-control" placeholder="Search transactions..." aria-label="Search transactions" value="<?php echo htmlspecialchars($search); ?>">
+                                <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                            </form>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle small">
+                                    <thead>
+                                        <tr>
+                                            <th>Transaction ID</th>
+                                            <th>User/Company</th>
+                                            <th>Plan</th>
+                                            <th>Amount</th>
+                                            <th>Method</th>
+                                            <th>Date</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php
+                                            try{
+                                                $totalSql = "SELECT COUNT(*) as total FROM transaction_history WHERE deleted_at IS NULL" . $searchQuery;
+                                                $totalStmt = $conn->prepare($totalSql);
+                                                if (!empty($search)) {
+                                                    $searchTerm = "%$search%";
+                                                    $totalStmt->bind_param("ssss", $searchTerm, $searchTerm, $searchTerm, $searchTerm);
+                                                }
+                                                $totalStmt->execute();
+                                                $totalResult = $totalStmt->get_result()->fetch_assoc();
+                                                $totalRows = $totalResult['total'];
+                                                $totalPages = ceil($totalRows / $limit);
+                                                $totalStmt->close();
+                                                
+                                                $sql = "SELECT * FROM transaction_history WHERE deleted_at IS NULL" . $searchQuery . " ORDER BY created_at DESC LIMIT ? OFFSET ?";
+                                                $stmt = $conn->prepare($sql);
+                                                if ($stmt === false) {
+                                                    throw new Exception("Failed to prepare statement: " . $conn->error);
+                                                }
+                                                
+                                                if (!empty($search)) {
+                                                    $searchTerm = "%$search%";
+                                                    $stmt->bind_param("ssssii", $searchTerm, $searchTerm, $searchTerm, $searchTerm, $limit, $offset);
+                                                } else {
+                                                    $stmt->bind_param("ii", $limit, $offset);
+                                                }
+                                                
+                                                $stmt->execute();
+                                                $result = $stmt->get_result();
+                                                if ($result->num_rows < 1) {
+                                                    echo "<tr><td colspan='7' class='text-center text-danger'>No transactions found.</td></tr>";
+                                                }
+                                                while ($row = $result->fetch_assoc()) {
+                                        ?>
+                                                    <tr>
+                                                        <td><?php echo $row['transaction_id']; ?></td>
+                                                        <td><?php echo $row['user_company']; ?></td>
+                                                        <td><?php echo $row['plan']; ?></td>
+                                                        <td><?php echo $row['amount']; ?></td>
+                                                        <td><?php echo $row['method']; ?></td>
+                                                        <td>
+                                                            <?php 
+                                                                $date = new DateTime($row['created_at']);
+                                                                echo $date->format('l, Y-m-d H:i');
+                                                            ?>
+                                                        </td>
+                                                        <td>
+                                                            <!-- <button class="btn btn-sm btn-outline-warning" onclick="issueRefund('<?php echo $row['id']; ?>')" title="Issue Refund">
+                                                                <i class="bi bi-arrow-return-left"></i> Refund
+                                                            </button> -->
+                                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction('<?php echo $row['id']; ?>')" title="Delete Transaction">
+                                                                <i class="bi bi-trash"></i> Delete
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                        
+                                        <?php
+                                                }
+                                            } catch (Exception $e) {
+                                                echo "<tr><td colspan='7' class='text-center text-danger'>" . $e->getMessage() . "</td></tr>";
                                             }
-                                            $stmt->bind_param("ii", $limit, $offset);
-                                            $stmt->execute();
-                                            $result = $stmt->get_result();
-                                            if ($result->num_rows < 1) {
-                                                echo "<tr><td colspan='7' class='text-center text-danger'>No transactions found.</td></tr>";
-                                            }
-                                            while ($row = $result->fetch_assoc()) {
-                                    ?>
-                                                <tr>
-                                                    <td><?php echo $row['transaction_id']; ?></td>
-                                                    <td><?php echo $row['user_company']; ?></td>
-                                                    <td><?php echo $row['plan']; ?></td>
-                                                    <td><?php echo $row['amount']; ?></td>
-                                                    <td><?php echo $row['method']; ?></td>
-                                                    <td>
-                                                        <?php 
-                                                            $date = new DateTime($row['created_at']);
-                                                            echo $date->format('l, Y-m-d H:i');
-                                                        ?>
-                                                    </td>
-                                                    <td>
-                                                        <!-- <button class="btn btn-sm btn-outline-warning" onclick="issueRefund('<?php echo $row['id']; ?>')" title="Issue Refund">
-                                                            <i class="bi bi-arrow-return-left"></i> Refund
-                                                        </button> -->
-                                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction('<?php echo $row['id']; ?>')" title="Delete Transaction">
-                                                            <i class="bi bi-trash"></i> Delete
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                    
-                                    <?php
-                                            }
-                                        } catch (Exception $e) {
-                                            echo "<tr><td colspan='7' class='text-center text-danger'>" . $e->getMessage() . "</td></tr>";
-                                        }
-                                    ?>
-                                </tbody>
-                            </table>
+                                        ?>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                         <nav aria-label="Page navigation">
                             <ul class="pagination justify-content-end mt-3">
                                 <!-- Previous Button -->
                                 <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-                                    <a class="page-link" href="<?= ($page <= 1) ? '#' : '?page=' . ($page - 1) ?>">Previous</a>
+                                    <a class="page-link" href="<?= ($page <= 1) ? '#' : '?page=' . ($page - 1) . (!empty($search) ? '&search=' . urlencode($search) : '') ?>">Previous</a>
                                 </li>
 
                                 <?php for($i = 1; $i <= $totalPages; $i++): ?>
                                     <li class="page-item <?= $i == $page ? 'active' : '' ?>">
-                                        <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                                        <a class="page-link" href="?page=<?= $i ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><?= $i ?></a>
                                     </li>
                                 <?php endfor; ?>
 
                                 <!-- Next Button -->
                                 <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
-                                    <a class="page-link" href="<?= ($page >= $totalPages) ? '#' : '?page=' . ($page + 1) ?>">Next</a>
+                                    <a class="page-link" href="<?= ($page >= $totalPages) ? '#' : '?page=' . ($page + 1) . (!empty($search) ? '&search=' . urlencode($search) : '') ?>">Next</a>
                                 </li>
                             </ul>
                         </nav>
