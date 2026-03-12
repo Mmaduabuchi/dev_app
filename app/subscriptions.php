@@ -5,6 +5,11 @@ require_once "auth.php";
 //notification count
 require_once __DIR__ . '/fetch_notification_count.php';
 
+$sub_payment_status_flag = "";
+if (isset($_GET["payment"])) {
+    $sub_payment_status_flag = $_GET["payment"];
+}
+
 
 try {
     $subscription_ids = [1, 2, 3];
@@ -120,6 +125,25 @@ try {
                         </div>
                     </div>
 
+                    <div class="row">
+                        <?php if ($sub_payment_status_flag == "success") { ?>
+                            <div class="col-12">
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <strong>Holy <?= htmlspecialchars($fullname, ENT_QUOTES, 'UTF-8'); ?>!</strong> Your subscription payment was successfully processed.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            </div>
+                        <?php } ?>
+                        <?php if ($sub_payment_status_flag == "failed") { ?>
+                            <div class="col-12">
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <strong>Holy <?= htmlspecialchars($fullname, ENT_QUOTES, 'UTF-8'); ?>!</strong> Your subscription payment failed.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            </div>
+                        <?php } ?>
+                    </div>
+
                     <!-- Start Row -->
                     <div class="row">
 
@@ -135,7 +159,7 @@ try {
                                             </div>
 
                                             <div class="d-flex align-items-center mb-3">
-                                                <h3 class="mb-0 fs-26 text-dark me-2 me-3">$<?= number_format($plan['price'], 2) ?> 
+                                                <h3 class="mb-0 fs-26 text-dark me-2 me-3">₦<?= number_format($plan['price'], 2) ?> 
                                                     <sub> / <?= $plan['duration_days'] == 30 ? 'Month' : ($plan['duration_days'] == 90 ? 'Quarterly' : 'Yearly') ?></sub> 
                                                 </h3>
                                             </div>
@@ -160,9 +184,20 @@ try {
                                             <div class="row align-items-center">
                                                 <div class="col">
                                                     <?php $btn_color = $plan['id'] == 1 ? 'subBtn0' : 'subBtn' ?>
-                                                    <button class="btn <?= $btn_color ?> rounded-4 text-light p-2 w-100">
-                                                        <?= $plan['id'] == 1 ? 'Active' : 'Choose Plan' ?>
-                                                    </button>
+                                                    <?php if ($plan['id'] == 1): ?>
+                                                        <button class="btn subBtn0 rounded-4 text-light p-2 w-100" disabled>
+                                                            Active
+                                                        </button>
+                                                    <?php else: ?>
+                                                        <button class="btn subBtn rounded-4 text-light p-2 w-100 choosePlanBtn"
+                                                            data-plan-id="<?= $plan['id'] ?>"
+                                                            data-plan-name="<?= htmlspecialchars(ucfirst($plan['name'])) ?>"
+                                                            data-plan-price="<?= number_format($plan['price'], 2) ?>"
+                                                            data-plan-duration="<?= $plan['duration_days'] == 30 ? 'Monthly' : ($plan['duration_days'] == 90 ? 'Quarterly' : 'Yearly') ?>"
+                                                            data-bs-toggle="modal" data-bs-target="#confirmPlanModal">
+                                                            Choose Plan
+                                                        </button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
 
@@ -173,6 +208,44 @@ try {
                         <?php endforeach; ?>                        
 
                     </div>
+
+                    <!-- Plan Confirmation Modal -->
+                    <div class="modal fade" id="confirmPlanModal" tabindex="-1" aria-labelledby="confirmPlanModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                <div class="modal-header border-0 pb-0">
+                                    <h5 class="modal-title fw-bold" id="confirmPlanModalLabel">
+                                        <i data-feather="credit-card" class="text-primary me-2"></i> Confirm Subscription
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body pt-3">
+                                    <div class="alert alert-light border rounded-3 text-center p-4 mb-3">
+                                        <p class="mb-1 text-muted fs-13">You are about to subscribe to</p>
+                                        <h4 class="fw-bold text-dark mb-1" id="modalPlanName">--</h4>
+                                        <h3 class="fw-bold text-primary mb-0">₦<span id="modalPlanPrice">--</span></h3>
+                                        <small class="text-muted" id="modalPlanDuration">--</small>
+                                    </div>
+                                    <p class="text-muted fs-13 text-center">
+                                        You will be redirected to Paystack to securely complete your payment.
+                                    </p>
+                                    <div id="modalErrorAlert" class="alert alert-danger d-none" role="alert"></div>
+                                </div>
+                                <div class="modal-footer border-0 pt-0">
+                                    <button type="button" class="btn btn-outline-secondary rounded-4 px-4" data-bs-dismiss="modal" id="cancelPlanBtn">
+                                        <i data-feather="x" class="me-1"></i> Cancel
+                                    </button>
+                                    <button type="button" class="btn btn-primary rounded-4 px-4" id="proceedPaymentBtn">
+                                        <span id="proceedBtnText"><i data-feather="arrow-right-circle" class="me-1"></i> Proceed to Payment</span>
+                                        <span id="proceedBtnSpinner" class="d-none">
+                                            <span class="spinner-border spinner-border-sm me-1" role="status"></span> Processing...
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End Plan Confirmation Modal -->
 
                 </div> <!-- container-fluid -->
             </div> <!-- content -->
@@ -209,6 +282,87 @@ try {
 
     <!-- App js-->
     <script src="<?php echo $base_url; ?>assets/js/app.js"></script>
+
+    <script>
+        const CSRF_TOKEN = '<?= htmlspecialchars($csrf_token ?? '') ?>';
+
+        // Populate modal when "Choose Plan" is clicked
+        document.querySelectorAll('.choosePlanBtn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const planId       = this.getAttribute('data-plan-id');
+                const planName     = this.getAttribute('data-plan-name');
+                const planPrice    = this.getAttribute('data-plan-price');
+                const planDuration = this.getAttribute('data-plan-duration');
+
+                document.getElementById('modalPlanName').textContent     = planName;
+                document.getElementById('modalPlanPrice').textContent    = planPrice;
+                document.getElementById('modalPlanDuration').textContent = planDuration;
+                document.getElementById('proceedPaymentBtn').dataset.planId = planId;
+
+                // Reset state
+                document.getElementById('modalErrorAlert').classList.add('d-none');
+                document.getElementById('modalErrorAlert').textContent = '';
+                setProceedLoading(false);
+                feather.replace();
+            });
+        });
+
+        function setProceedLoading(loading) {
+            const btnText    = document.getElementById('proceedBtnText');
+            const btnSpinner = document.getElementById('proceedBtnSpinner');
+            const proceedBtn = document.getElementById('proceedPaymentBtn');
+            const cancelBtn  = document.getElementById('cancelPlanBtn');
+
+            if (loading) {
+                btnText.classList.add('d-none');
+                btnSpinner.classList.remove('d-none');
+                proceedBtn.disabled = true;
+                cancelBtn.disabled  = true;
+            } else {
+                btnText.classList.remove('d-none');
+                btnSpinner.classList.add('d-none');
+                proceedBtn.disabled = false;
+                cancelBtn.disabled  = false;
+            }
+        }
+
+        document.getElementById('proceedPaymentBtn').addEventListener('click', function() {
+            const planId    = this.dataset.planId;
+            const errorBox  = document.getElementById('modalErrorAlert');
+
+            errorBox.classList.add('d-none');
+            errorBox.textContent = '';
+            setProceedLoading(true);
+
+            fetch('<?php echo $base_url; ?>process/process_payment_data_plan.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Csrf-Token': CSRF_TOKEN
+                },
+                body: JSON.stringify({
+                    action: 'initiate_plan_payment',
+                    plan_id: planId
+                })
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.status === 'success' && data.payment_url) {
+                    // Redirect to Paystack
+                    window.location.href = data.payment_url;
+                } else {
+                    setProceedLoading(false);
+                    errorBox.textContent = data.message || 'An error occurred. Please try again.';
+                    errorBox.classList.remove('d-none');
+                }
+            })
+            .catch(function(err) {
+                setProceedLoading(false);
+                errorBox.textContent = 'Network error. Please check your connection and try again.';
+                errorBox.classList.remove('d-none');
+            });
+        });
+    </script>
 </body>
 
 </html>
