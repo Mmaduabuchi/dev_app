@@ -68,6 +68,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     if ($planId <= 0) {
         sendResponse('error', 'Invalid plan selected.');
     }
+ 
+    $paymentType = isset($data['payment_type']) ? $data['payment_type'] : 'new';
+    if (!in_array($paymentType, ['new', 'upgrade', 'downgrade'])) {
+        $paymentType = 'new';
+    }
 
     // Never let them "choose" plan 1 (the free/active plan)
     if ($planId === 1) {
@@ -173,6 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 'user_id' => $userId,
                 'plan_id' => $planId,
                 'plan_name' => $planName,
+                'payment_type' => $paymentType
             ]
         ]);
 

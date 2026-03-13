@@ -5,11 +5,7 @@ require_once "auth.php";
 //notification count
 require_once __DIR__ . '/fetch_notification_count.php';
 
-$sub_payment_status_flag = "";
-if (isset($_GET["payment"])) {
-    $sub_payment_status_flag = $_GET["payment"];
-}
-
+$sub_payment_status_flag = isset($_GET['payment']) ? htmlspecialchars($_GET['payment']) : "";
 
 try {
     $subscription_ids = [1, 2, 3];
@@ -183,20 +179,62 @@ try {
 
                                             <div class="row align-items-center">
                                                 <div class="col">
-                                                    <?php $btn_color = $plan['id'] == 1 ? 'subBtn0' : 'subBtn' ?>
-                                                    <?php if ($plan['id'] == 1): ?>
+                                                    <?php if ($current_plan_id == $plan['id']): ?>
+
+                                                        <!-- Current active plan -->
                                                         <button class="btn subBtn0 rounded-4 text-light p-2 w-100" disabled>
-                                                            Active
+                                                            <i data-feather="check-circle" class="me-1" style="width:16px;height:16px;"></i> Current Plan
                                                         </button>
-                                                    <?php else: ?>
+
+                                                    <?php elseif ($current_plan_id && $plan['id'] == 1): ?>
+
+                                                        <!-- Free plan is unavailable once user has an active paid subscription -->
+                                                        <button class="btn btn-secondary rounded-4 text-light p-2 w-100" disabled>
+                                                            Not Available
+                                                        </button>
+
+                                                    <?php elseif ($current_plan_id && $plan['id'] > $current_plan_id): ?>
+
+                                                        <!-- Upgrade to a higher plan -->
                                                         <button class="btn subBtn rounded-4 text-light p-2 w-100 choosePlanBtn"
                                                             data-plan-id="<?= $plan['id'] ?>"
                                                             data-plan-name="<?= htmlspecialchars(ucfirst($plan['name'])) ?>"
                                                             data-plan-price="<?= number_format($plan['price'], 2) ?>"
                                                             data-plan-duration="<?= $plan['duration_days'] == 30 ? 'Monthly' : ($plan['duration_days'] == 90 ? 'Quarterly' : 'Yearly') ?>"
-                                                            data-bs-toggle="modal" data-bs-target="#confirmPlanModal">
-                                                            Choose Plan
+                                                            data-type="upgrade"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#confirmPlanModal">
+                                                            <i data-feather="arrow-up-circle" class="me-1" style="width:16px;height:16px;"></i> Upgrade Plan
                                                         </button>
+
+                                                    <?php elseif ($current_plan_id && $plan['id'] < $current_plan_id): ?>
+
+                                                        <!-- Downgrade to a lower plan -->
+                                                        <button class="btn btn-warning rounded-4 text-dark p-2 w-100 choosePlanBtn"
+                                                            data-plan-id="<?= $plan['id'] ?>"
+                                                            data-plan-name="<?= htmlspecialchars(ucfirst($plan['name'])) ?>"
+                                                            data-plan-price="<?= number_format($plan['price'], 2) ?>"
+                                                            data-plan-duration="<?= $plan['duration_days'] == 30 ? 'Monthly' : ($plan['duration_days'] == 90 ? 'Quarterly' : 'Yearly') ?>"
+                                                            data-type="downgrade"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#confirmPlanModal">
+                                                            <i data-feather="arrow-down-circle" class="me-1" style="width:16px;height:16px;"></i> Downgrade Plan
+                                                        </button>
+
+                                                    <?php elseif (!$current_plan_id): ?>
+
+                                                        <!-- No active plan — show Subscribe button -->
+                                                        <button class="btn subBtn rounded-4 text-light p-2 w-100 choosePlanBtn"
+                                                            data-plan-id="<?= $plan['id'] ?>"
+                                                            data-plan-name="<?= htmlspecialchars(ucfirst($plan['name'])) ?>"
+                                                            data-plan-price="<?= number_format($plan['price'], 2) ?>"
+                                                            data-plan-duration="<?= $plan['duration_days'] == 30 ? 'Monthly' : ($plan['duration_days'] == 90 ? 'Quarterly' : 'Yearly') ?>"
+                                                            data-type="new"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#confirmPlanModal">
+                                                            Subscribe
+                                                        </button>
+
                                                     <?php endif; ?>
                                                 </div>
                                             </div>
@@ -293,11 +331,13 @@ try {
                 const planName     = this.getAttribute('data-plan-name');
                 const planPrice    = this.getAttribute('data-plan-price');
                 const planDuration = this.getAttribute('data-plan-duration');
+                const paymentType  = this.getAttribute('data-type');
 
                 document.getElementById('modalPlanName').textContent     = planName;
                 document.getElementById('modalPlanPrice').textContent    = planPrice;
                 document.getElementById('modalPlanDuration').textContent = planDuration;
                 document.getElementById('proceedPaymentBtn').dataset.planId = planId;
+                document.getElementById('proceedPaymentBtn').dataset.type   = paymentType;
 
                 // Reset state
                 document.getElementById('modalErrorAlert').classList.add('d-none');
@@ -328,6 +368,7 @@ try {
 
         document.getElementById('proceedPaymentBtn').addEventListener('click', function() {
             const planId    = this.dataset.planId;
+            const payType   = this.dataset.type;
             const errorBox  = document.getElementById('modalErrorAlert');
 
             errorBox.classList.add('d-none');
@@ -342,7 +383,8 @@ try {
                 },
                 body: JSON.stringify({
                     action: 'initiate_plan_payment',
-                    plan_id: planId
+                    plan_id: planId,
+                    payment_type: payType
                 })
             })
             .then(function(response) { return response.json(); })

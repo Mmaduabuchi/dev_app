@@ -24,6 +24,7 @@ if ($user_id === null) {
 
 $user_global_variable = false;
 $sub_status = true;
+$current_subscription = $current_plan_id = null;
 
 try {
 
@@ -121,7 +122,7 @@ try {
 
 
     //check if user has active subscription
-    $stmt = $conn->prepare("SELECT id FROM `subscriptions` WHERE user_id = ? AND cancelled_at IS NULL ORDER BY created_at DESC LIMIT 1");
+    $stmt = $conn->prepare("SELECT id, plan_id, status, start_date, end_date FROM `subscriptions` WHERE user_id = ? AND cancelled_at IS NULL ORDER BY created_at DESC LIMIT 1");
     if (!$stmt) {
         throw new Exception('Database error: ' . $conn->error);
     }
@@ -132,6 +133,8 @@ try {
         $sub_status = false;
     } else {
         $subscription = $result->fetch_assoc();
+        $current_subscription = $subscription['plan_id'];
+        $current_plan_id = $current_subscription ?? null;
     }
     $stmt->close();
 

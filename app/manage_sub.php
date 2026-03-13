@@ -158,7 +158,7 @@ try{
                                             <h5 class="text-dark">Current Plan</h5>
                                         </div>
                                         <div class="col-12 col-md-6 text-end">
-                                            <a href="/devhire/dashboard/change-plan">
+                                            <a href="/devhire/dashboard/subscriptions">
                                                 <button class="btn btn-outline-dark">Change Plan</button>
                                             </a>
                                         </div>

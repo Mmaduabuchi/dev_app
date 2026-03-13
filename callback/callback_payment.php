@@ -48,6 +48,7 @@ if ($paymentData['status'] !== 'success') {
 
 $userId = $paymentData['metadata']['user_id'];
 $planId = $paymentData['metadata']['plan_id'];
+$paymentType = $paymentData['metadata']['payment_type'] ?? 'new';
 $amountPaid = $paymentData['amount'] / 100;
 
 error_log("Paystack Response: " . print_r($paymentData, true));
@@ -80,6 +81,14 @@ try {
     }
 
     $durationDays = (int)$plan['duration_days'];
+
+    // If upgrade or downgrade, cancel existing active subscriptions
+    if (in_array($paymentType, ['upgrade', 'downgrade'])) {
+        $cancelStmt = $conn->prepare("UPDATE subscriptions SET status = 'cancelled', cancelled_at = NOW() WHERE user_id = ? AND status = 'active'");
+        $cancelStmt->bind_param("i", $userId);
+        $cancelStmt->execute();
+        $cancelStmt->close();
+    }
 
     $startDate = date('Y-m-d H:i:s');
     $endDate = date('Y-m-d H:i:s', strtotime("+$durationDays days"));

@@ -33,6 +33,7 @@ if ($event === 'charge.success') {
     $amount = $data['data']['amount'] / 100;
     $planId = $data['data']['metadata']['plan_id'];
     $userId = $data['data']['metadata']['user_id'];
+    $paymentType = $data['data']['metadata']['payment_type'] ?? 'new';
 
     // Update transaction and subscription in DB...
     try {
@@ -55,9 +56,18 @@ if ($event === 'charge.success') {
         $startDate = date('Y-m-d H:i:s');
         $endDate = date('Y-m-d H:i:s', strtotime("+{$plan['duration_days']} days"));
 
+        // If upgrade or downgrade, cancel existing active subscriptions
+        if (in_array($paymentType, ['upgrade', 'downgrade'])) {
+            $cancelStmt = $conn->prepare("UPDATE subscriptions SET status = 'cancelled', cancelled_at = NOW() WHERE user_id = ? AND status = 'active'");
+            $cancelStmt->bind_param("i", $userId);
+            $cancelStmt->execute();
+            $cancelStmt->close();
+        }
+
+        $status = "active";
         // Add subscription
-        $stmt = $conn->prepare("INSERT INTO subscriptions (user_id, plan_id, start_date, end_date, created_at) VALUES (?, ?, ?, ?, NOW())");
-        $stmt->bind_param("iiss", $userId, $planId, $startDate, $endDate);
+        $stmt = $conn->prepare("INSERT INTO subscriptions (user_id, plan_id, status, start_date, end_date, transaction_id, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+        $stmt->bind_param("iissss", $userId, $planId, $status, $startDate, $endDate, $ref);
         $stmt->execute();
         $stmt->close();
 
