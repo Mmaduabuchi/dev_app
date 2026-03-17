@@ -275,45 +275,69 @@ try {
                             <div class="card">
                                 <div class="card-header">
                                     <div class="d-flex align-items-center">
-                                        <h5 class="card-title mb-0">Sales Pipeline</h5>
+                                        <h5 class="card-title mb-0">Active Subscription Plan</h5>
                                     </div>
                                 </div>
 
                                 <div class="card-body">
-                                    <div id="top-session" class="apex-charts"></div>
-
-                                    <div class="row mt-2">
-                                        <div class="col">
-                                            <div class="d-flex justify-content-between align-items-center p-1">
-                                                <div>
-                                                    <i class="mdi mdi-circle fs-12 align-middle me-1 text-success"></i>
-                                                    <span class="align-middle fw-semibold">Won</span>
-                                                </div>
-                                                <span class="fw-medium text-muted float-end"><i
-                                                        class="mdi mdi-arrow-up text-success align-middle fs-14 me-1"></i>12.48%</span>
+                                    <?php if ($sub_status && isset($current_plan_id)): ?>
+                                        <?php
+                                        // Fetch current plan details
+                                        try {
+                                            $planStmt = $conn->prepare("SELECT name, price FROM subscription_plans WHERE id = ?");
+                                            $planStmt->bind_param("i", $current_plan_id);
+                                            $planStmt->execute();
+                                            $planResult = $planStmt->get_result();
+                                            $activePlan = $planResult->fetch_assoc();
+                                            $planStmt->close();
+                                            
+                                            $planName = $activePlan['name'] ?? 'Unknown Plan';
+                                            $planPrice = number_format($activePlan['price'] ?? 0, 2);
+                                            $startDate = isset($subscription['start_date']) ? date("M d, Y", strtotime($subscription['start_date'])) : 'N/A';
+                                            $endDate = isset($subscription['end_date']) ? date("M d, Y", strtotime($subscription['end_date'])) : 'N/A';
+                                        } catch (Exception $e) {
+                                            $planName = 'Error locating plan';
+                                            $planPrice = '0.00';
+                                            $startDate = 'N/A';
+                                            $endDate = 'N/A';
+                                        }
+                                        ?>
+                                        <div class="text-center mb-4 mt-2">
+                                            <div class="avatar-md bg-primary-subtle text-primary rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center">
+                                                <i class="mdi mdi-shield-star fs-24"></i>
                                             </div>
-
-                                            <div class="d-flex justify-content-between align-items-center p-1">
-                                                <div>
-                                                    <i class="mdi mdi-circle fs-12 align-middle me-1"
-                                                        style="color: #522c8f;"></i>
-                                                    <span class="align-middle fw-semibold">Discovery</span>
-                                                </div>
-                                                <span class="fw-medium text-muted float-end"><i
-                                                        class="mdi mdi-arrow-up text-success align-middle fs-14 me-1"></i>5.23%</span>
-                                            </div>
-
-                                            <div class="d-flex justify-content-between align-items-center p-1">
-                                                <div>
-                                                    <i class="mdi mdi-circle fs-12 align-middle me-1 text-warning"></i>
-                                                    <span class="align-middle fw-semibold">Undiscovery</span>
-                                                </div>
-                                                <span class="fw-medium text-muted float-end"><i
-                                                        class="mdi mdi-arrow-up text-success align-middle fs-14 me-1"></i>15.58%</span>
-                                            </div>
-
+                                            <h4 class="mb-1"><?= htmlspecialchars($planName) ?></h4>
+                                            <p class="text-muted"><span class="fs-20 fw-bold text-dark">$<?= $planPrice ?></span> / month</p>
                                         </div>
-                                    </div>
+
+                                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                                            <span class="text-muted fw-medium">Status</span>
+                                            <span class="badge bg-success-subtle text-success fs-12">Active</span>
+                                        </div>
+                                        
+                                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                                            <span class="text-muted fw-medium">Started On</span>
+                                            <span class="fw-semibold text-dark"><?= $startDate ?></span>
+                                        </div>
+
+                                        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                                            <span class="text-muted fw-medium">Expires On</span>
+                                            <span class="fw-semibold text-dark"><?= $endDate ?></span>
+                                        </div>
+
+                                        <div class="mt-4 text-center">
+                                            <a href="/devhire/dashboard/manage" class="btn btn-primary w-100">Manage Plan</a>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="text-center py-4">
+                                            <div class="avatar-md bg-warning-subtle text-warning rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
+                                                <i class="mdi mdi-alert-circle-outline fs-24"></i>
+                                            </div>
+                                            <h5 class="mb-2">No Active Plan</h5>
+                                            <p class="text-muted mb-4">You are currently not subscribed to any premium features.</p>
+                                            <a href="/devhire/dashboard/subscriptions" class="btn btn-primary w-100">Explore Plans</a>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
 
@@ -417,11 +441,11 @@ try {
                                                         }
 
                                                         echo "<tr>
-                                                            <td class='text-center'><p class='mb-0 fs-14'>{$date}</p></td>
+                                                            <td><p class='mb-0 fs-14'>{$date}</p></td>
                                                             <td><p class='mb-0 fw-semibold'>{$planName}</p></td>
                                                             <td><p class='mb-0 fw-medium'>\${$amount}</p></td>
                                                             <td><span class='badge {$badgeClass} fw-semibold'>{$status}</span></td>
-                                                            <td><a href='/invoice.php?txn={$transactionId}' class='mb-0 fw-medium'>[Download]</a></td>
+                                                            <td><a href='./process/process_invoice.php?txn={$transactionId}' class='mb-0 fw-medium'>[Download]</a></td>
                                                         </tr>";
                                                     }
                                                 }
