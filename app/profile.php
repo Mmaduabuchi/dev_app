@@ -7,7 +7,6 @@ require_once __DIR__ . '/fetch_notification_count.php';
 //get usertoken from session
 $usertoken = $_SESSION['user']['usertoken'] ?? null;
 
-$user_subscription_status = false;
 
 try{
     // fetch user data from database
@@ -58,27 +57,27 @@ try{
 
 
     //check user current subscription
-    $stmt = $conn->prepare("SELECT * FROM `subscriptions` WHERE user_id = ? ORDER BY created_at DESC LIMIT 1");
-    if(!$stmt){
-        throw new Exception("Database error" . $conn->error);
-    }
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // $stmt = $conn->prepare("SELECT * FROM `subscriptions` WHERE user_id = ? ORDER BY created_at DESC LIMIT 1");
+    // if(!$stmt){
+    //     throw new Exception("Database error" . $conn->error);
+    // }
+    // $stmt->bind_param("i", $user_id);
+    // $stmt->execute();
+    // $result = $stmt->get_result();
 
-    if($result->num_rows < 1){
-        $user_subscription_status = false;
-        return;
-    }
+    // if($result->num_rows < 1){
+    //     $user_subscription_status = false;
+    //     return;
+    // }
 
-    $userSubscription = $result->fetch_assoc();
+    // $userSubscription = $result->fetch_assoc();
 
-    //check user subscription status
-    if($userSubscription['status'] === 'active'){
-        $user_subscription_status = true;
-    }
+    // //check user subscription status
+    // if($userSubscription['status'] === 'active'){
+    //     $user_subscription_status = true;
+    // }
 
-    $stmt->close();
+    // $stmt->close();
 
 } catch (Exception $e){
     $conn->close();

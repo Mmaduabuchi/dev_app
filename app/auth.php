@@ -25,6 +25,7 @@ if ($user_id === null) {
 $user_global_variable = false;
 $sub_status = true;
 $current_subscription = $current_plan_id = null;
+$user_subscription_status = true;
 
 try {
 
@@ -140,6 +141,7 @@ try {
 
     if (!isset($subscription['status']) || $subscription['status'] !== 'active') {
         $sub_status = false;
+        $user_subscription_status = false;
     }
 } catch (Exception $e) {
     $conn->close();

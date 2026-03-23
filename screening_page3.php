@@ -277,7 +277,8 @@ require_once "auth_screening_complete.php";
                         <div class="d-flex align-items-center gap-3">
                             <label for="resumeUpload" class="btn btn-primary">Upload</label>
                             <input type="file" id="resumeUpload" name="resume" accept="application/pdf" hidden />
-                            <small class="text-muted">PDF file • Maximum file size: 5 MB</small>
+                            <span id="resumeFileName" class="text-success fw-bold"></span>
+                            <small class="text-muted" id="resumeHelpText">PDF file • Maximum file size: 5 MB</small>
                         </div>
                     </div>
 
@@ -293,6 +294,37 @@ require_once "auth_screening_complete.php";
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         feather.replace();
+
+        document.getElementById('profilePhoto').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const uploadBox = document.querySelector('label[for="profilePhoto"]');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadBox.innerHTML = `<img src="${e.target.result}" alt="Profile Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">`;
+                    uploadBox.style.border = 'none';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                uploadBox.innerHTML = `<i class="bi bi-plus-lg"></i>\n                                <span class="text-muted mt-2">Upload</span>`;
+                uploadBox.style.border = '2px dashed #ccc';
+            }
+        });
+
+        document.getElementById('resumeUpload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const fileNameDisplay = document.getElementById('resumeFileName');
+            const helpText = document.getElementById('resumeHelpText');
+            
+            if (file) {
+                fileNameDisplay.textContent = file.name;
+                helpText.style.display = 'none';
+            } else {
+                fileNameDisplay.textContent = '';
+                helpText.style.display = 'inline-block';
+            }
+        });
 
         async function completed() {
             const profilePhoto = document.getElementById('profilePhoto').files[0];
