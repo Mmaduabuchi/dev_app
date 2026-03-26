@@ -66,6 +66,14 @@ try {
         $recevied_request_count = isset($data['recevied_request_count']) ? (int)$data['recevied_request_count'] : 0;
         $stmt->close();
     }
+
+    // Fetch recent activity
+    $recentActivityStmt = $conn->prepare("SELECT title, message, created_at, type FROM notifications WHERE user_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 6");
+    $recentActivityStmt->bind_param("i", $user_id);
+    $recentActivityStmt->execute();
+    $recentActivityResults = $recentActivityStmt->get_result();
+    $recentActivityStmt->close();
+
 } catch (exception $e) {
     $conn->close();
     error_log($e->getMessage());
@@ -260,13 +268,48 @@ try {
                         <div class="col-md-12 col-xl-8">
                             <div class="card">
                                 <div class="card-header">
-                                    <div class="d-flex align-items-center">
-                                        <h5 class="card-title mb-0">Profile Views</h5>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <h5 class="card-title mb-0">Recent Activity</h5>
+                                        <a href="/devhire/dashboard/myrequest" class="btn btn-sm btn-soft-primary">View All</a>
                                     </div>
                                 </div>
 
                                 <div class="card-body">
-                                    <div id="sales-overview" class="apex-charts"></div>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-nowrap mb-0">
+                                            <tbody>
+                                                <?php if ($recentActivityResults->num_rows > 0): ?>
+                                                    <?php while ($activity = $recentActivityResults->fetch_assoc()): ?>
+                                                        <tr>
+                                                            <td>
+                                                                <div class="d-flex align-items-center">
+                                                                    <div class="p-2 bg-primary-subtle text-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                                        <i class="mdi mdi-bell-outline fs-16"></i>
+                                                                    </div>
+                                                                    <div>
+                                                                        <h6 class="mb-0 fw-semibold fs-14"><?= htmlspecialchars($activity['title']) ?></h6>
+                                                                        <p class="text-muted mb-0 fs-12"><?= htmlspecialchars(mb_strimwidth($activity['message'], 0, 80, "...")) ?></p>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td class="text-end">
+                                                                <span class="text-muted fs-12"><?= date("M d, H:i", strtotime($activity['created_at'])) ?></span>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endwhile; ?>
+                                                <?php else: ?>
+                                                    <tr>
+                                                        <td colspan="2" class="text-center py-4">
+                                                            <div class="text-muted">
+                                                                <i class="mdi mdi-information-outline fs-24 d-block mb-2"></i>
+                                                                <p class="mb-0">No recent activity to show.</p>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                <?php endif; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -511,7 +554,8 @@ try {
     <script src="<?php echo $base_url; ?>assets/libs/apexcharts/apexcharts.min.js"></script>
 
     <!-- Widgets Init Js -->
-    <script src="<?php echo $base_url; ?>assets/js/pages/crm-dashboard.init.js"></script>
+    <!-- Dashboard Init JS (Removed) -->
+    <!-- <script src="<?php echo $base_url; ?>assets/js/pages/crm-dashboard.init.js"></script> -->
 
     <!-- App js-->
     <script src="<?php echo $base_url; ?>assets/js/app.js"></script>
