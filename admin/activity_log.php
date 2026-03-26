@@ -5,6 +5,91 @@ include_once "auth.php";
 //include route
 include_once "route.php";
 
+// Pagination settings
+$limit = 20;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) $page = 1;
+$offset = ($page - 1) * $limit;
+
+try {
+
+    // Fetch total count for pagination
+    $total_stmt = $conn->prepare("SELECT COUNT(*) FROM admin_audit_logs");
+    $total_stmt->execute();
+    $total_stmt->bind_result($total_rows);
+    $total_stmt->fetch();
+    $total_stmt->close();
+    $total_pages = ceil($total_rows / $limit);
+
+    // Fetch logs with admin names
+    $query = "SELECT l.*, u.fullname as admin_name FROM admin_audit_logs l LEFT JOIN users u ON l.admin_id = u.id ORDER BY l.created_at DESC LIMIT ? OFFSET ?";
+    $stmt = $conn->prepare($query);
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("ii", $limit, $offset);
+    if (!$stmt->execute()) {
+        throw new Exception('Database execute failed.');
+    }
+    $logs_result = $stmt->get_result();
+    $stmt->close();
+
+    // Helper function for time formatting
+    function time_elapsed_string($datetime, $full = false) {
+        if (!$datetime) return "some time ago";
+        $now = new DateTime;
+        $ago = new DateTime($datetime);
+        $diff = $now->diff($ago);
+        
+        $weeks = floor($diff->days / 7);
+        
+        $units = array(
+            'y' => 'year',
+            'm' => 'month',
+            'w' => 'week',
+            'd' => 'day',
+            'h' => 'hour',
+            'i' => 'minute',
+            's' => 'second',
+        );
+        
+        $values = array(
+            'y' => $diff->y,
+            'm' => $diff->m,
+            'w' => $weeks,
+            'd' => $diff->d - ($weeks * 7),
+            'h' => $diff->h,
+            'i' => $diff->i,
+            's' => $diff->s,
+        );
+
+        $result = [];
+
+        foreach ($values as $key => $val) {
+            if ($val > 0) {
+                $result[] = $val . ' ' . $units[$key] . ($val > 1 ? 's' : '');
+            }
+        }
+
+        if (!$full) {
+            $result = array_slice($result, 0, 1);
+        }
+        return $result ? implode(', ', $result) . ' ago' : 'just now';
+    }
+
+    // Action icon mapping
+    $action_map = [
+        'create_job' => ['icon' => 'bi-person-plus-fill', 'color' => 'text-primary'],
+        'update_status' => ['icon' => 'bi-pencil-square', 'color' => 'text-warning'],
+        'delete_user' => ['icon' => 'bi-trash-fill', 'color' => 'text-danger'],
+        'login' => ['icon' => 'bi-box-arrow-in-right', 'color' => 'text-success'],
+        'update_settings' => ['icon' => 'bi-gear-fill', 'color' => 'text-info'],
+    ];
+} catch (Exception $e) {
+    $_SESSION['error'] = $e->getMessage();
+    header('Location: /devhire/admin/dashboard/errorpage/error');
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -143,42 +228,49 @@ include_once "route.php";
                             <div class="card">
                                 <div class="card-body">
                                     <ul class="list-group list-group-flush">
-                                        <li class="list-group-item d-flex align-items-start py-3">
-                                            <i class="bi bi-person-plus-fill fs-4 text-primary me-3"></i>
-                                            <div>
-                                                <p class="mb-1"><strong>John Doe</strong> created a new job posting for "Senior PHP Developer".</p>
-                                                <small class="text-muted"><i class="bi bi-clock me-1"></i> 2 hours ago</small>
-                                            </div>
-                                        </li>
-                                        <li class="list-group-item d-flex align-items-start py-3">
-                                            <i class="bi bi-pencil-square fs-4 text-warning me-3"></i>
-                                            <div>
-                                                <p class="mb-1"><strong>Jane Smith</strong> updated the status of application #1234 from "Pending" to "Reviewed".</p>
-                                                <small class="text-muted"><i class="bi bi-clock me-1"></i> Yesterday at 3:00 PM</small>
-                                            </div>
-                                        </li>
-                                        <li class="list-group-item d-flex align-items-start py-3">
-                                            <i class="bi bi-trash-fill fs-4 text-danger me-3"></i>
-                                            <div>
-                                                <p class="mb-1"><strong>Admin User</strong> deleted user account "inactive_user@example.com".</p>
-                                                <small class="text-muted"><i class="bi bi-clock me-1"></i> 3 days ago</small>
-                                            </div>
-                                        </li>
-                                        <li class="list-group-item d-flex align-items-start py-3">
-                                            <i class="bi bi-box-arrow-in-right fs-4 text-success me-3"></i>
-                                            <div>
-                                                <p class="mb-1"><strong>System</strong> user "john.doe@example.com" logged in successfully.</p>
-                                                <small class="text-muted"><i class="bi bi-clock me-1"></i> 5 days ago</small>
-                                            </div>
-                                        </li>
-                                        <li class="list-group-item d-flex align-items-start py-3">
-                                            <i class="bi bi-gear-fill fs-4 text-info me-3"></i>
-                                            <div>
-                                                <p class="mb-1"><strong>System</strong> configuration settings were updated.</p>
-                                                <small class="text-muted"><i class="bi bi-clock me-1"></i> 1 week ago</small>
-                                            </div>
-                                        </li>
+                                        <?php if ($logs_result->num_rows > 0): ?>
+                                            <?php while ($log = $logs_result->fetch_assoc()): ?>
+                                                <?php 
+                                                    $action = $log['action'];
+                                                    $display_action = $action_map[$action] ?? ['icon' => 'bi-info-circle-fill', 'color' => 'text-secondary'];
+                                                ?>
+                                                <li class="list-group-item d-flex align-items-start py-3">
+                                                    <i class="bi <?= $display_action['icon'] ?> fs-4 <?= $display_action['color'] ?> me-3"></i>
+                                                    <div>
+                                                        <p class="mb-1"><strong><?= htmlspecialchars($log['admin_name'] ?? 'System') ?></strong> <?= htmlspecialchars($log['action_description']) ?></p>
+                                                        <small class="text-muted"><i class="bi bi-clock me-1"></i> <?= time_elapsed_string($log['created_at']) ?></small>
+                                                    </div>
+                                                </li>
+                                            <?php endwhile; ?>
+                                        <?php else: ?>
+                                            <li class="list-group-item py-4 text-center text-muted">
+                                                No activity logs found.
+                                            </li>
+                                        <?php endif; ?>
                                     </ul>
+
+                                    <!-- Pagination -->
+                                    <?php if ($total_pages > 1): ?>
+                                        <nav aria-label="Page navigation" class="mt-4">
+                                            <ul class="pagination justify-content-center">
+                                                <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                                                    <a class="page-link" href="?page=<?= $page - 1 ?>" aria-label="Previous">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                                                    <li class="page-item <?= ($page == $i) ? 'active' : '' ?>">
+                                                        <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                                                    </li>
+                                                <?php endfor; ?>
+                                                <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
+                                                    <a class="page-link" href="?page=<?= $page + 1 ?>" aria-label="Next">
+                                                        <span aria-hidden="true">&raquo;</span>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </nav>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>

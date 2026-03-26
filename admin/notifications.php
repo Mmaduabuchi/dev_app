@@ -5,6 +5,21 @@ include_once "auth.php";
 //include route
 include_once "route.php";
 
+try {
+    //mark all reports as read
+    $stmt = $conn->prepare("UPDATE reports SET status = 'read' WHERE (status IS NULL OR status = 'unread') AND deleted_at IS NULL");
+    if ($stmt === false) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    if (!$stmt->execute()) {
+        throw new Exception('Failed to update reports.');
+    }
+    $stmt->close();
+} catch (Exception $e) {
+    $_SESSION['error'] = $e->getMessage();
+    header('Location: /devhire/admin/dashboard/errorpage/error');
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

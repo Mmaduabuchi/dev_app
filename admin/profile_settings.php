@@ -354,7 +354,7 @@ try{
                                         <input class="form-check-input" type="checkbox" checked style="width: 3em; height: 1.5em;">
                                     </div>
                                 </div> -->
-                                <div class="setting-item">
+                                <!-- <div class="setting-item">
                                     <div class="setting-info">
                                         <p>System Maintenance</p>
                                         <small>Get notified about scheduled downtime and updates.</small>
@@ -362,7 +362,7 @@ try{
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" style="width: 3em; height: 1.5em;">
                                     </div>
-                                </div>
+                                </div> -->
                             </div>
                         </div>
 
@@ -391,7 +391,7 @@ try{
                                 <ul class="list-unstyled small mb-0">
                                     <li class="mb-2"><a href="#" class="text-decoration-none text-muted"><i class="bi bi-book me-2"></i> Role Permission Guide</a></li>
                                     <li class="mb-2"><a href="#" class="text-decoration-none text-muted"><i class="bi bi-shield-check me-2"></i> Security Best Practices</a></li>
-                                    <li><a href="#" class="text-decoration-none text-muted"><i class="bi bi-envelope me-2"></i> Contact Tech Support</a></li>
+                                    <!-- <li><a href="#" class="text-decoration-none text-muted"><i class="bi bi-envelope me-2"></i> Contact Tech Support</a></li> -->
                                 </ul>
                             </div>
                         </div>

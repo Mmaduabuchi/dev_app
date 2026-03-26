@@ -131,6 +131,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $stmt->close();
 
+        if($action === "suspend") {
+            $action_description = "User suspended by " . $admin_type;
+            $action_data = "ADMIN_SUSPEND";
+        } elseif($action === "unsuspend") {
+            $action_description = "User unsuspended by " . $admin_type;
+            $action_data = "ADMIN_UNSUSPEND";
+        } else {
+            $action_description = "User deleted by " . $admin_type;
+            $action_data = "ADMIN_DELETED";
+        }
+
+        $ip_address = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN';
+        $user_agent = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255);
+        $target_user_type = $user['user_type'] ?? 'unknown';
+
+        //admin_audit_logs
+        $stmt = $conn->prepare("INSERT INTO admin_audit_logs (admin_id, admin_user_type, action, action_description, target_user_id, target_user_type, ip_address, user_agent, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        if ($stmt === false) {
+            throw new Exception('Database error: ' . $conn->error);
+        }
+        $stmt->bind_param("isssisss", $current_admin_id, $admin_type, $action_data, $action_description, $user_id, $target_user_type, $ip_address, $user_agent);
+        if(!$stmt->execute()) {
+            throw new Exception('Database execute failed.');
+        }
+        $stmt->close();
+
         //commit transaction
         $conn->commit();
 

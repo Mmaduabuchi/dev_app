@@ -43,6 +43,7 @@ try{
     
     $user_joined_at = date("F j, Y", strtotime($user["created_at"]));
     $user_suspended_at = $user["suspended_at"];
+    $user_picture = $user["picture"] ?? null;
 
     $stmt->close();
 
@@ -72,7 +73,7 @@ try{
     $user_certificate = $developers_profiles["certificate"] ?? "N/A";
     $user_primary_job_interest = $developers_profiles["primary_job_interest"] ?? "N/A";
     $user_industry_experience = $developers_profiles["industry_experience"] ?? "N/A";
-    $user_profile_picture = $developers_profiles["profile_picture"] ?? "N/A";
+    $user_profile_picture = $developers_profiles["profile_picture"] ?? null;
     $user_job_commitment = $developers_profiles["job_commitment"] ?? "N/A";
     $user_preferred_hourly_rate = $developers_profiles["preferred_hourly_rate"] ?? "N/A";
     $user_resume = $developers_profiles["resume"] ?? "N/A";
@@ -80,6 +81,14 @@ try{
     $user_github = $developers_profiles["github"] ?? "N/A";
     $user_linkedin = $developers_profiles["linkedin"] ?? "N/A";
     $user_action = $developers_profiles["action"] ?? "N/A";
+
+    if ($user_picture) {
+        $user_picture = $user_picture;
+    } elseif ($user_profile_picture) {
+        $user_picture = "../../" . $user_profile_picture;
+    } else {
+        $user_picture = "../assets/gggt.avif";
+    }
 
     // Query to fetch skills
     $stmt = $conn->prepare("SELECT s.skill_name FROM user_skills us INNER JOIN skills s ON us.skill_id = s.id WHERE us.user_id = ?");
@@ -326,7 +335,7 @@ try{
         <div class="card p-4 border-0">
             <div class="row align-items-center">
                 <div class="col-md-auto text-center text-md-start mb-3 mb-md-0">
-                    <img src="../assets/gggt.avif" alt="Profile" class="profile-header-img">
+                    <img src="<?= $user_picture ?>" alt="Profile" class="profile-header-img">
                 </div>
                 <div class="col-md">
                     <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
@@ -725,7 +734,7 @@ try{
                                                 <td class='text-muted small'>{$transactionId}</td>
                                                 <td><span class='fw-medium'>{$planName}</span></td>
                                                 <td>{$method}</td>
-                                                <td><span class='fw-bold text-success'>\${$amount}</span></td>
+                                                <td><span class='fw-bold text-success'>₦ {$amount}</span></td>
                                                 <td>{$date}</td>
                                                 <td><span class='badge {$badgeClass}'>{$status}</span></td>
                                             </tr>";
@@ -943,7 +952,7 @@ try{
                                                 <td class='text-muted small'>{$transactionId}</td>
                                                 <td><span class='fw-medium'>{$planName}</span></td>
                                                 <td>{$date}</td>
-                                                <td><span class='fw-bold text-success'>\${$amount}</span></td>
+                                                <td><span class='fw-bold text-success'>₦{$amount}</span></td>
                                                 <td><span class='badge {$badgeClass}'>{$status}</span></td>
                                                 <td>
                                                     <a href='./../process/process_user_subscription_invoice.php?txn={$transactionId}&token_ref=" . urlencode($_GET['token_ref']) . "&user_id={$user_id_num}' class='text-primary'>

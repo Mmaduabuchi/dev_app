@@ -20,19 +20,6 @@ try{
     }
     $stmt->close();
 
-    // Get total number of Employers
-    $stmt = $conn->prepare("SELECT COUNT(*) as total_employers FROM `users` WHERE auth = 'user' AND user_type = 'employer' AND deleted_at IS NULL");
-    if($stmt === false){
-        throw new Exception("Failed to prepare statement: " . $conn->error);
-    }
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if($result->num_rows > 0){
-        $row = $result->fetch_assoc();
-        $totalEmployers = (int)$row['total_employers'];
-    }
-    $stmt->close();
-
 } catch (Exception $e){
     $_SESSION['error'] = $e->getMessage();
     header('Location: /devhire/admin/dashboard/errorpage/error');
@@ -194,7 +181,7 @@ try{
                                         <thead>
                                             <tr>
                                                 <th>Name</th>
-                                                <!-- <th>Skills</th> -->
+                                                <th>Email</th>
                                                 <th>Nationality</th>
                                                 <th>Location</th>
                                                 <th>Subscription</th>
@@ -218,8 +205,40 @@ try{
                                                     $totalUsers = $totalUsersResult['total'];
                                                     $totalPages = ceil($totalUsers / $limit);
 
-                                                    $stmt = $conn->prepare("SELECT u.id AS user_id, u.fullname, u.email, u.user_type, u.is_profile_complete, u.suspended_at, dp.*
-                                                    FROM users u LEFT JOIN developers_profiles dp ON u.id = dp.user_id WHERE u.user_type = 'talent' AND u.deleted_at IS NULL  ORDER BY u.created_at DESC LIMIT ? OFFSET ?");
+                                                    $stmt = $conn->prepare("                                                    
+                                                        SELECT 
+                                                            u.id AS user_id, 
+                                                            u.fullname, 
+                                                            u.email, 
+                                                            u.user_type, 
+                                                            u.is_profile_complete, 
+                                                            u.suspended_at, 
+                                                            dp.*,
+                                                            sp.name AS plan_name,
+                                                            s.status AS subscription_status
+
+                                                        FROM users u 
+
+                                                        LEFT JOIN developers_profiles dp 
+                                                            ON u.id = dp.user_id 
+
+                                                        LEFT JOIN subscriptions s 
+                                                            ON s.id = (
+                                                                SELECT id FROM subscriptions 
+                                                                WHERE user_id = u.id 
+                                                                ORDER BY id DESC 
+                                                                LIMIT 1
+                                                            )
+
+                                                        LEFT JOIN subscription_plans sp 
+                                                            ON s.plan_id = sp.id 
+
+                                                        WHERE u.user_type = 'talent' 
+                                                        AND u.deleted_at IS NULL 
+
+                                                        ORDER BY u.created_at DESC 
+                                                        LIMIT ? OFFSET ?
+                                                    ");
                                                     if($stmt === false){
                                                         throw new Exception("Failed to prepare statement.");
                                                     }
@@ -232,10 +251,48 @@ try{
                                             ?>
                                                             <tr>
                                                                 <td><?= htmlspecialchars($user['fullname']) ?></td>
+                                                                <td><?= htmlspecialchars($user['email']) ?></td>
                                                                 <!-- <td><span class="badge bg-primary">Frontend</span> <span class="badge bg-secondary">React</span></td> -->
                                                                 <td><?= htmlspecialchars(ucfirst($user["citizenship"])) ?></td>
                                                                 <td><?= htmlspecialchars(ucfirst($user["location"])) ?></td>
-                                                                <td><span class="badge bg-warning">Premium</span></td>
+                                                                <?php
+                                                                    $planName = $user['plan_name'] ?? null;
+                                                                    $status_sub = $user['subscription_status'] ?? null;
+
+                                                                    if (!$planName) {
+                                                                        // No subscription at all
+                                                                        $badgeClass = 'secondary';
+                                                                        $displayText = 'Free Plan';
+
+                                                                    } else {
+                                                                        switch (strtolower($status_sub)) {
+
+                                                                            case 'active':
+                                                                                $badgeClass = match(strtolower($planName)) {
+                                                                                    'premium' => 'warning',
+                                                                                    'standard' => 'primary',
+                                                                                    default => 'secondary'
+                                                                                };
+                                                                                $displayText = ucfirst($planName);
+                                                                                break;
+
+                                                                            case 'expired':
+                                                                            case 'cancelled':
+                                                                                $badgeClass = 'danger';
+                                                                                $displayText = 'Inactive Plan';
+                                                                                break;
+
+                                                                            default:
+                                                                                $badgeClass = 'secondary';
+                                                                                $displayText = 'Free Plan';
+                                                                        }
+                                                                    }
+                                                                ?>
+                                                                <td>
+                                                                    <span class="badge bg-<?= $badgeClass ?>">
+                                                                        <?= $displayText ?>
+                                                                    </span>
+                                                                </td>
                                                                 <td><span class="badge bg-<?= ($user["is_profile_complete"] == 1) ? "success" : "secondary" ?>"><?= $status ?></span></td>
                                                                 <td>Just now</td>
                                                                 <td class="text-center">

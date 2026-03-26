@@ -7,19 +7,6 @@ include_once "route.php";
 
 
 try{
-    // Get total number of users
-    $stmt = $conn->prepare("SELECT COUNT(*) as total_users FROM `users` WHERE auth = 'user' AND user_type = 'talent' AND deleted_at IS NULL");
-    if($stmt === false){
-        throw new Exception("Failed to prepare statement: " . $conn->error);
-    }
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if($result->num_rows > 0){
-        $row = $result->fetch_assoc();
-        $totalUsers = (int)$row['total_users'];
-    }
-    $stmt->close();
-
     // Get total number of Employers
     $stmt = $conn->prepare("SELECT COUNT(*) as total_employers FROM `users` WHERE auth = 'user' AND user_type = 'employer' AND deleted_at IS NULL");
     if($stmt === false){
@@ -183,7 +170,7 @@ try{
                     <div class="tab-content">
                         <div class="tab-pane fade show active" id="talents-pane" role="tabpanel" aria-labelledby="talent-tab">
                             <div class="card p-4">
-                                <h5 class="card-title fw-bold mb-3">Employer Roster (<?= $totalUsers ?> Total)</h5>
+                                <h5 class="card-title fw-bold mb-3">Employer Roster (<?= $totalEmployers ?> Total)</h5>
 
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle small">
@@ -192,6 +179,7 @@ try{
                                                 <th>Company Name</th>
                                                 <th>Industry</th>
                                                 <th>Website</th>
+                                                <th>Subscription</th>
                                                 <th>Verification</th>
                                                 <th>Registered Date</th>
                                                 <th>Actions</th>
@@ -212,8 +200,29 @@ try{
                                                     $totalUsers = $totalUsersResult['total'];
                                                     $totalPages = ceil($totalUsers / $limit);
 
-                                                    $stmt = $conn->prepare("SELECT u.id, u.fullname, u.email, u.user_type, u.is_profile_complete, u.suspended_at, dp.*
-                                                    FROM users u LEFT JOIN employer_profiles dp ON u.id = dp.user_id WHERE u.user_type = 'employer' AND u.deleted_at IS NULL  ORDER BY u.created_at DESC LIMIT ? OFFSET ?");
+                                                    $stmt = $conn->prepare("SELECT 
+                                                    u.id, 
+                                                    u.fullname, 
+                                                    u.email, 
+                                                    u.user_type, 
+                                                    u.is_profile_complete, 
+                                                    u.suspended_at, dp.*,
+                                                    sp.name AS plan_name,
+                                                    s.status AS subscription_status
+                                                    FROM users u LEFT JOIN employer_profiles dp ON u.id = dp.user_id 
+                                                    
+                                                    LEFT JOIN subscriptions s 
+                                                        ON s.id = (
+                                                            SELECT id FROM subscriptions 
+                                                            WHERE user_id = u.id 
+                                                            ORDER BY id DESC 
+                                                            LIMIT 1
+                                                        )
+
+                                                    LEFT JOIN subscription_plans sp 
+                                                        ON s.plan_id = sp.id 
+
+                                                    WHERE u.user_type = 'employer' AND u.deleted_at IS NULL  ORDER BY u.created_at DESC LIMIT ? OFFSET ?");
                                                     if($stmt === false){
                                                         throw new Exception("Failed to prepare statement.");
                                                     }
@@ -228,6 +237,44 @@ try{
                                                                 <td><?= htmlspecialchars($user['company_name']) ?></td>
                                                                 <td><?= htmlspecialchars(ucfirst($user["industry"])) ?></td>
                                                                 <td><?= (htmlspecialchars($user["website"]) == "") ? "N/A" : htmlspecialchars($user["website"]) ?></td>
+                                                                <?php
+                                                                    $planName = $user['plan_name'] ?? null;
+                                                                    $status_sub = $user['subscription_status'] ?? null;
+
+                                                                    if (!$planName) {
+                                                                        // No subscription at all
+                                                                        $badgeClass = 'secondary';
+                                                                        $displayText = 'Free Plan';
+
+                                                                    } else {
+                                                                        switch (strtolower($status_sub)) {
+
+                                                                            case 'active':
+                                                                                $badgeClass = match(strtolower($planName)) {
+                                                                                    'premium' => 'warning',
+                                                                                    'standard' => 'primary',
+                                                                                    default => 'secondary'
+                                                                                };
+                                                                                $displayText = ucfirst($planName);
+                                                                                break;
+
+                                                                            case 'expired':
+                                                                            case 'cancelled':
+                                                                                $badgeClass = 'danger';
+                                                                                $displayText = 'Inactive Plan';
+                                                                                break;
+
+                                                                            default:
+                                                                                $badgeClass = 'secondary';
+                                                                                $displayText = 'Free Plan';
+                                                                        }
+                                                                    }
+                                                                ?>
+                                                                <td>
+                                                                    <span class="badge bg-<?= $badgeClass ?>">
+                                                                        <?= $displayText ?>
+                                                                    </span>
+                                                                </td>
                                                                 <td><span class="badge bg-<?= ($user["action"] === "completed") ? "success" : "secondary" ?>"><?= $status ?></span></td>
                                                                 <td>
                                                                     <?php 

@@ -64,6 +64,44 @@ try{
 
     $stmt->close();
 
+    $premiumCount = $standardCount = $freeCount = 0;
+
+    // Get premium and standard users sub count
+    $stmt = $conn->prepare("
+        SELECT 
+            SUM(CASE WHEN sp.name = 'premium' AND s.status = 'active' THEN 1 ELSE 0 END) AS premium,
+            SUM(CASE WHEN sp.name = 'standard' AND s.status = 'active' THEN 1 ELSE 0 END) AS standard
+        FROM users u
+        LEFT JOIN subscriptions s 
+            ON u.id = s.user_id AND s.status = 'active'
+        LEFT JOIN subscription_plans sp 
+            ON s.plan_id = sp.id
+        WHERE u.user_type IN ('talent', 'employer')
+        AND u.deleted_at IS NULL
+    ");
+
+    if ($stmt === false) {
+        throw new Exception("Prepare failed: " . $conn->error);
+    }
+
+    $stmt->execute();
+    $data = $stmt->get_result()->fetch_assoc();
+
+    $stmt->close();
+
+    $premiumCount = $data['premium'] ?? 0;
+    $standardCount = $data['standard'] ?? 0;
+
+    // Get total users for sub count
+    $stmt = $conn->prepare("SELECT COUNT(*) AS total FROM users WHERE user_type IN ('talent', 'employer') AND deleted_at IS NULL");
+    if ($stmt === false) {
+        throw new Exception("Prepare failed: " . $conn->error);
+    }
+    $stmt->execute();
+    $totalUsers = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
+
+    $stmt->close();
+    $freeCount = $totalUsers - ($premiumCount + $standardCount);
 
 } catch (Exception $e) {
     $conn->close();
@@ -263,7 +301,7 @@ try{
                                             <div class="text-center mb-4">
                                                 <h6 class="text-uppercase fw-bold text-muted tracking-wider mb-2"><?= ucfirst($sub_one_data_name) ?></h6>
                                                 <div class="d-flex justify-content-center align-items-baseline mb-2">
-                                                    <span class="fs-4 fw-semibold text-muted">$</span>
+                                                    <span class="fs-4 fw-semibold text-muted">₦</span>
                                                     <span class="display-5 fw-bold text-dark"><?= $sub_one_data_price ?></span>
                                                     <span class="text-muted ms-1">/mo</span>
                                                 </div>
@@ -309,7 +347,7 @@ try{
                                             <div class="text-center mb-4 mt-3">
                                                 <h6 class="text-uppercase fw-bold text-primary tracking-wider mb-2"><?= ucfirst($sub_two_data_name) ?></h6>
                                                 <div class="d-flex justify-content-center align-items-baseline mb-2">
-                                                    <span class="fs-4 fw-semibold text-primary">$</span>
+                                                    <span class="fs-4 fw-semibold text-primary">₦</span>
                                                     <span class="display-5 fw-bold text-primary"><?= $sub_two_data_price ?></span>
                                                     <span class="text-muted ms-1">/mo</span>
                                                 </div>
@@ -348,7 +386,7 @@ try{
                                             <div class="text-center mb-4">
                                                 <h6 class="text-uppercase fw-bold text-warning tracking-wider mb-2"><?= ucfirst($sub_three_data_name) ?></h6>
                                                 <div class="d-flex justify-content-center align-items-baseline mb-2">
-                                                    <span class="fs-4 fw-semibold text-white-50">$</span>
+                                                    <span class="fs-4 fw-semibold text-white-50">₦</span>
                                                     <span class="display-5 fw-bold text-white"><?= $sub_three_data_price ?></span>
                                                     <span class="text-white-50 ms-1">/mo</span>
                                                 </div>
@@ -393,13 +431,13 @@ try{
                             <div class="col d-flex align-items-center">
                                 <ul class="list-group list-group-flush w-100">
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <?= ucfirst($sub_three_data_name) ?> <span class="badge bg-warning rounded-pill">1,024</span>
+                                        <?= ucfirst($sub_three_data_name) ?> <span class="badge bg-warning rounded-pill"><?= $premiumCount ?></span>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <?= ucfirst($sub_two_data_name) ?> <span class="badge bg-primary rounded-pill">2,500</span>
+                                        <?= ucfirst($sub_two_data_name) ?> <span class="badge bg-primary rounded-pill"><?= $standardCount ?></span>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <?= ucfirst($sub_one_data_name) ?> <span class="badge bg-secondary rounded-pill">1,596</span>
+                                        <?= ucfirst($sub_one_data_name) ?> <span class="badge bg-secondary rounded-pill"><?= $freeCount ?></span>
                                     </li>
                                 </ul>
                             </div>
@@ -432,7 +470,7 @@ try{
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Monthly Price ($)</label>
+                                <label class="form-label">Monthly Price (₦)</label>
                                 <input type="number" name="plan_price" id="planPrice" class="form-control" required>
                             </div>
 

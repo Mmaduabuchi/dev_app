@@ -561,7 +561,7 @@ try{
                                                 <td class='text-muted small'>{$transactionId}</td>
                                                 <td><span class='fw-medium'>{$planName}</span></td>
                                                 <td>{$date}</td>
-                                                <td><span class='fw-bold text-success'>\${$amount}</span></td>
+                                                <td><span class='fw-bold text-success'>₦{$amount}</span></td>
                                                 <td><span class='badge {$badgeClass}'>{$status}</span></td>
                                                 <td>
                                                     <a href='./../process/process_user_subscription_invoice.php?txn={$transactionId}&token_ref=" . urlencode($_GET['token_ref']) . "&user_id={$employer_id_num}' class='text-primary'>

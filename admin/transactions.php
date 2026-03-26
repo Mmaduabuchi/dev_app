@@ -240,7 +240,7 @@ if (!empty($search)) {
                                                         <td><?php echo $row['transaction_id']; ?></td>
                                                         <td><?php echo $row['user_company']; ?></td>
                                                         <td><?php echo $row['plan']; ?></td>
-                                                        <td><?php echo $row['amount']; ?></td>
+                                                        <td><?php echo "₦" . number_format($row['amount'], 2); ?></td>
                                                         <td><?php echo $row['method']; ?></td>
                                                         <td>
                                                             <?php 
