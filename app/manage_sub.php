@@ -7,55 +7,51 @@ require_once __DIR__ . '/fetch_notification_count.php';
 
 //get usertoken from session
 $usertoken = $_SESSION['user']['usertoken'] ?? null;
-$no_sub = false;
 
 try{
-    // Fetch latest subscription and join with plan details
-    $query = " SELECT 
-            sp.name,
-            sp.price,
-            sp.duration_days,
-            s.status,
-            s.end_date
-        FROM subscriptions s
-        INNER JOIN subscription_plans sp ON s.plan_id = sp.id
-        WHERE s.user_id = ? ORDER BY s.created_at DESC LIMIT 1
-    ";
 
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $subscription = $result->fetch_assoc();
+    if ($sub_status === true) {
+        $planName = htmlspecialchars($subscription['name']);
+        $cycle = htmlspecialchars($subscription['duration_days']);
+        
+        //get plan price from plan_id
+        $stmt = $conn->prepare("SELECT price FROM `subscription_plans` WHERE id = ?");
+        if (!$stmt) {
+            throw new Exception('Database error: ' . $conn->error);
+        }
+        $stmt->bind_param("i", $current_plan_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $plan = $result->fetch_assoc();
+        $stmt->close();
 
-    if (!$subscription) {
-        $no_sub = true;
-        exit;
+        $price = number_format($plan['price'], 2);
+    
+
+        switch ($cycle) {
+            case 90:
+                $cycle = "Quarterly";
+                break;
+            case 365:
+                $cycle = "Yearly";
+                break;
+            default:
+                $cycle = "Monthly";
+        }
+        $status = htmlspecialchars($subscription['status']);
+        $renewDate = !empty($subscription['end_date']) ? date('M d, Y', strtotime($subscription['end_date'])) : 'N/A';
+
+        // Badge color class
+        $badgeClass = ($status === 'active') ? 'text-success bg-success-subtle' : 'text-danger bg-danger-subtle';
     }
-
-    $planName = htmlspecialchars($subscription['name']);
-    $price = htmlspecialchars($subscription['price']);
-    $cycle = htmlspecialchars($subscription['duration_days']);
-    switch ($cycle) {
-        case 90:
-            $cycle = "Quarterly";
-            break;
-        case 365:
-            $cycle = "Yearly";
-            break;
-        default:
-            $cycle = "Monthly";
-    }
-    $status = htmlspecialchars($subscription['status']);
-    $renewDate = !empty($subscription['end_date']) ? date('M d, Y', strtotime($subscription['end_date'])) : 'N/A';
-
-    // Badge color class
-    $badgeClass = ($status === 'active') ? 'text-success bg-success-subtle' : 'text-danger bg-danger-subtle';
-
 } catch (Exception $e) {
     $conn->close();
+    //session log
+    $_SESSION['error'] = $e->getMessage();
     error_log($e->getMessage());
-    echo "Something went wrong. Please try again later.";
+    // echo "Something went wrong. Please try again later.";
+    header("Location: /devhire/dashboard/error");
+    exit;
 }
 ?>
 <!DOCTYPE html>
@@ -131,7 +127,7 @@ try{
                                         </div>
                                         <div class="col-12 col-md-6 text-end pt-2">
                                             <?php
-                                                if($no_sub === false):
+                                                if($user_subscription_status !== false):
                                             ?>
                                             <button class="btn btn-outline-dark" id="Cancelsub">Cancel subscription</button>
                                             <?php
@@ -143,7 +139,7 @@ try{
                                 </div>
                                 <div class="card-body bg-light-subtle">
                                     <?php
-                                        if($no_sub === true):
+                                        if($user_subscription_status !== true):
                                     ?>
                                     <div class="row">
                                         <div class="col-12 text-center mt-3">

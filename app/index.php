@@ -65,7 +65,32 @@ try {
         //response with notification count
         $recevied_request_count = isset($data['recevied_request_count']) ? (int)$data['recevied_request_count'] : 0;
         $stmt->close();
+
+        //check education status
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM `education_records` WHERE user_id = ? AND deleted_at IS NULL");
+        if (!$stmt) {
+            throw new Exception('Database error: ' . $conn->error);
+        }
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $stmt->bind_result($education_count);
+        $stmt->fetch();
+        $education_count = (int) $education_count;
+        $stmt->close();
+
     }
+
+    //check support ticket count
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM `support_ticket` WHERE user_id = ? AND deleted_at IS NULL");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . $conn->error);
+    }
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $stmt->bind_result($support_ticket_count);
+    $stmt->fetch();
+    $support_ticket_count = (int) $support_ticket_count;
+    $stmt->close();
 
     // Fetch recent activity
     $recentActivityStmt = $conn->prepare("SELECT title, message, created_at, type FROM notifications WHERE user_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 6");
@@ -76,6 +101,8 @@ try {
 
 } catch (exception $e) {
     $conn->close();
+    //session log
+    $_SESSION['error'] = $e->getMessage();
     error_log($e->getMessage());
     // echo "Something went wrong. Please try again later.";
     header("Location: /devhire/dashboard/error");
@@ -103,7 +130,60 @@ try {
 
     <script src="<?php echo $base_url; ?>assets/js/head.js"></script>
 
+    <style>
+        .modern-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            background: #fff;
+        }
 
+        .modern-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+        }
+
+        .icon-box {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            color: #fff;
+        }
+
+        .bg-gradient-danger {
+            background: linear-gradient(135deg, #ff4d4f, #ff7875);
+        }
+
+        .bg-gradient-secondary {
+            background: linear-gradient(135deg, #6c757d, #adb5bd);
+        }
+
+        .card-title-small {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+
+        .card-value {
+            font-size: 26px;
+            font-weight: 600;
+            color: #111;
+        }
+
+        .alert-info {
+            background-color: #e3f2fd;
+            border-left: 5px solid #0d6efd;
+            font-size: 0.95rem;
+        }
+        .alert-info a {
+            text-decoration: underline;
+            font-weight: 500;
+        }
+    </style>
 </head>
 
 <!-- body start -->
@@ -137,105 +217,81 @@ try {
                         <?php endif; ?>
                     </div>
 
-                    <!-- Start Main Widgets -->
                     <div class="row">
-                        <div class="col-md-6 col-lg-4 col-xl">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="widget-first">
+                        <div class="col">
+                            <?php if ($education_count === 0): ?>
+                                <div class="alert alert-info d-flex align-items-center" role="alert">
+                                    <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Info:">
+                                        <use xlink:href="#info-fill"/>
+                                    </svg>
+                                    <div>
+                                        Hey <?= htmlspecialchars($fullname, ENT_QUOTES, 'UTF-8'); ?>! It looks like your education profile is empty. 
+                                        <a href="/devhire/dashboard/resume" class="alert-link">Click here to set it up now.</a>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
 
-                                        <div class="d-flex align-items-center mb-2">
-                                            <div class="p-2 border border-danger border-opacity-10 bg-danger-subtle rounded-2 me-2">
-                                                <div class="bg-danger rounded-circle widget-size text-center">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-                                                        <path fill="#ffffff" d="M12 4a4 4 0 0 1 4 4a4 4 0 0 1-4 4a4 4 0 0 1-4-4a4 4 0 0 1 4-4m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                            <p class="mb-0 text-dark fs-15">Total Visitor</p>
-                                        </div>
+                    <!-- Start Main Widgets -->
+                    <div class="row g-4">
 
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <h3 class="mb-0 fs-22 text-dark me-3">3,456</h3>
-                                        </div>
-
+                        <!-- Total Visitors -->
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card modern-card p-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <p class="card-title-small">Total Visitors</p>
+                                        <h3 class="card-value">3,456</h3>
+                                    </div>
+                                    <div class="icon-box bg-gradient-danger">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#fff" viewBox="0 0 24 24">
+                                            <path d="M12 4a4 4 0 1 1 0 8a4 4 0 0 1 0-8m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4"/>
+                                        </svg>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-md-6 col-lg-4 col-xl">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="widget-first">
-
-                                        <div class="d-flex align-items-center mb-2">
-                                            <div
-                                                class="p-2 border border-secondary border-opacity-10 bg-secondary-subtle rounded-2 me-2">
-                                                <div class="bg-secondary rounded-circle widget-size text-center">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="#ffffff" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.0" stroke="currentColor" class="size-6">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                            <p class="mb-0 text-dark fs-15">Views</p>
-                                        </div>
-
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <h3 class="mb-0 fs-22 text-dark me-3">839</h3>
-                                        </div>
-
+                        <!-- Views -->
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card modern-card p-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <p class="card-title-small text-muted">Support Tickets</p>
+                                        <h3 class="card-value"><?= $support_ticket_count ?></h3>
+                                    </div>
+                                    <div class="icon-box bg-gradient-primary rounded-circle d-flex align-items-center justify-content-center" style="width:50px; height:50px;">
+                                        <!-- Support/Help icon -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#fff" viewBox="0 0 24 24">
+                                            <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm1 17h-2v-2h2v2zm1.071-7.071l-.071.071V15h-2v-2.586l.293-.293a1.5 1.5 0 0 0 .439-1.06c0-.828-.672-1.5-1.5-1.5S9 10.284 9 11h-2c0-1.654 1.346-3 3-3s3 1.346 3 3c0 .397-.105.767-.293 1.071z"/>
+                                        </svg>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-md-6 col-lg-4 col-xl">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="widget-first">
-
-                                        <div class="d-flex align-items-center mb-2">
-                                            <div class="p-2 border border-danger border-opacity-10 bg-danger-subtle rounded-2 me-2">
-                                                <div class="bg-danger rounded-circle widget-size text-center">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="#ffffff" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="" class="size-6">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                            <?php
-                                            if ($user_global_variable !== false):
-                                            ?>
-                                                <p class="mb-0 text-dark fs-15">Sent Requests</p>
-                                            <?php
-                                            else:
-                                            ?>
-                                                <p class="mb-0 text-dark fs-15">Requests</p>
-                                            <?php
-                                            endif;
-                                            ?>
-                                        </div>
-
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <?php
-                                            if ($user_global_variable !== false):
-                                            ?>
-                                                <h3 class="mb-0 fs-22 text-dark me-3"><?php echo $sent_request_count; ?></h3>
-                                            <?php
-                                            else:
-                                            ?>
-                                                <h3 class="mb-0 fs-22 text-dark me-3"><?php echo $recevied_request_count; ?></h3>
-                                            <?php
-                                            endif;
-                                            ?>
-                                        </div>
-
+                        <!-- Requests -->
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card modern-card p-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <?php if ($user_global_variable !== false): ?>
+                                            <p class="card-title-small">Sent Requests</p>
+                                            <h3 class="card-value"><?php echo $sent_request_count; ?></h3>
+                                        <?php else: ?>
+                                            <p class="card-title-small">Requests</p>
+                                            <h3 class="card-value"><?php echo $recevied_request_count; ?></h3>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="icon-box bg-gradient-danger">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#fff" viewBox="0 0 24 24">
+                                            <path d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Z"/>
+                                        </svg>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
 
                     </div>
                     <!-- End Main Widgets -->
@@ -389,6 +445,8 @@ try {
 
                     </div>
                     <!-- end start -->
+
+                    
 
                     <div class="row">
                         <!-- Subscription History / Logs -->

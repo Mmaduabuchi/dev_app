@@ -42,7 +42,7 @@ require_once "auth.php";
                                 <div class="text-center">
                                     <div class="mb-0">
                                         <h3 class="fw-semibold text-dark text-capitalize">Oops!, Page Not Found</h3>
-                                        <p class="text-dark">This pages you are trying to access does not exits or has been moved. <br> Try going back to our homepage.</p>
+                                        <p class="text-dark"><?php echo $_SESSION['error']; ?></p>
                                     </div>
 
                                     <a class='btn btn-primary mt-3 me-1' href='/devhire/'>Back to Home</a>
