@@ -68,6 +68,7 @@ require_once __DIR__ . '/fetch_notification_count.php';
                         <?php if (!$sub_status): ?>
                             <div class="alert alert-warning alert-dismissible fade show" role="alert">
                                 <strong>Hello <?= htmlspecialchars($fullname, ENT_QUOTES, 'UTF-8'); ?>!</strong> Your do not have any active subscription.
+                                <a href="/devhire/dashboard/subscriptions" class="alert-link">Choose a plan.</a>
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         <?php endif; ?>
