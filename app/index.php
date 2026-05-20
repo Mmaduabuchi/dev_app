@@ -226,7 +226,7 @@ try {
                                         <use xlink:href="#info-fill"/>
                                     </svg>
                                     <div>
-                                        Hey <?= htmlspecialchars($fullname, ENT_QUOTES, 'UTF-8'); ?>! It looks like your education profile is empty. 
+                                        Hey <?= htmlspecialchars($fullname, ENT_QUOTES, 'UTF-8'); ?>! Complete your profile setup. 
                                         <a href="/devhire/dashboard/complete-setup" class="alert-link">Click here to set it up now.</a>
                                     </div>
                                 </div>
@@ -407,7 +407,7 @@ try {
                                                 <i class="mdi mdi-shield-star fs-24"></i>
                                             </div>
                                             <h4 class="mb-1"><?= htmlspecialchars($planName) ?></h4>
-                                            <p class="text-muted"><span class="fs-20 fw-bold text-dark">$<?= $planPrice ?></span> / month</p>
+                                            <p class="text-muted"><span class="fs-20 fw-bold text-dark">₦<?= $planPrice ?></span> / month</p>
                                         </div>
 
                                         <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
@@ -543,7 +543,7 @@ try {
                                                         echo "<tr>
                                                             <td><p class='mb-0 fs-14'>{$date}</p></td>
                                                             <td><p class='mb-0 fw-semibold'>{$planName}</p></td>
-                                                            <td><p class='mb-0 fw-medium'>\${$amount}</p></td>
+                                                            <td><p class='mb-0 fw-medium'>₦{$amount}</p></td>
                                                             <td><span class='badge {$badgeClass} fw-semibold'>{$status}</span></td>
                                                             <td><a href='./process/process_invoice.php?txn={$transactionId}' class='mb-0 fw-medium'>[Download]</a></td>
                                                         </tr>";

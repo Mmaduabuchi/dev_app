@@ -10,6 +10,8 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^we-welcome-you/?$ index.php [NC,L]
 RewriteRule ^login/?$ login.php [NC,L]
 RewriteRule ^register/?$ register.php [NC,L]
+RewriteRule ^talents/?$ talents.php [NC,L]
+RewriteRule ^aboutus/?$ about.php [NC,L]
 RewriteRule ^forgotten/?$ forgotten.php [NC,L]
 RewriteRule ^reset/?$ reset.php [NC,L]
 RewriteRule ^logout/?$ app/auth-logout.php [NC,L]
